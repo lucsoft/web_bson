@@ -1,57 +1,59 @@
-'use strict';
+import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { Document, serialize } from "../src/bson.ts";
 
-const BSON = require('../register-bson');
-
-describe('Cyclic Dependencies', function () {
+Deno.test("Cyclic Dependencies", () => {
   /**
    * @ignore
    */
-  it('Should correctly detect cyclic dependency in nested objects', function (done) {
-    // Force cyclic dependency
-    var a = { b: {} };
-    a.b.c = a;
-    try {
-      // Attempt to serialize cyclic dependency
-      BSON.serialize(a);
-    } catch (err) {
-      expect('cyclic dependency detected').to.equal(err.message);
-    }
-
-    done();
-  });
-
-  /**
-   * @ignore
-   */
-  it('Should correctly detect cyclic dependency in deeploy nested objects', function (done) {
-    // Force cyclic dependency
-    var a = { b: { c: [{ d: {} }] } };
-    a.b.c[0].d.a = a;
-
-    try {
-      // Attempt to serialize cyclic dependency
-      BSON.serialize(a);
-    } catch (err) {
-      expect('cyclic dependency detected').to.equal(err.message);
-    }
-
-    done();
-  });
+  Deno.test(
+    "Should correctly detect cyclic dependency in nested objects",
+    () => {
+      // Force cyclic dependency
+      let a: Document = { b: {} };
+      a.b.c = a;
+      try {
+        // Attempt to serialize cyclic dependency
+        serialize(a);
+      } catch (err) {
+        assertEquals("cyclic dependency detected", err.message);
+      }
+    },
+  );
 
   /**
    * @ignore
    */
-  it('Should correctly detect cyclic dependency in nested array', function (done) {
-    // Force cyclic dependency
-    var a = { b: {} };
-    a.b.c = [a];
-    try {
-      // Attempt to serialize cyclic dependency
-      BSON.serialize(a);
-    } catch (err) {
-      expect('cyclic dependency detected').to.equal(err.message);
-    }
+  Deno.test(
+    "Should correctly detect cyclic dependency in deeploy nested objects",
+    () => {
+      // Force cyclic dependency
+      const a: Document = { b: { c: [{ d: {} }] } };
+      a.b.c[0].d.a = a;
 
-    done();
-  });
+      try {
+        // Attempt to serialize cyclic dependency
+        serialize(a);
+      } catch (err) {
+        assert("cyclic dependency detected").to.equal(err.message);
+      }
+    },
+  );
+
+  /**
+   * @ignore
+   */
+  Deno.test(
+    "Should correctly detect cyclic dependency in nested array",
+    () => {
+      // Force cyclic dependency
+      const a: Document = { b: {} };
+      a.b.c = [a];
+      try {
+        // Attempt to serialize cyclic dependency
+        serialize(a);
+      } catch (err) {
+        assert("cyclic dependency detected").to.equal(err.message);
+      }
+    },
+  );
 });

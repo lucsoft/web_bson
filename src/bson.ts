@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { Binary } from "./binary.ts";
+import { Binary, BinarySizes } from "./binary.ts";
 import { Code } from "./code.ts";
 import { DBRef } from "./db_ref.ts";
 import { Decimal128 } from "./decimal128.ts";
@@ -32,6 +32,7 @@ export type { LongWithoutOverrides } from "./timestamp.ts";
 export type { DeserializeOptions, SerializeOptions };
 export {
   Binary,
+  BinarySizes,
   BSONRegExp,
   BSONSymbol,
   Code,

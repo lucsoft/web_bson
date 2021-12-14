@@ -1,9 +1,32 @@
-'use strict';
+import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import {
+  BinarySizes,
+  BSON_BINARY_SUBTYPE_DEFAULT,
+  BSON_DATA_ARRAY,
+  BSON_DATA_BINARY,
+  BSON_DATA_BOOLEAN,
+  BSON_DATA_CODE,
+  BSON_DATA_CODE_W_SCOPE,
+  BSON_DATA_DATE,
+  BSON_DATA_DBPOINTER,
+  BSON_DATA_DECIMAL128,
+  BSON_DATA_INT,
+  BSON_DATA_LONG,
+  BSON_DATA_MAX_KEY,
+  BSON_DATA_MIN_KEY,
+  BSON_DATA_NULL,
+  BSON_DATA_NUMBER,
+  BSON_DATA_OBJECT,
+  BSON_DATA_OID,
+  BSON_DATA_REGEXP,
+  BSON_DATA_STRING,
+  BSON_DATA_SYMBOL,
+  BSON_DATA_TIMESTAMP,
+  BSON_DATA_UNDEFINED,
+} from "../src/bson.ts";
 
-const BSON = require('../register-bson');
-
-describe('BSON Constants', () => {
-  context('Binary Subtype', () => {
+Deno.test("BSON Constants", () => {
+  Deno.test("Binary Subtype", () => {
     /*
      subtype	::=
      |  "\x00"  Generic binary subtype
@@ -15,42 +38,32 @@ describe('BSON Constants', () => {
      |  "\x06"  Encrypted BSON value
      |  "\x80"  User defined
     */
-    it('Default should be 0', () => {
-      expect(BSON.BSON_BINARY_SUBTYPE_DEFAULT).to.equal(0);
-      expect(BSON.Binary.SUBTYPE_DEFAULT).to.equal(0);
+    Deno.test("Default should be 0", () => {
+      assertEquals(BSON_BINARY_SUBTYPE_DEFAULT, 0);
+      assertEquals(BinarySizes.SUBTYPE_DEFAULT, 0);
     });
-    it('Function should be 1', () => {
-      expect(BSON.BSON_BINARY_SUBTYPE_FUNCTION).to.equal(1);
-      expect(BSON.Binary.SUBTYPE_FUNCTION).to.equal(1);
+    Deno.test("Function should be 1", () => {
+      assertEquals(BinarySizes.SUBTYPE_FUNCTION, 1);
     });
-    it('Binary (Old) should be 2', () => {
-      expect(BSON.BSON_BINARY_SUBTYPE_BYTE_ARRAY).to.equal(2);
-      expect(BSON.Binary.SUBTYPE_BYTE_ARRAY).to.equal(2);
+    Deno.test("Binary (Old) should be 2", () => {
+      assertEquals(BinarySizes.SUBTYPE_BYTE_ARRAY, 2);
     });
-    it('UUID (Old) should be 3', () => {
-      expect(BSON.BSON_BINARY_SUBTYPE_UUID).to.equal(3);
-      expect(BSON.Binary.SUBTYPE_UUID_OLD).to.equal(3);
+    Deno.test("UUID should be 4", () => {
+      assertEquals(BinarySizes.SUBTYPE_UUID, 4);
     });
-    it('UUID should be 4', () => {
-      expect(BSON.BSON_BINARY_SUBTYPE_UUID_NEW).to.equal(4);
-      expect(BSON.Binary.SUBTYPE_UUID).to.equal(4);
-    });
-    it('MD5 should be 5', () => {
-      expect(BSON.BSON_BINARY_SUBTYPE_MD5).to.equal(5);
-      expect(BSON.Binary.SUBTYPE_MD5).to.equal(5);
+    Deno.test("MD5 should be 5", () => {
+      assertEquals(BinarySizes.SUBTYPE_MD5, 5);
     });
 
-    it('Encrypted should be 6', () => {
-      expect(BSON.BSON_BINARY_SUBTYPE_ENCRYPTED).to.equal(6);
-      expect(BSON.Binary.SUBTYPE_ENCRYPTED).to.equal(6);
+    Deno.test("Encrypted should be 6", () => {
+      assertEquals(BinarySizes.SUBTYPE_ENCRYPTED, 6);
     });
 
-    it('Column should be 7', () => {
-      expect(BSON.BSON_BINARY_SUBTYPE_COLUMN).to.equal(7);
-      expect(BSON.Binary.SUBTYPE_COLUMN).to.equal(7);
+    Deno.test("Column should be 7", () => {
+      assertEquals(BinarySizes.SUBTYPE_COLUMN, 7);
     });
   });
-  context('BSON Type indicators', () => {
+  Deno.test("BSON Type indicators", () => {
     /*
       | "\x01" 64-bit binary floating point
       | "\x02" UTF-8 string
@@ -75,68 +88,68 @@ describe('BSON Constants', () => {
       | "\x7F" Max key
      */
 
-    it('64-bit binary floating point should be 0x01', () => {
-      expect(BSON.BSON_DATA_NUMBER).to.equal(0x01);
+    Deno.test("64-bit binary floating point should be 0x01", () => {
+      assertEquals(BSON_DATA_NUMBER, 0x01);
     });
-    it('UTF-8 string should be 0x02', () => {
-      expect(BSON.BSON_DATA_STRING).to.equal(0x02);
+    Deno.test("UTF-8 string should be 0x02", () => {
+      assertEquals(BSON_DATA_STRING, 0x02);
     });
-    it('Embedded document should be 0x03', () => {
-      expect(BSON.BSON_DATA_OBJECT).to.equal(0x03);
+    Deno.test("Embedded document should be 0x03", () => {
+      assertEquals(BSON_DATA_OBJECT, 0x03);
     });
-    it('Array should be 0x04', () => {
-      expect(BSON.BSON_DATA_ARRAY).to.equal(0x04);
+    Deno.test("Array should be 0x04", () => {
+      assertEquals(BSON_DATA_ARRAY, 0x04);
     });
-    it('Binary data should be 0x05', () => {
-      expect(BSON.BSON_DATA_BINARY).to.equal(0x05);
+    Deno.test("Binary data should be 0x05", () => {
+      assertEquals(BSON_DATA_BINARY, 0x05);
     });
-    it('Undefined (value) — Deprecated should be 0x06', () => {
-      expect(BSON.BSON_DATA_UNDEFINED).to.equal(0x06);
+    Deno.test("Undefined (value) — Deprecated should be 0x06", () => {
+      assertEquals(BSON_DATA_UNDEFINED, 0x06);
     });
-    it('ObjectId should be 0x07', () => {
-      expect(BSON.BSON_DATA_OID).to.equal(0x07);
+    Deno.test("ObjectId should be 0x07", () => {
+      assertEquals(BSON_DATA_OID, 0x07);
     });
-    it('Boolean should be 0x08', () => {
-      expect(BSON.BSON_DATA_BOOLEAN).to.equal(0x08);
+    Deno.test("Boolean should be 0x08", () => {
+      assertEquals(BSON_DATA_BOOLEAN, 0x08);
     });
-    it('UTC date time should be 0x09', () => {
-      expect(BSON.BSON_DATA_DATE).to.equal(0x09);
+    Deno.test("UTC date time should be 0x09", () => {
+      assertEquals(BSON_DATA_DATE, 0x09);
     });
-    it('Null value should be 0x0A', () => {
-      expect(BSON.BSON_DATA_NULL).to.equal(0x0a);
+    Deno.test("Null value should be 0x0A", () => {
+      assertEquals(BSON_DATA_NULL, 0x0a);
     });
-    it('Regular expression should be 0x0B', () => {
-      expect(BSON.BSON_DATA_REGEXP).to.equal(0x0b);
+    Deno.test("Regular expression should be 0x0B", () => {
+      assertEquals(BSON_DATA_REGEXP, 0x0b);
     });
-    it('DBPointer — Deprecated should be 0x0C', () => {
-      expect(BSON.BSON_DATA_DBPOINTER).to.equal(0x0c);
+    Deno.test("DBPointer — Deprecated should be 0x0C", () => {
+      assertEquals(BSON_DATA_DBPOINTER, 0x0c);
     });
-    it('JavaScript code should be 0x0D', () => {
-      expect(BSON.BSON_DATA_CODE).to.equal(0x0d);
+    Deno.test("JavaScript code should be 0x0D", () => {
+      assertEquals(BSON_DATA_CODE, 0x0d);
     });
-    it('Symbol. — Deprecated should be 0x0E', () => {
-      expect(BSON.BSON_DATA_SYMBOL).to.equal(0x0e);
+    Deno.test("Symbol. — Deprecated should be 0x0E", () => {
+      assertEquals(BSON_DATA_SYMBOL, 0x0e);
     });
-    it('JavaScript code w/ scope — Deprecated should be 0x0F', () => {
-      expect(BSON.BSON_DATA_CODE_W_SCOPE).to.equal(0x0f);
+    Deno.test("JavaScript code w/ scope — Deprecated should be 0x0F", () => {
+      assertEquals(BSON_DATA_CODE_W_SCOPE, 0x0f);
     });
-    it('32-bit integer should be 0x10', () => {
-      expect(BSON.BSON_DATA_INT).to.equal(0x10);
+    Deno.test("32-bit integer should be 0x10", () => {
+      assertEquals(BSON_DATA_INT, 0x10);
     });
-    it('Timestamp should be 0x11', () => {
-      expect(BSON.BSON_DATA_TIMESTAMP).to.equal(0x11);
+    Deno.test("Timestamp should be 0x11", () => {
+      assertEquals(BSON_DATA_TIMESTAMP, 0x11);
     });
-    it('64-bit integer should be 0x12', () => {
-      expect(BSON.BSON_DATA_LONG).to.equal(0x12);
+    Deno.test("64-bit integer should be 0x12", () => {
+      assertEquals(BSON_DATA_LONG, 0x12);
     });
-    it('128-bit decimal floating point should be 0x13', () => {
-      expect(BSON.BSON_DATA_DECIMAL128).to.equal(0x13);
+    Deno.test("128-bit decimal floating point should be 0x13", () => {
+      assertEquals(BSON_DATA_DECIMAL128, 0x13);
     });
-    it('Min key should be 0xFF', () => {
-      expect(BSON.BSON_DATA_MIN_KEY).to.equal(0xff);
+    Deno.test("Min key should be 0xFF", () => {
+      assertEquals(BSON_DATA_MIN_KEY, 0xff);
     });
-    it('Max key should be 0x7F', () => {
-      expect(BSON.BSON_DATA_MAX_KEY).to.equal(0x7f);
+    Deno.test("Max key should be 0x7F", () => {
+      assertEquals(BSON_DATA_MAX_KEY, 0x7f);
     });
   });
 });

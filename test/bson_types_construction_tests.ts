@@ -1,35 +1,48 @@
-'use strict';
-const BSON = require('../register-bson');
+import {
+  Binary,
+  BSONRegExp,
+  BSONSymbol,
+  Code,
+  DBRef,
+  Decimal128,
+  Double,
+  Int32,
+  Long,
+  MaxKey,
+  MinKey,
+  ObjectId,
+  Timestamp,
+} from "../src/bson.ts";
 
-describe('Constructing BSON types', function () {
-  it('with new keyword should work', function () {
-    const oid = new BSON.ObjectId();
-    new BSON.DBRef('test', oid);
-    new BSON.BSONRegExp('aaa');
-    new BSON.BSONSymbol('aaa');
-    new BSON.Binary('aaa');
-    new BSON.Code(function () {});
-    new BSON.Decimal128('123');
-    new BSON.Double(2.3);
-    new BSON.Int32(1);
-    new BSON.Long(0, 0);
-    new BSON.Timestamp(0, 0);
-    new BSON.MaxKey();
-    new BSON.MinKey();
+Deno.test("Constructing BSON types", () => {
+  Deno.test("with new keyword should work", () => {
+    const oid = new ObjectId();
+    new DBRef("test", oid);
+    new BSONRegExp("aaa");
+    new BSONSymbol("aaa");
+    new Binary("aaa");
+    new Code(() => {});
+    new Decimal128("123");
+    new Double(2.3);
+    new Int32(1);
+    new Long(0, 0);
+    new Timestamp(0, 0);
+    new MaxKey();
+    new MinKey();
   });
-  it('as a function call should work', function () {
-    const oid = BSON.ObjectId();
-    BSON.DBRef('test', oid);
-    BSON.BSONRegExp('aaa');
-    BSON.BSONSymbol('aaa');
-    BSON.Binary('aaa');
-    BSON.Code(function () {});
-    BSON.Decimal128('123');
-    BSON.Double(2.3);
-    BSON.Int32(1);
-    BSON.Long(0, 0);
-    BSON.Timestamp(0, 0);
-    BSON.MaxKey();
-    BSON.MinKey();
-  });
+  //   Deno.test("as a function call should work", () => {
+  //     const oid = ObjectId();
+  //     DBRef("test", oid);
+  //     BSONRegExp("aaa");
+  //     BSONSymbol("aaa");
+  //     Binary("aaa");
+  //     Code(() => {});
+  //     Decimal128("123");
+  //     Double(2.3);
+  //     Int32(1);
+  //     Long(0, 0);
+  //     Timestamp(0, 0);
+  //     MaxKey();
+  //     MinKey();
+  //   });
 });

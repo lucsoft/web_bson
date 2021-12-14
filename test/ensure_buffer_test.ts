@@ -1,90 +1,91 @@
 /* global SharedArrayBuffer */
-'use strict';
 
-const { Buffer } = require('buffer');
-const { ensureBuffer } = require('../register-bson');
-const BSON = require('../register-bson');
+const { Buffer } = require("buffer");
+const { ensureBuffer } = require("../register-bson");
+import {} from "../src/bson.ts";
 const BSONTypeError = BSON.BSONTypeError;
 
-describe('ensureBuffer tests', function () {
-  it('should be a function', function () {
-    expect(ensureBuffer).to.be.a('function');
+Deno.test("ensureBuffer tests", () => {
+  Deno.test("should be a function", () => {
+    assert(ensureBuffer).to.be.a("function");
   });
 
-  it('should return a view over the exact same memory when a Buffer is passed in', function () {
+  Deno.test("should return a view over the exact same memory when a Buffer is passed in", () => {
     const bufferIn = Buffer.alloc(10);
     let bufferOut;
 
-    expect(function () {
+    assert(() => {
       bufferOut = ensureBuffer(bufferIn);
     }).to.not.throw(BSONTypeError);
 
-    expect(bufferOut).to.be.an.instanceOf(Buffer);
-    expect(bufferOut.buffer).to.equal(bufferIn.buffer);
-    expect(bufferOut.byteLength).to.equal(bufferIn.byteLength);
-    expect(bufferOut.byteOffset).to.equal(bufferIn.byteOffset);
+    assert(bufferOut).to.be.an.instanceOf(Buffer);
+    assert(bufferOut.buffer).to.equal(bufferIn.buffer);
+    assert(bufferOut.byteLength).to.equal(bufferIn.byteLength);
+    assert(bufferOut.byteOffset).to.equal(bufferIn.byteOffset);
   });
 
-  it('should wrap a Uint8Array with a buffer', function () {
+  Deno.test("should wrap a Uint8Array with a buffer", () => {
     const arrayIn = Uint8Array.from([1, 2, 3]);
     let bufferOut;
 
-    expect(function () {
+    assert(() => {
       bufferOut = ensureBuffer(arrayIn);
     }).to.not.throw(BSONTypeError);
 
-    expect(bufferOut).to.be.an.instanceOf(Buffer);
-    expect(bufferOut.buffer).to.equal(arrayIn.buffer);
+    assert(bufferOut).to.be.an.instanceOf(Buffer);
+    assert(bufferOut.buffer).to.equal(arrayIn.buffer);
   });
 
-  it('should wrap a ArrayBuffer with a buffer', function () {
+  Deno.test("should wrap a ArrayBuffer with a buffer", () => {
     const arrayBufferIn = Uint8Array.from([1, 2, 3]).buffer;
     let bufferOut;
 
-    expect(function () {
+    assert(() => {
       bufferOut = ensureBuffer(arrayBufferIn);
     }).to.not.throw(BSONTypeError);
 
-    expect(bufferOut).to.be.an.instanceOf(Buffer);
-    expect(bufferOut.buffer).to.equal(arrayBufferIn);
+    assert(bufferOut).to.be.an.instanceOf(Buffer);
+    assert(bufferOut.buffer).to.equal(arrayBufferIn);
   });
 
-  it('should wrap a SharedArrayBuffer with a buffer', function () {
-    if (typeof SharedArrayBuffer === 'undefined') {
+  Deno.test("should wrap a SharedArrayBuffer with a buffer", () => {
+    if (typeof SharedArrayBuffer === "undefined") {
       this.skip();
       return;
     }
     const arrayBufferIn = new SharedArrayBuffer(3);
     let bufferOut;
 
-    expect(function () {
+    assert(() => {
       bufferOut = ensureBuffer(arrayBufferIn);
     }).to.not.throw(BSONTypeError);
 
-    expect(bufferOut).to.be.an.instanceOf(Buffer);
-    expect(bufferOut.buffer).to.equal(arrayBufferIn);
+    assert(bufferOut).to.be.an.instanceOf(Buffer);
+    assert(bufferOut.buffer).to.equal(arrayBufferIn);
   });
 
-  it('should account for the input view byteLength and byteOffset', function () {
+  Deno.test("should account for the input view byteLength and byteOffset", () => {
     const input = new Uint8Array(new Uint8Array([1, 2, 3, 4, 5]).buffer, 1, 3);
     let bufferOut;
 
-    expect(function () {
+    assert(() => {
       bufferOut = ensureBuffer(input);
     }).to.not.throw(BSONTypeError);
 
-    expect(bufferOut).to.be.an.instanceOf(Buffer);
-    expect(bufferOut.byteLength).to.equal(3);
-    expect(bufferOut.byteOffset).to.equal(1);
+    assert(bufferOut).to.be.an.instanceOf(Buffer);
+    assert(bufferOut.byteLength).to.equal(3);
+    assert(bufferOut.byteOffset).to.equal(1);
   });
 
-  [0, 12, -1, '', 'foo', null, undefined, ['list'], {}, /x/].forEach(function (item) {
-    it(`should throw if input is ${typeof item}: ${item}`, function () {
-      expect(function () {
-        ensureBuffer(item);
-      }).to.throw(BSONTypeError);
-    });
-  });
+  [0, 12, -1, "", "foo", null, undefined, ["list"], {}, /x/].forEach(
+    function (item) {
+      Deno.test(`should throw if input is ${typeof item}: ${item}`, () => {
+        assert(() => {
+          ensureBuffer(item);
+        }).to.throw(BSONTypeError);
+      });
+    },
+  );
 
   [
     Int8Array,
@@ -94,11 +95,11 @@ describe('ensureBuffer tests', function () {
     Int32Array,
     Uint32Array,
     Float32Array,
-    Float64Array
+    Float64Array,
   ].forEach(function (TypedArray) {
-    it(`should throw if input is typed array ${TypedArray.name}`, function () {
+    Deno.test(`should throw if input is typed array ${TypedArray.name}`, () => {
       const typedArray = new TypedArray();
-      expect(ensureBuffer(typedArray)).to.be.instanceOf(Buffer);
+      assert(ensureBuffer(typedArray)).to.be.instanceOf(Buffer);
     });
   });
 });

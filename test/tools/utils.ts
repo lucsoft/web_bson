@@ -1,8 +1,6 @@
-'use strict';
-
-exports.assertArrayEqual = function (array1, array2) {
+export const assertArrayEqual = (array1: [], array2: []) => {
   if (array1.length !== array2.length) return false;
-  for (var i = 0; i < array1.length; i++) {
+  for (let i = 0; i < array1.length; i++) {
     if (array1[i] !== array2[i]) return false;
   }
 
@@ -10,10 +8,10 @@ exports.assertArrayEqual = function (array1, array2) {
 };
 
 // String to arraybuffer
-exports.stringToArrayBuffer = function (string) {
-  var dataBuffer = new Uint8Array(new ArrayBuffer(string.length));
+export const stringToArrayBuffer = (string: string) => {
+  const dataBuffer = new Uint8Array(new ArrayBuffer(string.length));
   // Return the strings
-  for (var i = 0; i < string.length; i++) {
+  for (let i = 0; i < string.length; i++) {
     dataBuffer[i] = string.charCodeAt(i);
   }
   // Return the data buffer
@@ -21,32 +19,32 @@ exports.stringToArrayBuffer = function (string) {
 };
 
 // String to arraybuffer
-exports.stringToArray = function (string) {
-  var dataBuffer = new Array(string.length);
+export const stringToArray = (string: string) => {
+  const dataBuffer = new Array(string.length);
   // Return the strings
-  for (var i = 0; i < string.length; i++) {
+  for (let i = 0; i < string.length; i++) {
     dataBuffer[i] = string.charCodeAt(i);
   }
   // Return the data buffer
   return dataBuffer;
 };
 
-exports.Utf8 = {
-  // public method for url encoding
-  encode: function (string) {
-    string = string.replace(/\r\n/g, '\n');
-    var utftext = '';
+export const Utf8 = { // public => method for url encoding
+  encode: (string: string) => {
+    string = string.replace(/\r\n/g, "\n");
+    let utftext = "";
 
-    for (var n = 0; n < string.length; n++) {
-      var c = string.charCodeAt(n);
+    for (let n = 0; n < string.length; n++) {
+      const c = string.charCodeAt(n);
       if (c < 128) {
         utftext += String.fromCharCode(c);
-      } else if (c > 127 && c < 2048) {
-        utftext += String.fromCharCode((c >> 6) | 192);
-        utftext += String.fromCharCode((c & 63) | 128);
       } else {
-        utftext += String.fromCharCode((c >> 12) | 224);
-        utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+        if (c > 127 && c < 2048) {
+          utftext += String.fromCharCode((c >> 6) | 192);
+        } else {
+          utftext += String.fromCharCode((c >> 12) | 224);
+          utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+        }
         utftext += String.fromCharCode((c & 63) | 128);
       }
     }
@@ -55,12 +53,12 @@ exports.Utf8 = {
   },
 
   // public method for url decoding
-  decode: function (utftext) {
-    var string = '';
-    var i = 0;
-    var c = 0,
-      c2 = 0,
-      c3 = 0;
+  decode: (utftext: string) => {
+    let string = "";
+    let i = 0;
+    let c = 0;
+    let c2 = 0;
+    let c3 = 0;
 
     while (i < utftext.length) {
       c = utftext.charCodeAt(i);
@@ -74,21 +72,27 @@ exports.Utf8 = {
       } else {
         c2 = utftext.charCodeAt(i + 1);
         c3 = utftext.charCodeAt(i + 2);
-        string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+        string += String.fromCharCode(
+          ((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63),
+        );
         i += 3;
       }
     }
     return string;
-  }
+  },
 };
 
-exports.assertBuffersEqual = function (done, buffer1, buffer2) {
+export const assertBuffersEqual = (
+  done: string,
+  buffer1: Uint8Array,
+  buffer2: Uint8Array,
+) => {
   if (buffer1.length !== buffer2.length) {
-    done('Buffers do not have the same length', buffer1, buffer2);
+    done("Buffers do not have the same length", buffer1, buffer2);
   }
 
   for (var i = 0; i < buffer1.length; i++) {
-    expect(buffer1[i]).to.equal(buffer2[i]);
+    assert(buffer1[i]).to.equal(buffer2[i]);
   }
 };
 
@@ -104,55 +108,40 @@ exports.assertBuffersEqual = function (done, buffer1, buffer2) {
  *   '6100', // 'a' key with key null terminator
  *   '01000000' // little endian int32
  * ])
- * BSON.serialize(bytes) // { a: 1 }
+ * serialize(bytes) // { a: 1 }
  * ```
- *
- * @param {string[]} array - sequences of hex digits broken up to be human readable
- * @returns
  */
-const bufferFromHexArray = array => {
-  const string = array.concat(['00']).join('');
+export const bufferFromHexArray = (array: string[]) => {
+  const string = array.concat(["00"]).join("");
   const size = string.length / 2 + 4;
 
-  const byteLength = [size & 0xff, (size >> 8) & 0xff, (size >> 16) & 0xff, (size >> 24) & 0xff]
-    .map(n => {
+  const byteLength = [
+    size & 0xff,
+    (size >> 8) & 0xff,
+    (size >> 16) & 0xff,
+    (size >> 24) & 0xff,
+  ]
+    .map((n) => {
       const hexCode = n.toString(16);
-      return hexCode.length === 2 ? hexCode : '0' + hexCode;
+      return hexCode.length === 2 ? hexCode : "0" + hexCode;
     })
-    .join('');
+    .join("");
 
-  return Buffer.from(byteLength + string, 'hex');
+  return Buffer.from(byteLength + string, "hex");
 };
 
-exports.bufferFromHexArray = bufferFromHexArray;
-
-/**
+/** =>
  * A helper to calculate the byte size of a string (including null)
  *
  * ```js
  * const x = stringToUTF8HexBytes('ab') // { x: '03000000616200' }
- *
- * @param string - representing what you want to encode into BSON
- * @returns BSON string with byte size encoded
  */
-const stringToUTF8HexBytes = str => {
-  var b = Buffer.from(str, 'utf8');
-  var len = b.byteLength;
-  var out = Buffer.alloc(len + 4 + 1);
+export const stringToUTF8HexBytes = (str: string) => {
+  const b = Buffer.from(str, "utf8");
+  const len = b.byteLength;
+  const out = Buffer.alloc(len + 4 + 1);
   out.writeInt32LE(len + 1, 0);
   out.set(b, 4);
   out[len + 1] = 0x00;
-  return out.toString('hex');
-};
-
-exports.stringToUTF8HexBytes = stringToUTF8HexBytes;
-
-exports.isBrowser = function () {
-  // eslint-disable-next-line no-undef
-  return typeof window === 'object' && typeof window['navigator'] === 'object';
-};
-
-exports.isNode6 = function () {
-  // eslint-disable-next-line no-undef
-  return process.version.split('.')[0] === 'v6';
+  return out.toString("hex");
 };

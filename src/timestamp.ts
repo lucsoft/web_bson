@@ -17,15 +17,12 @@ export const LongWithoutOverridesClass =
 export class Timestamp extends LongWithoutOverridesClass {
   static readonly MAX_VALUE = Long.MAX_UNSIGNED_VALUE;
 
-  /**
-   * @param low - A 64-bit Long representing the Timestamp.
-   */
-  constructor(long: Long);
-  /**
-   * @param value - A pair of two values indicating timestamp and increment.
-   */
-  constructor(value: { t: number; i: number });
-  constructor(low: number | Long | { t: number; i: number }, high?: number) {
+  constructor(
+    low: number | Long | { t: number; i: number },
+    high?: number,
+    unsigned?: boolean,
+  ) {
+    super(low, high, unsigned);
     if (Long.isLong(low)) {
       super(low.low, low.high, true);
     } else if (
