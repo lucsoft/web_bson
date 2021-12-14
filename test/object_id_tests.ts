@@ -1,292 +1,351 @@
-'use strict';
+import { hex } from "../deps.ts";
+import { ObjectId } from "../src/objectid.ts";
+import { BSONTypeError } from "../src/error.ts";
+import { assertEquals, assertThrows } from "./deps.ts";
+import { assert } from "./deps.ts";
 
-const Buffer = require('buffer').Buffer;
-const BSON = require('../register-bson');
-const BSONTypeError = BSON.BSONTypeError;
-const util = require('util');
-const ObjectId = BSON.ObjectId;
+const textEncoder = new TextEncoder();
 
-describe('ObjectId', function () {
-  it('should correctly handle objectId timestamps', function (done) {
-    const a = ObjectId.createFromTime(1);
-    expect(Buffer.from([0, 0, 0, 1])).to.deep.equal(a.id.slice(0, 4));
-    expect(1000).to.equal(a.getTimestamp().getTime());
+const textDecoder = new TextDecoder();
 
-    const b = new ObjectId();
-    b.generationTime = 1;
-    expect(Buffer.from([0, 0, 0, 1])).to.deep.equal(b.id.slice(0, 4));
-    expect(1).to.equal(b.generationTime);
-    expect(1000).to.equal(b.getTimestamp().getTime());
+function decodeHex(hexString: string): Uint8Array {
+  return hex.decode(textEncoder.encode(hexString));
+}
 
-    done();
+function uint8arrayToHexString(uint8Array: Uint8Array): string {
+  return textDecoder.decode(hex.encode(uint8Array));
+}
+
+function decodeLatin1(latin1String: string): Uint8Array {
+  return textEncoder.encode(latin1String);
+}
+
+// const util = require("util");
+
+Deno.test("[ObjectId] should correctly handle objectId timestamps", () => {
+  const a = ObjectId.createFromTime(1);
+  assertEquals(new Uint8Array([0, 0, 0, 1]), a.id.slice(0, 4));
+  assertEquals(1000, a.getTimestamp().getTime());
+});
+
+Deno.test("[ObjectId] should correctly create ObjectId from ObjectId", () => {
+  const noArgObjID = new ObjectId();
+  assertEquals(new ObjectId(noArgObjID).id, noArgObjID.id);
+});
+
+const invalidInputs: { input: any; description: string }[] = [
+  { input: [], description: "empty array" },
+  { input: ["abcdefŽhijkl"], description: "nonempty array" },
+  { input: {}, description: "empty object" },
+];
+
+for (const { input, description } of invalidInputs) {
+  Deno.test(`[ObjectId] should throw error if ${description} is passed in`, () => {
+    assertThrows(() => new ObjectId(input), BSONTypeError);
   });
+}
 
-  it('should correctly create ObjectId from ObjectId', function () {
-    const noArgObjID = new ObjectId();
-    expect(new ObjectId(noArgObjID).id).to.deep.equal(Buffer.from(noArgObjID.id, 'hex'));
-  });
+Deno.test("[ObjectId] should throw error if object without an id property is passed in", () => {
+  const noArgObjID = new ObjectId();
+  const objectIdLike: any = {
+    toHexString: () => {
+      return noArgObjID.toHexString();
+    },
+  };
+  assertThrows(() => new ObjectId(objectIdLike), BSONTypeError);
+});
 
-  const invalidInputs = [
-    { input: [], description: 'empty array' },
-    { input: ['abcdefŽhijkl'], description: 'nonempty array' },
-    { input: {}, description: 'empty object' }
-  ];
+Deno.test("[ObjectId] should correctly create ObjectId from object with valid string id", () => {
+  const objectValidString24Hex: any = {
+    id: "aaaaaaaaaaaaaaaaaaaaaaaa",
+  };
+  const objectValidString12Bytes: any = {
+    id: "abcdefghijkl",
+  };
+  const buf24Hex = decodeHex("aaaaaaaaaaaaaaaaaaaaaaaa");
+  const buf12Bytes = new TextEncoder().encode("abcdefghijkl");
+  assertEquals(new ObjectId(objectValidString24Hex).id, buf24Hex);
+  assertEquals(new ObjectId(objectValidString12Bytes).id, buf12Bytes);
+});
 
-  for (const { input, description } of invalidInputs) {
-    it(`should throw error if ${description} is passed in`, function () {
-      expect(() => new ObjectId(input)).to.throw(BSONTypeError);
-    });
+Deno.test("[ObjectId] should correctly create ObjectId from object with valid string id and toHexString method", () => {
+  function new24HexToHexString() {
+    return "BBBBBBBBBBBBBBBBBBBBBBBB";
+  }
+  const buf24hex = decodeHex("BBBBBBBBBBBBBBBBBBBBBBBB");
+  const objectValidString24Hex: any = {
+    id: "aaaaaaaaaaaaaaaaaaaaaaaa",
+    toHexString: new24HexToHexString,
+  };
+  const objectValidString12Bytes: any = {
+    id: "abcdefghijkl",
+    toHexString: new24HexToHexString,
+  };
+  assertEquals(new ObjectId(objectValidString24Hex).id, buf24hex);
+  console.log("dooe");
+  assertEquals(new ObjectId(objectValidString12Bytes).id, buf24hex);
+});
+
+Deno.test("[ObjectId] should correctly create ObjectId from object with valid Buffer id", () => {
+  const validBuffer24Hex = decodeHex("AAAAAAAAAAAAAAAAAAAAAAAA");
+  const validBuffer12Array = new Uint8Array([
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+  ]);
+  const objectBufferId: any = {
+    id: validBuffer24Hex,
+  };
+  const objectBufferFromArray: any = {
+    id: validBuffer12Array,
+  };
+  assertEquals(new ObjectId(objectBufferId).id, validBuffer24Hex);
+  assertEquals(new ObjectId(objectBufferFromArray).id, validBuffer12Array);
+});
+
+Deno.test("[ObjectId] should correctly create ObjectId from object with valid Buffer id and toHexString method", () => {
+  const validBuffer24Hex = decodeHex("AAAAAAAAAAAAAAAAAAAAAAAA");
+  const validBuffer12Array = new Uint8Array([
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+  ]);
+  const bufferNew24Hex = decodeHex("BBBBBBBBBBBBBBBBBBBBBBBB");
+  function newToHexString() {
+    return "BBBBBBBBBBBBBBBBBBBBBBBB";
+  }
+  const objectBufferHex: any = {
+    id: validBuffer24Hex,
+    toHexString: newToHexString,
+  };
+  const objectBufferArray: any = {
+    id: validBuffer12Array,
+    toHexString: newToHexString,
+  };
+  assertEquals(new ObjectId(objectBufferHex).id, bufferNew24Hex);
+  assertEquals(new ObjectId(objectBufferArray).id, bufferNew24Hex);
+});
+
+Deno.test("[ObjectId] should throw error if object with non-Buffer non-string id is passed in", () => {
+  const objectNumId: any = {
+    id: 5,
+  };
+  const objectNullId: any = {
+    id: null,
+  };
+  assertThrows(() => new ObjectId(objectNumId), BSONTypeError);
+  assertThrows(() => new ObjectId(objectNullId), BSONTypeError);
+});
+
+Deno.test("[ObjectId] should throw an error if object with invalid string id is passed in", () => {
+  const objectInvalid24HexStr: any = {
+    id: "FFFFFFFFFFFFFFFFFFFFFFFG",
+  };
+  assertThrows(() => new ObjectId(objectInvalid24HexStr), BSONTypeError);
+});
+
+Deno.test("[ObjectId] should correctly create ObjectId from object with invalid string id and toHexString method", () => {
+  function newToHexString() {
+    return "BBBBBBBBBBBBBBBBBBBBBBBB";
   }
 
-  it('should throw error if object without an id property is passed in', function () {
-    const noArgObjID = new ObjectId();
-    const objectIdLike = {
-      toHexString: function () {
-        return noArgObjID.toHexString();
-      }
-    };
-    expect(() => new ObjectId(objectIdLike)).to.throw(BSONTypeError);
-  });
+  const objectInvalid24HexStr: any = {
+    id: "FFFFFFFFFFFFFFFFFFFFFFFG",
+    toHexString: newToHexString,
+  };
+  const bufferNew24Hex = decodeHex("BBBBBBBBBBBBBBBBBBBBBBBB");
+  assertEquals(new ObjectId(objectInvalid24HexStr).id, bufferNew24Hex);
+});
 
-  it('should correctly create ObjectId from object with valid string id', function () {
-    const objectValidString24Hex = {
-      id: 'aaaaaaaaaaaaaaaaaaaaaaaa'
+Deno.test(
+  "[ObjectId] should throw an error if object with invalid Buffer id is passed in",
+  () => {
+    const objectInvalidBuffer: any = {
+      id: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]),
     };
-    const objectValidString12Bytes = {
-      id: 'abcdefghijkl'
-    };
-    const buf24Hex = Buffer.from('aaaaaaaaaaaaaaaaaaaaaaaa', 'hex');
-    const buf12Bytes = Buffer.from('abcdefghijkl');
-    expect(new ObjectId(objectValidString24Hex).id).to.deep.equal(buf24Hex);
-    expect(new ObjectId(objectValidString12Bytes).id).to.deep.equal(buf12Bytes);
-  });
+    assertThrows(() => new ObjectId(objectInvalidBuffer), BSONTypeError);
+  },
+);
 
-  it('should correctly create ObjectId from object with valid string id and toHexString method', function () {
-    function new24HexToHexString() {
-      return 'BBBBBBBBBBBBBBBBBBBBBBBB';
-    }
-    const buf24hex = Buffer.from('BBBBBBBBBBBBBBBBBBBBBBBB', 'hex');
-    const objectValidString24Hex = {
-      id: 'aaaaaaaaaaaaaaaaaaaaaaaa',
-      toHexString: new24HexToHexString
-    };
-    const objectValidString12Bytes = {
-      id: 'abcdefghijkl',
-      toHexString: new24HexToHexString
-    };
-    expect(new ObjectId(objectValidString24Hex).id).to.deep.equal(buf24hex);
-    expect(new ObjectId(objectValidString12Bytes).id).to.deep.equal(buf24hex);
-  });
-
-  it('should correctly create ObjectId from object with valid Buffer id', function () {
-    const validBuffer24Hex = Buffer.from('AAAAAAAAAAAAAAAAAAAAAAAA', 'hex');
-    const validBuffer12Array = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-    const objectBufferId = {
-      id: validBuffer24Hex
-    };
-    const objectBufferFromArray = {
-      id: validBuffer12Array
-    };
-    expect(new ObjectId(objectBufferId).id).to.deep.equals(validBuffer24Hex);
-    expect(new ObjectId(objectBufferFromArray).id).to.deep.equals(validBuffer12Array);
-  });
-
-  it('should correctly create ObjectId from object with valid Buffer id and toHexString method', function () {
-    const validBuffer24Hex = Buffer.from('AAAAAAAAAAAAAAAAAAAAAAAA', 'hex');
-    const validBuffer12Array = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-    const bufferNew24Hex = Buffer.from('BBBBBBBBBBBBBBBBBBBBBBBB', 'hex');
-    function newToHexString() {
-      return 'BBBBBBBBBBBBBBBBBBBBBBBB';
-    }
-    const objectBufferHex = {
-      id: validBuffer24Hex,
-      toHexString: newToHexString
-    };
-    const objectBufferArray = {
-      id: validBuffer12Array,
-      toHexString: newToHexString
-    };
-    expect(new ObjectId(objectBufferHex).id).to.deep.equal(bufferNew24Hex);
-    expect(new ObjectId(objectBufferArray).id).to.deep.equal(bufferNew24Hex);
-  });
-
-  it('should throw error if object with non-Buffer non-string id is passed in', function () {
-    const objectNumId = {
-      id: 5
-    };
-    const objectNullId = {
-      id: null
-    };
-    expect(() => new ObjectId(objectNumId)).to.throw(BSONTypeError);
-    expect(() => new ObjectId(objectNullId)).to.throw(BSONTypeError);
-  });
-
-  it('should throw an error if object with invalid string id is passed in', function () {
-    const objectInvalid24HexStr = {
-      id: 'FFFFFFFFFFFFFFFFFFFFFFFG'
-    };
-    expect(() => new ObjectId(objectInvalid24HexStr)).to.throw(BSONTypeError);
-  });
-
-  it('should correctly create ObjectId from object with invalid string id and toHexString method', function () {
-    function newToHexString() {
-      return 'BBBBBBBBBBBBBBBBBBBBBBBB';
-    }
-    const objectInvalid24HexStr = {
-      id: 'FFFFFFFFFFFFFFFFFFFFFFFG',
-      toHexString: newToHexString
-    };
-    const bufferNew24Hex = Buffer.from('BBBBBBBBBBBBBBBBBBBBBBBB', 'hex');
-    expect(new ObjectId(objectInvalid24HexStr).id).to.deep.equal(bufferNew24Hex);
-  });
-
-  it('should throw an error if object with invalid Buffer id is passed in', function () {
-    const objectInvalidBuffer = {
-      id: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
-    };
-    expect(() => new ObjectId(objectInvalidBuffer)).to.throw(BSONTypeError);
-  });
-
-  it('should correctly create ObjectId from object with invalid Buffer id and toHexString method', function () {
-    function newToHexString() {
-      return 'BBBBBBBBBBBBBBBBBBBBBBBB';
-    }
-    const objectInvalidBuffer = {
-      id: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]),
-      toHexString: newToHexString
-    };
-    const bufferNew24Hex = Buffer.from('BBBBBBBBBBBBBBBBBBBBBBBB', 'hex');
-    expect(new ObjectId(objectInvalidBuffer).id).to.deep.equal(bufferNew24Hex);
-  });
-
-  const numericIO = [
-    { input: 42, output: 42, description: '42' },
-    { input: 0x2a, output: 0x2a, description: '0x2a' },
-    { input: 4.2, output: 4, description: '4.2' },
-    { input: NaN, output: 0, description: 'NaN' }
-  ];
-
-  for (const { input, output } of numericIO) {
-    it(`should correctly create ObjectId from ${input} and result in ${output}`, function () {
-      const objId = new ObjectId(input);
-      expect(objId).to.have.property('id');
-      expect(objId.id).to.be.instanceOf(Buffer);
-      expect(objId.id.readUInt32BE(0)).to.equal(output);
-    });
+Deno.test("[ObjectId] should correctly create ObjectId from object with invalid Buffer id and toHexString method", () => {
+  function newToHexString() {
+    return "BBBBBBBBBBBBBBBBBBBBBBBB";
   }
+  const objectInvalidBuffer: any = {
+    id: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]),
+    toHexString: newToHexString,
+  };
+  const bufferNew24Hex = decodeHex("BBBBBBBBBBBBBBBBBBBBBBBB");
+  assertEquals(new ObjectId(objectInvalidBuffer).id, bufferNew24Hex);
+});
 
-  it('should correctly create ObjectId undefined or null', function () {
-    const objNull = new ObjectId(null);
-    const objNoArg = new ObjectId();
-    const objUndef = new ObjectId(undefined);
-    expect(objNull.id).to.be.instanceOf(Buffer);
-    expect(objNoArg.id).to.be.instanceOf(Buffer);
-    expect(objUndef.id).to.be.instanceOf(Buffer);
+const numericIO = [
+  { input: 42, output: 42, description: "42" },
+  { input: 0x2a, output: 0x2a, description: "0x2a" },
+  { input: 4.2, output: 4, description: "4.2" },
+  { input: NaN, output: 0, description: "NaN" },
+];
+
+for (const { input, output } of numericIO) {
+  Deno.test(`[ObjectId] should correctly create ObjectId from ${input} and result in ${output}`, () => {
+    const objId = new ObjectId(input);
+    assert("id" in objId);
+    assert(objId.id instanceof Uint8Array);
+    assertEquals(new DataView(objId.id.buffer).getUint32(0), output);
   });
+}
 
-  it('should throw error if non-12 byte non-24 hex string passed in', function () {
-    expect(() => new ObjectId('FFFFFFFFFFFFFFFFFFFFFFFG')).to.throw(BSONTypeError);
-    expect(() => new ObjectId('thisstringisdefinitelytoolong')).to.throw(BSONTypeError);
-    expect(() => new ObjectId('tooshort')).to.throw(BSONTypeError);
-    expect(() => new ObjectId('101010')).to.throw(BSONTypeError);
-    expect(() => new ObjectId('')).to.throw(BSONTypeError);
-  });
+Deno.test("[ObjectId] should correctly create ObjectId undefined or null", () => {
+  const objNull = new ObjectId(null as any);
+  const objNoArg = new ObjectId();
+  const objUndef = new ObjectId(undefined);
+  assert(objNull.id instanceof Uint8Array);
+  assert(objNoArg.id instanceof Uint8Array);
+  assert(objUndef.id instanceof Uint8Array);
+});
 
-  it('should correctly create ObjectId from 24 hex string', function () {
-    const validStr24Hex = 'FFFFFFFFFFFFFFFFFFFFFFFF';
-    expect(new ObjectId(validStr24Hex).id).to.deep.equal(Buffer.from(validStr24Hex, 'hex'));
-  });
+Deno.test("[ObjectId] should throw error if non-12 byte non-24 hex string passed in", () => {
+  assertThrows(() => new ObjectId("FFFFFFFFFFFFFFFFFFFFFFFG"), BSONTypeError);
+  assertThrows(
+    () => new ObjectId("thisstringisdefinitelytoolong"),
+    BSONTypeError,
+  );
+  assertThrows(() => new ObjectId("tooshort"), BSONTypeError);
+  assertThrows(() => new ObjectId("101010"), BSONTypeError);
+  assertThrows(() => new ObjectId(""), BSONTypeError);
+});
 
-  it('should correctly create ObjectId from 12 byte sequence', function () {
-    const byteSequence12 = '111111111111';
-    expect(new ObjectId(byteSequence12).id).to.deep.equal(Buffer.from(byteSequence12, 'latin1'));
-  });
+Deno.test("[ObjectId] should correctly create ObjectId from 24 hex string", () => {
+  const validStr24Hex = "FFFFFFFFFFFFFFFFFFFFFFFF";
+  assertEquals(new ObjectId(validStr24Hex).id, decodeHex(validStr24Hex));
+});
 
-  it('should correctly create ObjectId from uppercase hexstring', function (done) {
-    let a = 'AAAAAAAAAAAAAAAAAAAAAAAA';
+Deno.test("[ObjectId] should correctly create ObjectId from 12 byte sequence", () => {
+  const byteSequence12 = "111111111111";
+  assertEquals(
+    new ObjectId(byteSequence12).id,
+    new TextEncoder().encode(byteSequence12),
+  );
+});
+
+Deno.test(
+  "[ObjectId] should correctly create ObjectId from uppercase hexstring",
+  () => {
+    let a = "AAAAAAAAAAAAAAAAAAAAAAAA";
     let b = new ObjectId(a);
-    let c = b.equals(a); // => false
-    expect(true).to.equal(c);
+    assert(b.equals(a));
 
-    a = 'aaaaaaaaaaaaaaaaaaaaaaaa';
+    a = "aaaaaaaaaaaaaaaaaaaaaaaa";
     b = new ObjectId(a);
-    c = b.equals(a); // => true
-    expect(true).to.equal(c);
-    expect(a).to.equal(b.toString());
+    assert(b.equals(a));
+    assert(a, b.toString());
+  },
+);
 
-    done();
-  });
+Deno.test(
+  "[ObjectId] should correctly create ObjectId from valid Buffer",
+  () => {
+    let a = "AAAAAAAAAAAAAAAAAAAAAAAA";
+    let b = new ObjectId(decodeHex(a));
+    assert(b.equals(a));
 
-  it('should correctly create ObjectId from valid Buffer', function (done) {
-    if (!Buffer.from) return done();
-    let a = 'AAAAAAAAAAAAAAAAAAAAAAAA';
-    let b = new ObjectId(Buffer.from(a, 'hex'));
-    let c = b.equals(a); // => false
-    expect(true).to.equal(c);
+    a = "aaaaaaaaaaaaaaaaaaaaaaaa";
+    b = new ObjectId(decodeHex(a));
+    assert(a, b.toString());
+    assert(b.equals(a));
+  },
+);
 
-    a = 'aaaaaaaaaaaaaaaaaaaaaaaa';
-    b = new ObjectId(Buffer.from(a, 'hex'));
-    c = b.equals(a); // => true
-    expect(a).to.equal(b.toString());
-    expect(true).to.equal(c);
-    done();
-  });
+Deno.test("[ObjectId] should throw an error if invalid Buffer passed in", () => {
+  const a = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
+  assertThrows(() => new ObjectId(a), BSONTypeError);
+});
 
-  it('should throw an error if invalid Buffer passed in', function () {
-    const a = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
-    expect(() => new ObjectId(a)).to.throw(BSONTypeError);
-  });
-
-  it('should correctly allow for node.js inspect to work with ObjectId', function (done) {
-    const a = 'AAAAAAAAAAAAAAAAAAAAAAAA';
+Deno.test(
+  "[ObjectId] should correctly allow for node.js inspect to work with ObjectId",
+  () => {
+    const a = "AAAAAAAAAAAAAAAAAAAAAAAA";
     const b = new ObjectId(a);
-    expect(util.inspect(b)).to.equal('new ObjectId("aaaaaaaaaaaaaaaaaaaaaaaa")');
+    assertEquals(Deno.inspect(b), 'new ObjectId("aaaaaaaaaaaaaaaaaaaaaaaa")');
+  },
+);
 
-    done();
-  });
+Deno.test("[ObjectId] should isValid check input Buffer length", () => {
+  const buffTooShort = new Uint8Array([]);
+  const buffTooLong = new Uint8Array([
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+  ]);
+  const buff12Bytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
 
-  it('should isValid check input Buffer length', function (done) {
-    const buffTooShort = Buffer.from([]);
-    const buffTooLong = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
-    const buff12Bytes = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  assert(!ObjectId.isValid(buffTooShort));
+  assert(!ObjectId.isValid(buffTooLong));
+  assert(ObjectId.isValid(buff12Bytes));
+});
 
-    expect(ObjectId.isValid(buffTooShort)).to.be.false;
-    expect(ObjectId.isValid(buffTooLong)).to.be.false;
-    expect(ObjectId.isValid(buff12Bytes)).to.be.true;
-    done();
-  });
+Deno.test("[ObjectId] should throw if a 12-char length but non-12 byte string is passed in", () => {
+  const characterCodesLargerThan256 = "abcdefŽhijkl";
+  const length12Not12Bytes = "🐶🐶🐶🐶🐶🐶";
+  assertThrows(
+    () => new ObjectId(characterCodesLargerThan256).toHexString(),
+    BSONTypeError,
+    "Argument passed in must be a string of 12 bytes",
+  );
+  assertThrows(
+    () => new ObjectId(length12Not12Bytes).id,
+    BSONTypeError,
+    "Argument passed in must be a string of 12 bytes",
+  );
+});
 
-  it('should throw if a 12-char length but non-12 byte string is passed in', function () {
-    const characterCodesLargerThan256 = 'abcdefŽhijkl';
-    const length12Not12Bytes = '🐶🐶🐶🐶🐶🐶';
-    expect(() => new ObjectId(characterCodesLargerThan256).toHexString()).to.throw(
-      BSONTypeError,
-      'Argument passed in must be a string of 12 bytes'
-    );
-    expect(() => new ObjectId(length12Not12Bytes).id).to.throw(
-      BSONTypeError,
-      'Argument passed in must be a string of 12 bytes'
-    );
-  });
+Deno.test("[ObjectId] should have isValid be true for 12-char length and 12-byte length string", () => {
+  const plainASCIIstr = "aaaaaaaaaaaa";
+  assert(ObjectId.isValid(plainASCIIstr));
+});
 
-  it('should have isValid be true for 12-char length and 12-byte length string', function () {
-    const plainASCIIstr = 'aaaaaaaaaaaa';
-    expect(ObjectId.isValid(plainASCIIstr)).to.be.true;
-  });
+Deno.test("[ObjectId] should have isValid be false for 12-char length but non-12-byte length string", () => {
+  const characterCodesLargerThan256 = "abcdefŽhijkl";
+  const length12Not12Bytest1 = "🐶🐶🐶🐶🐶🐶";
+  const length12Not12Bytest2 = "value with é";
+  assert(!ObjectId.isValid(characterCodesLargerThan256));
+  assert(!ObjectId.isValid(length12Not12Bytest1));
+  assert(!ObjectId.isValid(length12Not12Bytest2));
+});
 
-  it('should have isValid be false for 12-char length but non-12-byte length string', function () {
-    const characterCodesLargerThan256 = 'abcdefŽhijkl';
-    const length12Not12Bytest1 = '🐶🐶🐶🐶🐶🐶';
-    const length12Not12Bytest2 = 'value with é';
-    expect(ObjectId.isValid(characterCodesLargerThan256)).to.be.false;
-    expect(ObjectId.isValid(length12Not12Bytest1)).to.be.false;
-    expect(ObjectId.isValid(length12Not12Bytest2)).to.be.false;
-  });
-
-  it('should correctly interpret timestamps beyond 2038', function () {
-    const farFuture = new Date('2040-01-01T00:00:00.000Z').getTime();
-    expect(
-      new BSON.ObjectId(BSON.ObjectId.generate(farFuture / 1000)).getTimestamp().getTime()
-    ).to.equal(farFuture);
-  });
+Deno.test("[ObjectId] should correctly interpret timestamps beyond 2038", () => {
+  const farFuture = new Date("2040-01-01T00:00:00.000Z").getTime();
+  assertEquals(
+    new ObjectId(ObjectId.generate(farFuture / 1000)).getTimestamp()
+      .getTime(),
+    farFuture,
+  );
 });

@@ -61,7 +61,7 @@ export class ObjectId {
       this.#bytesBuffer = new Uint8Array(ObjectId.generate(
         typeof workingId === "number" ? workingId : undefined,
       ));
-    } else if (workingId instanceof Uint8Array) {
+    } else if (ArrayBuffer.isView(workingId) && workingId.byteLength === 12) {
       this.#bytesBuffer = workingId;
     } else if (typeof workingId === "string") {
       if (workingId.length === 12) {
@@ -221,7 +221,7 @@ export class ObjectId {
   /** Returns the generation date (accurate up to the second) that this ID was generated. */
   getTimestamp(): Date {
     const timestamp = new Date();
-    const time = new DataView(this.id, 0, 4).getUint32(0);
+    const time = new DataView(this.id.buffer, 0, 4).getUint32(0);
     timestamp.setTime(Math.floor(time) * 1000);
     return timestamp;
   }
@@ -234,7 +234,7 @@ export class ObjectId {
   static createFromTime(time: number): ObjectId {
     const buffer = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     // Encode time into first 4 bytes
-    new DataView(buffer, 0, 4).setUint32(0, time);
+    new DataView(buffer.buffer, 0, 4).setUint32(0, time);
     // Return the new objectId
     return new ObjectId(buffer);
   }
@@ -277,6 +277,6 @@ export class ObjectId {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `ObjectId("${this.toHexString()}")`;
+    return `new ObjectId("${this.toHexString()}")`;
   }
 }
