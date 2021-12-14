@@ -47,9 +47,6 @@ const bsonSnippet = Buffer.from([
   // null terminator
   0,
 ]);
-
-Deno.test("dbpointer tests", async ({ step }) => {
-  await step("can serialize and deserialize 0xFFFD in dbpointer name", () => {
-    deserialize(bsonSnippet);
-  });
+Deno.test("[dbpointer tests] can serialize and deserialize 0xFFFD in dbpointer name", () => {
+  deserialize(bsonSnippet);
 });

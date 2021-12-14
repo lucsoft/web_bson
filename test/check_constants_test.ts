@@ -25,9 +25,7 @@ import {
   BSON_DATA_UNDEFINED,
 } from "../src/bson.ts";
 
-Deno.test("BSON Constants", async ({ step }) => {
-  await step("Binary Subtype", async ({ step }) => {
-    /*
+/*
      subtype	::=
      |  "\x00"  Generic binary subtype
      |  "\x01"  Function
@@ -38,33 +36,32 @@ Deno.test("BSON Constants", async ({ step }) => {
      |  "\x06"  Encrypted BSON value
      |  "\x80"  User defined
     */
-    await step("Default should be 0", () => {
-      assertEquals(BSON_BINARY_SUBTYPE_DEFAULT, 0);
-      assertEquals(BinarySizes.SUBTYPE_DEFAULT, 0);
-    });
-    await step("Function should be 1", () => {
-      assertEquals(BinarySizes.SUBTYPE_FUNCTION, 1);
-    });
-    await step("Binary (Old) should be 2", () => {
-      assertEquals(BinarySizes.SUBTYPE_BYTE_ARRAY, 2);
-    });
-    await step("UUID should be 4", () => {
-      assertEquals(BinarySizes.SUBTYPE_UUID, 4);
-    });
-    await step("MD5 should be 5", () => {
-      assertEquals(BinarySizes.SUBTYPE_MD5, 5);
-    });
+Deno.test("[BSON Constants Binary Subtype] Default should be 0", () => {
+  assertEquals(BSON_BINARY_SUBTYPE_DEFAULT, 0);
+  assertEquals(BinarySizes.SUBTYPE_DEFAULT, 0);
+});
+Deno.test("[BSON Constants Binary Subtype] Function should be 1", () => {
+  assertEquals(BinarySizes.SUBTYPE_FUNCTION, 1);
+});
+Deno.test("[BSON Constants Binary Subtype] Binary (Old) should be 2", () => {
+  assertEquals(BinarySizes.SUBTYPE_BYTE_ARRAY, 2);
+});
+Deno.test("[BSON Constants Binary Subtype] UUID should be 4", () => {
+  assertEquals(BinarySizes.SUBTYPE_UUID, 4);
+});
+Deno.test("[BSON Constants Binary Subtype] MD5 should be 5", () => {
+  assertEquals(BinarySizes.SUBTYPE_MD5, 5);
+});
 
-    await step("Encrypted should be 6", () => {
-      assertEquals(BinarySizes.SUBTYPE_ENCRYPTED, 6);
-    });
+Deno.test("[BSON Constants Binary Subtype] Encrypted should be 6", () => {
+  assertEquals(BinarySizes.SUBTYPE_ENCRYPTED, 6);
+});
 
-    await step("Column should be 7", () => {
-      assertEquals(BinarySizes.SUBTYPE_COLUMN, 7);
-    });
-  });
-  await step("BSON Type indicators", async ({ step }) => {
-    /*
+Deno.test("[BSON Constants Binary Subtype] Column should be 7", () => {
+  assertEquals(BinarySizes.SUBTYPE_COLUMN, 7);
+});
+
+/*
       | "\x01" 64-bit binary floating point
       | "\x02" UTF-8 string
       | "\x03" Embedded document
@@ -88,68 +85,66 @@ Deno.test("BSON Constants", async ({ step }) => {
       | "\x7F" Max key
      */
 
-    await step("64-bit binary floating point should be 0x01", () => {
-      assertEquals(BSON_DATA_NUMBER, 0x01);
-    });
-    await step("UTF-8 string should be 0x02", () => {
-      assertEquals(BSON_DATA_STRING, 0x02);
-    });
-    await step("Embedded document should be 0x03", () => {
-      assertEquals(BSON_DATA_OBJECT, 0x03);
-    });
-    await step("Array should be 0x04", () => {
-      assertEquals(BSON_DATA_ARRAY, 0x04);
-    });
-    await step("Binary data should be 0x05", () => {
-      assertEquals(BSON_DATA_BINARY, 0x05);
-    });
-    await step("Undefined (value) — Deprecated should be 0x06", () => {
-      assertEquals(BSON_DATA_UNDEFINED, 0x06);
-    });
-    await step("ObjectId should be 0x07", () => {
-      assertEquals(BSON_DATA_OID, 0x07);
-    });
-    await step("Boolean should be 0x08", () => {
-      assertEquals(BSON_DATA_BOOLEAN, 0x08);
-    });
-    await step("UTC date time should be 0x09", () => {
-      assertEquals(BSON_DATA_DATE, 0x09);
-    });
-    await step("Null value should be 0x0A", () => {
-      assertEquals(BSON_DATA_NULL, 0x0a);
-    });
-    await step("Regular expression should be 0x0B", () => {
-      assertEquals(BSON_DATA_REGEXP, 0x0b);
-    });
-    await step("DBPointer — Deprecated should be 0x0C", () => {
-      assertEquals(BSON_DATA_DBPOINTER, 0x0c);
-    });
-    await step("JavaScript code should be 0x0D", () => {
-      assertEquals(BSON_DATA_CODE, 0x0d);
-    });
-    await step("Symbol. — Deprecated should be 0x0E", () => {
-      assertEquals(BSON_DATA_SYMBOL, 0x0e);
-    });
-    await step("JavaScript code w/ scope — Deprecated should be 0x0F", () => {
-      assertEquals(BSON_DATA_CODE_W_SCOPE, 0x0f);
-    });
-    await step("32-bit integer should be 0x10", () => {
-      assertEquals(BSON_DATA_INT, 0x10);
-    });
-    await step("Timestamp should be 0x11", () => {
-      assertEquals(BSON_DATA_TIMESTAMP, 0x11);
-    });
-    await step("64-bit integer should be 0x12", () => {
-      assertEquals(BSON_DATA_LONG, 0x12);
-    });
-    await step("128-bit decimal floating point should be 0x13", () => {
-      assertEquals(BSON_DATA_DECIMAL128, 0x13);
-    });
-    await step("Min key should be 0xFF", () => {
-      assertEquals(BSON_DATA_MIN_KEY, 0xff);
-    });
-    await step("Max key should be 0x7F", () => {
-      assertEquals(BSON_DATA_MAX_KEY, 0x7f);
-    });
-  });
+Deno.test("[BSON Constants BSON Type indicators] 64-bit binary floating point should be 0x01", () => {
+  assertEquals(BSON_DATA_NUMBER, 0x01);
+});
+Deno.test("[BSON Constants BSON Type indicators] UTF-8 string should be 0x02", () => {
+  assertEquals(BSON_DATA_STRING, 0x02);
+});
+Deno.test("[BSON Constants BSON Type indicators] Embedded document should be 0x03", () => {
+  assertEquals(BSON_DATA_OBJECT, 0x03);
+});
+Deno.test("[BSON Constants BSON Type indicators] Array should be 0x04", () => {
+  assertEquals(BSON_DATA_ARRAY, 0x04);
+});
+Deno.test("[BSON Constants BSON Type indicators] Binary data should be 0x05", () => {
+  assertEquals(BSON_DATA_BINARY, 0x05);
+});
+Deno.test("[BSON Constants BSON Type indicators] Undefined (value) — Deprecated should be 0x06", () => {
+  assertEquals(BSON_DATA_UNDEFINED, 0x06);
+});
+Deno.test("[BSON Constants BSON Type indicators] ObjectId should be 0x07", () => {
+  assertEquals(BSON_DATA_OID, 0x07);
+});
+Deno.test("[BSON Constants BSON Type indicators] Boolean should be 0x08", () => {
+  assertEquals(BSON_DATA_BOOLEAN, 0x08);
+});
+Deno.test("[BSON Constants BSON Type indicators] UTC date time should be 0x09", () => {
+  assertEquals(BSON_DATA_DATE, 0x09);
+});
+Deno.test("[BSON Constants BSON Type indicators] Null value should be 0x0A", () => {
+  assertEquals(BSON_DATA_NULL, 0x0a);
+});
+Deno.test("[BSON Constants BSON Type indicators] Regular expression should be 0x0B", () => {
+  assertEquals(BSON_DATA_REGEXP, 0x0b);
+});
+Deno.test("[BSON Constants BSON Type indicators] DBPointer — Deprecated should be 0x0C", () => {
+  assertEquals(BSON_DATA_DBPOINTER, 0x0c);
+});
+Deno.test("[BSON Constants BSON Type indicators] JavaScript code should be 0x0D", () => {
+  assertEquals(BSON_DATA_CODE, 0x0d);
+});
+Deno.test("[BSON Constants BSON Type indicators] Symbol. — Deprecated should be 0x0E", () => {
+  assertEquals(BSON_DATA_SYMBOL, 0x0e);
+});
+Deno.test("[BSON Constants BSON Type indicators] JavaScript code w/ scope — Deprecated should be 0x0F", () => {
+  assertEquals(BSON_DATA_CODE_W_SCOPE, 0x0f);
+});
+Deno.test("[BSON Constants BSON Type indicators] 32-bit integer should be 0x10", () => {
+  assertEquals(BSON_DATA_INT, 0x10);
+});
+Deno.test("[BSON Constants BSON Type indicators] Timestamp should be 0x11", () => {
+  assertEquals(BSON_DATA_TIMESTAMP, 0x11);
+});
+Deno.test("[BSON Constants BSON Type indicators] 64-bit integer should be 0x12", () => {
+  assertEquals(BSON_DATA_LONG, 0x12);
+});
+Deno.test("[BSON Constants BSON Type indicators] 128-bit decimal floating point should be 0x13", () => {
+  assertEquals(BSON_DATA_DECIMAL128, 0x13);
+});
+Deno.test("[BSON Constants BSON Type indicators] Min key should be 0xFF", () => {
+  assertEquals(BSON_DATA_MIN_KEY, 0xff);
+});
+Deno.test("[BSON Constants BSON Type indicators] Max key should be 0x7F", () => {
+  assertEquals(BSON_DATA_MAX_KEY, 0x7f);
 });
