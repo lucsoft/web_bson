@@ -1,11 +1,21 @@
 import { Buffer } from "buffer";
+import {
+  assert,
+  equal,
+} from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { assertThrows } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { BSONError, deserialize, DeserializeOptions, serialize } from "../src/bson.ts";
+import {
+  BSONError,
+  deserialize,
+  DeserializeOptions,
+  Document,
+  serialize,
+} from "../src/bson.ts";
 
 Deno.test("UTF8 validation", () => {
   // Test both browser shims and node which have different replacement mechanisms
-    const replacementChar = "\u{FFFD}\u{FFFD}\u{FFFD}";
-    const replacementString = `hi${replacementChar}bye`;
+  const replacementChar = "\u{FFFD}\u{FFFD}\u{FFFD}";
+  const replacementString = `hi${replacementChar}bye`;
   const twoCharReplacementStr = `${replacementChar}${replacementChar}bye`;
   const sampleValidUTF8 = serialize({
     a: "😎",
@@ -14,64 +24,84 @@ Deno.test("UTF8 validation", () => {
   });
 
   Deno.test("should throw error if true and false mixed for validation option passed in with valid utf8 example", () => {
-    const mixedTrueFalse1 = { validation: { utf8: { a: false, b: true } } } as unknown as DeserializeOptions;
-    const mixedTrueFalse2 = { validation: { utf8: { a: true, b: true, c: false } } } as unknown as DeserializeOptions;
-    assertThrows(() => deserialize(sampleValidUTF8, mixedTrueFalse1),
+    const mixedTrueFalse1 = {
+      validation: { utf8: { a: false, b: true } },
+    } as unknown as DeserializeOptions;
+    const mixedTrueFalse2 = {
+      validation: { utf8: { a: true, b: true, c: false } },
+    } as unknown as DeserializeOptions;
+    assertThrows(
+      () => deserialize(sampleValidUTF8, mixedTrueFalse1),
       BSONError,
       "Invalid UTF-8 validation option - keys must be all true or all false",
     );
-    assertThrows(() => deserialize(sampleValidUTF8, mixedTrueFalse2),
+    assertThrows(
+      () => deserialize(sampleValidUTF8, mixedTrueFalse2),
       BSONError,
       "Invalid UTF-8 validation option - keys must be all true or all false",
     );
   });
 
   Deno.test("should correctly handle validation if validation option contains all T or all F with valid utf8 example", () => {
-    const allTrue = { validation: { utf8: { a: true, b: true, c: true } } };
-    const allFalse = {
+    const allTrue: DeserializeOptions = {
+      validation: { utf8: { a: true, b: true, c: true } },
+    };
+    const allFalse: DeserializeOptions = {
       validation: { utf8: { a: false, b: false, c: false, d: false } },
     };
-    assert(() => {deserialize(sampleValidUTF8, allTrue)).to.not.throw();
-    assert(() => {deserialize(sampleValidUTF8, allFalse)).to.not.throw();
+    assert(deserialize(sampleValidUTF8, allTrue));
+    assert(deserialize(sampleValidUTF8, allFalse));
   });
 
   Deno.test("should throw error if empty utf8 validation option passed in", () => {
     const doc = { a: "validation utf8 option cant be empty" };
     const serialized = serialize(doc);
     const emptyUTF8validation = { validation: { utf8: {} } };
-    assert(() => {deserialize(serialized, emptyUTF8validation)).to.throw(
+    assertThrows(
+      () => deserialize(serialized, emptyUTF8validation),
       BSONError,
       "UTF-8 validation setting cannot be empty",
     );
   });
 
   Deno.test("should throw error if non-boolean utf8 field for validation option is specified for a key", () => {
-    const utf8InvalidOptionObj = { validation: { utf8: { a: { a: true } } } };
+    const utf8InvalidOptionObj = {
+      validation: { utf8: { a: { a: true } } },
+    } as unknown as DeserializeOptions;
     const utf8InvalidOptionArr = {
       validation: { utf8: { a: ["should", "be", "boolean"], b: true } },
-    };
+    } as unknown as DeserializeOptions;
     const utf8InvalidOptionStr = {
       validation: { utf8: { a: "bad value", b: true } },
-    };
+    } as unknown as DeserializeOptions;
 
-    assert(() => {deserialize(sampleValidUTF8, utf8InvalidOptionObj)).to
-      .throw(
-        BSONError,
-        "Invalid UTF-8 validation option, must specify boolean values",
-      );
-    assert(() => {deserialize(sampleValidUTF8, utf8InvalidOptionArr)).to
-      .throw(
-        BSONError,
-        "Invalid UTF-8 validation option, must specify boolean values",
-      );
-    assert(() => {deserialize(sampleValidUTF8, utf8InvalidOptionStr)).to
-      .throw(
-        BSONError,
-        "Invalid UTF-8 validation option, must specify boolean values",
-      );
+    assertThrows(
+      () => deserialize(sampleValidUTF8, utf8InvalidOptionObj),
+      BSONError,
+      "Invalid UTF-8 validation option, must specify boolean values",
+      1 as unknown as string,
+    );
+    assertThrows(
+      () => deserialize(sampleValidUTF8, utf8InvalidOptionArr),
+      BSONError,
+      "Invalid UTF-8 validation option, must specify boolean values",
+      1 as unknown as string,
+    );
+    assertThrows(
+      () => deserialize(sampleValidUTF8, utf8InvalidOptionStr),
+      BSONError,
+      "Invalid UTF-8 validation option, must specify boolean values",
+      1 as unknown as string,
+    );
   });
 
-  const testInputs = [
+  const testInputs: {
+    description: string;
+    buffer: Uint8Array;
+    expectedObjectWithReplacementChars: Document;
+    containsInvalid: boolean;
+    testCases: ({ validation: DeserializeOptions; behavior: string })[];
+  }[] = [
     {
       description: "object with valid utf8 top level keys",
       buffer: Buffer.from(
@@ -98,13 +128,17 @@ Deno.test("UTF8 validation", () => {
       containsInvalid: true,
       testCases: [
         {
-          validation: { validation: { utf8: { validKeyChar: false } } },
+          validation: {
+            validation: { utf8: { validKeyChar: false } },
+          },
           behavior:
             "throw error when only valid toplevel key has validation disabled",
         },
         {
           validation: {
-            validation: { utf8: { invalidUtf8TopLevelKey: false } },
+            validation: {
+              utf8: { invalidUtf8TopLevelKey: false },
+            },
           },
           behavior:
             "not throw error when only invalid toplevel key has validation disabled",
@@ -112,14 +146,19 @@ Deno.test("UTF8 validation", () => {
         {
           validation: {
             validation: {
-              utf8: { validKeyChar: false, invalidUtf8TopLevelKey: false },
+              utf8: {
+                validKeyChar: false,
+                invalidUtf8TopLevelKey: false,
+              },
             },
           },
           behavior:
             "not throw error when both valid and invalid toplevel keys have validation disabled",
         },
         {
-          validation: { validation: { utf8: { validKeyChar: true } } },
+          validation: {
+            validation: { utf8: { validKeyChar: true } },
+          },
           behavior:
             "not throw error when only valid toplevel key has validation enabled",
         },
@@ -349,14 +388,13 @@ Deno.test("UTF8 validation", () => {
     const behavior = "validate utf8 if no validation option given";
     Deno.test(`should ${behavior} for ${description}`, () => {
       if (containsInvalid) {
-        assert(() => {deserialize(buffer)).to.throw(
+        assertThrows(
+          () => deserialize(buffer),
           BSONError,
           "Invalid UTF-8 string in BSON document",
         );
       } else {
-        assert(deserialize(buffer)).to.deep.equals(
-          expectedObjectWithReplacementChars,
-        );
+        equal(deserialize(buffer), expectedObjectWithReplacementChars);
       }
     });
   }
@@ -370,7 +408,8 @@ Deno.test("UTF8 validation", () => {
       const validation = Object.freeze({
         validation: Object.freeze({ utf8: false }),
       });
-      assert(deserialize(buffer, validation)).to.deep.equals(
+      equal(
+        deserialize(buffer, validation),
         expectedObjectWithReplacementChars,
       );
     });
@@ -392,12 +431,14 @@ Deno.test("UTF8 validation", () => {
         validation: Object.freeze({ utf8: true }),
       });
       if (containsInvalid) {
-        assert(() => {deserialize(buffer, validation)).to.throw(
+        assertThrows(
+          () => deserialize(buffer, validation),
           BSONError,
           "Invalid UTF-8 string in BSON document",
         );
       } else {
-        assert(deserialize(buffer, validation)).to.deep.equals(
+        equal(
+          deserialize(buffer, validation),
           expectedObjectWithReplacementChars,
         );
       }
@@ -411,13 +452,15 @@ Deno.test("UTF8 validation", () => {
     for (const { behavior, validation } of testCases) {
       Deno.test(`should ${behavior} for ${description}`, () => {
         Object.freeze(validation);
-        Object.freeze(validation.utf8);
+        Object.freeze(validation.validation?.utf8);
         if (behavior.substring(0, 3) === "not") {
-          assert(deserialize(buffer, validation)).to.deep.equals(
+          equal(
+            deserialize(buffer, validation),
             expectedObjectWithReplacementChars,
           );
         } else {
-          assert(() => {deserialize(buffer, validation)).to.throw(
+          assertThrows(
+            () => deserialize(buffer, validation),
             BSONError,
             "Invalid UTF-8 string in BSON document",
           );
