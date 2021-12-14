@@ -19,6 +19,14 @@ const LOWERCASE_DASH_SEPARATED_UUID_STRING =
   "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa";
 const LOWERCASE_VALUES_ONLY_UUID_STRING = "aaaaaaaaaaaa4aaaaaaaaaaaaaaaaaaa";
 
+function uuidStringVersion(uuid: string) {
+  if (!uuidStringValidate(uuid)) {
+    throw TypeError("Invalid UUID");
+  }
+
+  return parseInt(uuid.substr(14, 1), 16);
+}
+
 Deno.test("UUID", async ({ step }) => {
   await step(
     "should correctly generate a valid UUID v4 from empty constructor",
@@ -26,7 +34,7 @@ Deno.test("UUID", async ({ step }) => {
       const uuid = new UUID();
       const uuidHexStr = uuid.toHexString();
       assert(uuidStringValidate(uuidHexStr));
-      assertEquals(uuidHexStr.match(UUIDv4), BinarySizes.SUBTYPE_UUID);
+      assertEquals(uuidStringVersion(uuidHexStr), BinarySizes.SUBTYPE_UUID);
     },
   );
 
@@ -70,12 +78,12 @@ Deno.test("UUID", async ({ step }) => {
     assertEquals(uuid2.toString(), LOWERCASE_DASH_SEPARATED_UUID_STRING);
   });
 
+  // Ignored by upstream
   await step(
     "should correctly create UUID from UUID (copying existing buffer)",
     () => {
       const org = new UUID();
       const copy = new UUID(org);
-      assertNotEquals(org.id, copy.id);
       assertEquals(org.id, copy.id);
     },
   );
