@@ -82,7 +82,6 @@ Deno.test("[ObjectId] should correctly create ObjectId from object with valid st
     toHexString: new24HexToHexString,
   };
   assertEquals(new ObjectId(objectValidString24Hex).id, buf24hex);
-  console.log("dooe");
   assertEquals(new ObjectId(objectValidString12Bytes).id, buf24hex);
 });
 
