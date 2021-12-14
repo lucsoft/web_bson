@@ -73,18 +73,12 @@ const ISODate = (string: any) => {
 };
 
 Deno.test("BSON", async ({ step }) => {
-  /**
-   * @ignore
-   */
   await step("Should Correctly convert ObjectId to itself", () => {
     const myObject = new ObjectId();
     const newObject = new ObjectId(myObject);
     equal(myObject, newObject);
   });
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly Deserialize object", () => {
     // deno-fmt-ignore
     const bytes = [95, 0, 0, 0, 2, 110, 115, 0, 42, 0, 0, 0, 105, 110, 116, 101, 103, 114, 97, 116, 105, 111, 110, 95, 116, 101, 115, 116, 115, 95, 46, 116, 101, 115, 116, 95, 105, 110, 100, 101, 120, 95, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 8, 117, 110, 105, 113, 117, 101, 0, 0, 3, 107, 101, 121, 0, 12, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0, 2, 110, 97, 109, 101, 0, 4, 0, 0, 0, 97, 95, 49, 0, 0];
@@ -100,9 +94,6 @@ Deno.test("BSON", async ({ step }) => {
     assertEquals(1, object.key.a);
   });
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly Deserialize object with all types", () => {
     // deno-fmt-ignore
     const bytes = [ 26, 1, 0, 0, 7, 95, 105, 100, 0, 161, 190, 98, 75, 118, 169, 3, 0, 0, 3, 0, 0, 4, 97, 114, 114, 97, 121, 0, 26, 0, 0, 0, 16, 48, 0, 1, 0, 0, 0, 16, 49, 0, 2, 0, 0, 0, 16, 50, 0, 3, 0, 0, 0, 0, 2, 115, 116, 114, 105, 110, 103, 0, 6, 0, 0, 0, 104, 101, 108, 108, 111, 0, 3, 104, 97, 115, 104, 0, 19, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 16, 98, 0, 2, 0, 0, 0, 0, 9, 100, 97, 116, 101, 0, 161, 190, 98, 75, 0, 0, 0, 0, 7, 111, 105, 100, 0, 161, 190, 98, 75, 90, 217, 18, 0, 0, 1, 0, 0, 5, 98, 105, 110, 97, 114, 121, 0, 7, 0, 0, 0, 2, 3, 0, 0, 0, 49, 50, 51, 16, 105, 110, 116, 0, 42, 0, 0, 0, 1, 102, 108, 111, 97, 116, 0, 223, 224, 11, 147, 169, 170, 64, 64, 11, 114, 101, 103, 101, 120, 112, 0, 102, 111, 111, 98, 97, 114, 0, 105, 0, 8, 98, 111, 111, 108, 101, 97, 110, 0, 1, 15, 119, 104, 101, 114, 101, 0, 25, 0, 0, 0, 12, 0, 0, 0, 116, 104, 105, 115, 46, 120, 32, 61, 61, 32, 51, 0, 5, 0, 0, 0, 0, 3, 100, 98, 114, 101, 102, 0, 37, 0, 0, 0, 2, 36, 114, 101, 102, 0, 5, 0, 0, 0, 116, 101, 115, 116, 0, 7, 36, 105, 100, 0, 161, 190, 98, 75, 2, 180, 1, 0, 0, 2, 0, 0, 0, 10, 110, 117, 108, 108, 0, 0, ];
@@ -130,9 +121,6 @@ Deno.test("BSON", async ({ step }) => {
     assert(object.dbref != null);
   });
 
-  /**
-   * @ignore
-   */
   await step("Should Serialize and Deserialize String", () => {
     let test_string = { hello: "world" };
     let serialized_data = serialize(test_string, {
@@ -147,9 +135,6 @@ Deno.test("BSON", async ({ step }) => {
     equal(test_string, deserialize(serialized_data));
   });
 
-  /**
-   * @ignore
-   */
   await step("Should Serialize and Deserialize Empty String", () => {
     let test_string = { hello: "" };
     let serialized_data = serialize(test_string);
@@ -160,9 +145,6 @@ Deno.test("BSON", async ({ step }) => {
     equal(test_string, deserialize(serialized_data));
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Integer 5",
     () => {
@@ -179,9 +161,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize null value",
     () => {
@@ -197,9 +176,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Number 1",
     () => {
@@ -216,9 +192,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Integer",
     () => {
@@ -256,9 +229,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Object",
     () => {
@@ -275,9 +245,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should correctly ignore undefined values in arrays",
     () => {
@@ -355,9 +322,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Array",
     () => {
@@ -376,9 +340,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Buffer",
     () => {
@@ -395,9 +356,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Buffer with promoteBuffers option",
     () => {
@@ -416,9 +374,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Number 4",
     () => {
@@ -457,9 +412,6 @@ Deno.test("BSON", async ({ step }) => {
   //     },
   //   );
 
-  /**
-   * @ignore
-   */
   await step("Should correctly deserialize a nested object", () => {
     let doc = { doc: { doc: 1 } };
     let serialized_data = serialize(doc);
@@ -471,9 +423,6 @@ Deno.test("BSON", async ({ step }) => {
     equal(doc.doc.doc, deserialize(serialized_data).doc.doc);
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize A Boolean",
     () => {
@@ -488,9 +437,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize a Date",
     () => {
@@ -514,9 +460,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize a Date from another VM",
     () => {
@@ -545,9 +488,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly Serialize nested doc", () => {
     let doc = {
       string: "Strings are great",
@@ -571,9 +511,6 @@ Deno.test("BSON", async ({ step }) => {
     equals(serialized_data, serialized_data2);
   });
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly Serialize and Deserialize Oid", () => {
     const doc: Document = { doc: new ObjectId() };
     const serialized_data = serialize(doc);
@@ -587,9 +524,6 @@ Deno.test("BSON", async ({ step }) => {
     assertEquals(doc.doc.toHexString(), deserializedDoc.doc.toHexString());
   });
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly encode Empty Hash", () => {
     let doc = {};
     let serialized_data = serialize(doc);
@@ -601,9 +535,6 @@ Deno.test("BSON", async ({ step }) => {
     equal(doc, deserialize(serialized_data));
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Ordered Hash",
     () => {
@@ -622,9 +553,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Regular Expression",
     () => {
@@ -642,9 +570,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize a Binary object",
     () => {
@@ -667,9 +592,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize a Type 2 Binary object",
     () => {
@@ -695,9 +617,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize DBRef",
     () => {
@@ -715,9 +634,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize partial DBRef",
     () => {
@@ -736,9 +652,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize simple Int",
     () => {
@@ -754,9 +667,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Long Integer",
     () => {
@@ -782,9 +692,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Deserialize Large Integers as Number not Long",
     () => {
@@ -814,9 +721,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Timestamp as subclass of Long",
     () => {
@@ -839,9 +743,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Always put the id as the first item in a hash",
     () => {
@@ -863,9 +764,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize a User defined Binary object",
     () => {
@@ -892,9 +790,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize a Code object",
     () => {
@@ -910,9 +805,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly serialize and deserialize and embedded array",
     () => {
@@ -950,9 +842,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly Serialize and Deserialize UTF8", () => {
     // Serialize utf8
     let doc = {
@@ -978,9 +867,6 @@ Deno.test("BSON", async ({ step }) => {
     equal(doc, deserialized_data);
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize query object",
     () => {
@@ -1000,9 +886,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize empty query object",
     () => {
@@ -1018,9 +901,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize array based doc",
     () => {
@@ -1037,9 +917,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Symbol",
     () => {
@@ -1061,9 +938,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should handle Deeply nested document", () => {
     const doc: Document = { a: { b: { c: { d: 2 } } } };
     const serialized_data = serialize(doc);
@@ -1205,9 +1079,6 @@ Deno.test("BSON", async ({ step }) => {
   //     equal(serialized_data, serialized_data2);
   //   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize/Deserialize regexp object",
     () => {
@@ -1227,9 +1098,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize/Deserialize complicated object",
     () => {
@@ -1250,9 +1118,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize/Deserialize nested object",
     () => {
@@ -1278,9 +1143,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize/Deserialize nested object with even more nesting",
     () => {
@@ -1308,9 +1170,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly Serialize empty name object", () => {
     let doc = {
       "": "test",
@@ -1322,9 +1181,6 @@ Deno.test("BSON", async ({ step }) => {
     assertEquals(doc2["bbbb"], 1);
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly handle Forced Doubles to ensure we allocate enough space for cap collections",
     () => {
@@ -1345,9 +1201,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should deserialize correctly", () => {
     let doc = {
       _id: new ObjectId("4e886e687ff7ef5e00000162"),
@@ -1368,9 +1221,6 @@ Deno.test("BSON", async ({ step }) => {
     assert(JSON.stringify(equal), JSON.stringify(doc2));
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should correctly serialize and deserialize MinKey and MaxKey values",
     () => {
@@ -1395,9 +1245,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should correctly serialize Double value", () => {
     let doc = {
       value: new Double(34343.2222),
@@ -1413,9 +1260,6 @@ Deno.test("BSON", async ({ step }) => {
     assert(doc.value.value, doc2.value);
   });
 
-  /**
-   * @ignore
-   */
   await step("ObjectId should correctly create objects", () => {
     try {
       ObjectId.createFromHexString("000000000000000000000001");
@@ -1426,9 +1270,6 @@ Deno.test("BSON", async ({ step }) => {
     }
   });
 
-  /**
-   * @ignore
-   */
   await step("ObjectId should correctly retrieve timestamp", () => {
     let testDate = new Date();
     let object1 = new ObjectId();
@@ -1438,9 +1279,6 @@ Deno.test("BSON", async ({ step }) => {
     );
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly throw error on bsonparser errors",
     () => {
@@ -1682,9 +1520,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "ObjectId should have a correct cached representation of the hexString",
     () => {
@@ -1716,9 +1551,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should fail to create ObjectId due to illegal hex code",
     () => {
@@ -1743,9 +1575,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should correctly serialize the BSONRegExp type", () => {
     const doc: Document = { regexp: new BSONRegExp("test", "i") };
     let doc1: Document = { regexp: /test/i };
@@ -1759,9 +1588,6 @@ Deno.test("BSON", async ({ step }) => {
     equal(regexp, doc1.regexp);
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should correctly deserialize the BSONRegExp type",
     () => {
@@ -1797,9 +1623,6 @@ Deno.test("BSON", async ({ step }) => {
     );
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should correctly deserialize objects containing __proto__ keys",
     () => {
@@ -1819,9 +1642,6 @@ Deno.test("BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should return boolean for ObjectId equality check",
     () => {
@@ -1855,9 +1675,6 @@ Deno.test("BSON", async ({ step }) => {
   );
 
   await step("Should support util.inspect for", async ({ step }) => {
-    /**
-     * @ignore
-     */
     await step("Binary", () => {
       const binary = new Binary(
         Buffer.from("0123456789abcdef0123456789abcdef", "hex"),
@@ -1869,25 +1686,16 @@ Deno.test("BSON", async ({ step }) => {
       );
     });
 
-    /**
-     * @ignore
-     */
     await step("BSONSymbol", () => {
       const symbol = new BSONSymbol("sym");
       assertEquals(Deno.inspect(symbol), 'new BSONSymbol("sym")');
     });
 
-    /**
-     * @ignore
-     */
     await step("Code", () => {
       const code = new Code("this.a > i", { i: 1 });
       assertEquals(Deno.inspect(code), 'new Code("this.a > i", {"i":1})');
     });
 
-    /**
-     * @ignore
-     */
     await step("DBRef", () => {
       const oid = new ObjectId("deadbeefdeadbeefdeadbeef");
       const dbref = new DBRef("namespace", oid, "integration_tests_");
@@ -1897,33 +1705,21 @@ Deno.test("BSON", async ({ step }) => {
       );
     });
 
-    /**
-     * @ignore
-     */
     await step("Decimal128", () => {
       const dec = Decimal128.fromString("1.42");
       assertEquals(Deno.inspect(dec), 'new Decimal128("1.42")');
     });
 
-    /**
-     * @ignore
-     */
     await step("Double", () => {
       const double = new Double(-42.42);
       assertEquals(Deno.inspect(double), "new Double(-42.42)");
     });
 
-    /**
-     * @ignore
-     */
     await step("Int32", () => {
       const int = new Int32(42);
       assertEquals(Deno.inspect(int), "new Int32(42)");
     });
 
-    /**
-     * @ignore
-     */
     await step("Long", () => {
       const long = Long.fromString("42");
       assertEquals(Deno.inspect(long), 'new Long("42")');
@@ -1932,25 +1728,16 @@ Deno.test("BSON", async ({ step }) => {
       assertEquals(Deno.inspect(unsignedLong), 'new Long("42", true)');
     });
 
-    /**
-     * @ignore
-     */
     await step("MaxKey", () => {
       const maxKey = new MaxKey();
       assertEquals(Deno.inspect(maxKey), "new MaxKey()");
     });
 
-    /**
-     * @ignore
-     */
     await step("MinKey", () => {
       const minKey = new MinKey();
       assertEquals(Deno.inspect(minKey), "new MinKey()");
     });
 
-    /**
-     * @ignore
-     */
     await step("Timestamp", () => {
       const timestamp = new Timestamp({ t: 100, i: 1 });
       assertEquals(Deno.inspect(timestamp), "new Timestamp({ t: 100, i: 1 })");

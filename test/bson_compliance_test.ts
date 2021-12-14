@@ -20,9 +20,6 @@ import { corruptScenarios } from "./compliance/corrupt.ts";
 import { validScenarios } from "./compliance/valid.ts";
 
 Deno.test("BSON Compliance", async ({ step }) => {
-  /**
-   * @ignore
-   */
   await step(
     "Pass all corrupt BSON scenarios ./compliance/corrupt.json",
     () => {
@@ -39,9 +36,6 @@ Deno.test("BSON Compliance", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Pass all valid BSON serialization scenarios ./compliance/valid.json",
     () => {

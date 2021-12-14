@@ -20,9 +20,6 @@ const LOWERCASE_DASH_SEPARATED_UUID_STRING =
 const LOWERCASE_VALUES_ONLY_UUID_STRING = "aaaaaaaaaaaa4aaaaaaaaaaaaaaaaaaa";
 
 Deno.test("UUID", async ({ step }) => {
-  /**
-   * @ignore
-   */
   await step(
     "should correctly generate a valid UUID v4 from empty constructor",
     () => {
@@ -33,9 +30,6 @@ Deno.test("UUID", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "should correctly create UUIDs from UPPERCASE & lowercase 36 char dash-separated hex string",
     () => {
@@ -49,9 +43,6 @@ Deno.test("UUID", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "should correctly create UUIDs from UPPERCASE & lowercase 32 char hex string (no dash separators)",
     () => {
@@ -65,9 +56,6 @@ Deno.test("UUID", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("should correctly create UUID from Buffer", () => {
     const uuid1 = new UUID(
       Buffer.from(UPPERCASE_VALUES_ONLY_UUID_STRING, "hex"),
@@ -82,9 +70,6 @@ Deno.test("UUID", async ({ step }) => {
     assertEquals(uuid2.toString(), LOWERCASE_DASH_SEPARATED_UUID_STRING);
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "should correctly create UUID from UUID (copying existing buffer)",
     () => {
@@ -95,9 +80,6 @@ Deno.test("UUID", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("should throw if passed invalid 36-char uuid hex string", () => {
     new UUID(LOWERCASE_DASH_SEPARATED_UUID_STRING);
     assertThrows(
@@ -107,17 +89,11 @@ Deno.test("UUID", async ({ step }) => {
     // Note: The version is missing here ^
   });
 
-  /**
-   * @ignore
-   */
   await step("should throw if passed unsupported argument", () => {
     new UUID(LOWERCASE_DASH_SEPARATED_UUID_STRING);
     assertThrows(() => new UUID({} as UUID), BSONTypeError);
   });
 
-  /**
-   * @ignore
-   */
   await step("should correctly check if a buffer isValid", () => {
     const validBuffer = Buffer.from(UPPERCASE_VALUES_ONLY_UUID_STRING, "hex");
     const invalidBuffer1 = Buffer.from(
@@ -133,9 +109,6 @@ Deno.test("UUID", async ({ step }) => {
     assert(UUID.isValid(validBuffer));
   });
 
-  /**
-   * @ignore
-   */
   await step("should correctly convert to and from a Binary instance", () => {
     const uuid = new UUID(LOWERCASE_DASH_SEPARATED_UUID_STRING);
     assert(UUID.isValid(uuid));
@@ -147,9 +120,6 @@ Deno.test("UUID", async ({ step }) => {
     assertEquals(uuid2.toHexString(), LOWERCASE_DASH_SEPARATED_UUID_STRING);
   });
 
-  /**
-   * @ignore
-   */
   await step("should correctly convert to and from a Binary instance", () => {
     const uuid = new UUID(LOWERCASE_DASH_SEPARATED_UUID_STRING);
     assert(UUID.isValid(uuid));
@@ -161,9 +131,6 @@ Deno.test("UUID", async ({ step }) => {
     assert(uuid.equals(uuid2));
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "should throw when converted from an incompatible Binary instance",
     () => {
@@ -182,9 +149,6 @@ Deno.test("UUID", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "should correctly allow for node.js inspect to work with UUID",
     () => {

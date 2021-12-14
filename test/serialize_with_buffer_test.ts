@@ -6,9 +6,6 @@ import { serializeWithBufferAndIndex } from "../src/bson.ts";
 import {} from "../src/bson.ts";
 
 Deno.test("serializeWithBuffer", async ({ step }) => {
-  /**
-   * @ignore
-   */
   await step(
     "correctly serialize into buffer using serializeWithBufferAndIndex",
     () => {

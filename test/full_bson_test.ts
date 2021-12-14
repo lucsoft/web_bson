@@ -12,9 +12,6 @@ import { equal } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Document } from "../src/bson.ts";
 
 Deno.test("Full BSON", async ({ step }) => {
-  /**
-   * @ignore
-   */
   await step("Should Correctly Deserialize object", () => {
     // deno-fmt-ignore
     var bytes = [ 95, 0, 0, 0, 2, 110, 115, 0, 42, 0, 0, 0, 105, 110, 116, 101, 103, 114, 97, 116, 105, 111, 110, 95, 116, 101, 115, 116, 115, 95, 46, 116, 101, 115, 116, 95, 105, 110, 100, 101, 120, 95, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 8, 117, 110, 105, 113, 117, 101, 0, 0, 3, 107, 101, 121, 0, 12, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0, 2, 110, 97, 109, 101, 0, 4, 0, 0, 0, 97, 95, 49, 0, 0,
@@ -31,9 +28,6 @@ Deno.test("Full BSON", async ({ step }) => {
     assertEquals(1, object.key.a);
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Deserialize object with all types",
     () => {
@@ -63,18 +57,12 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should Serialize and Deserialize String", () => {
     var test_string = { hello: "world" };
     var serialized_data = serialize(test_string);
     equal(test_string, deserialize(serialized_data));
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Integer 5",
     () => {
@@ -84,9 +72,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize null value",
     () => {
@@ -97,9 +82,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize undefined value",
     () => {
@@ -110,9 +92,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Number 3",
     () => {
@@ -122,9 +101,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Integers",
     () => {
@@ -146,9 +122,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Object",
     () => {
@@ -158,9 +131,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Array",
     () => {
@@ -170,9 +140,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Array with added on functions",
     () => {
@@ -182,9 +149,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize A Boolean",
     () => {
@@ -194,9 +158,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize a Date",
     () => {
@@ -214,9 +175,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly Serialize and Deserialize Oid", () => {
     var doc: Document = { doc: new ObjectId() };
     var serialized_data = serialize(doc);
@@ -227,9 +185,6 @@ Deno.test("Full BSON", async ({ step }) => {
     );
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Buffer",
     () => {
@@ -243,9 +198,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Buffer with promoteBuffers option",
     () => {
@@ -260,18 +212,12 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step("Should Correctly encode Empty Hash", () => {
     var test_code = {};
     var serialized_data = serialize(test_code);
     equal(test_code, deserialize(serialized_data));
   });
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Ordered Hash",
     () => {
@@ -284,9 +230,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize Regular Expression",
     () => {
@@ -297,9 +240,6 @@ Deno.test("Full BSON", async ({ step }) => {
     },
   );
 
-  /**
-   * @ignore
-   */
   await step(
     "Should Correctly Serialize and Deserialize a Binary object",
     () => {

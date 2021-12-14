@@ -68,9 +68,6 @@ const INF_POSITIVE_BUFFER = Buffer.from(
 );
 
 Deno.test("Decimal128", async ({ step }) => {
-  /**
-   * @ignore
-   */
   await step("fromString invalid input", () => {
     assertThrows(() => Decimal128.fromString("E02"));
     assertThrows(() => Decimal128.fromString("E+02"));
