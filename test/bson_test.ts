@@ -1190,7 +1190,6 @@ Deno.test(
     // Peform equality checks
     assertEquals(JSON.stringify(doc), JSON.stringify(doc2));
     assert(doc._id.equals(doc2._id));
-    // process.ex step(0)
     assert(doc2.minKey instanceof MinKey);
     assert(doc2.maxKey instanceof MaxKey);
   },

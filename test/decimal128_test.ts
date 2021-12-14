@@ -1419,7 +1419,7 @@ Deno.test("[Decimal128] toString NaN", () => {
   assertEquals("NaN", decimal.toString());
 });
 
-Deno.test("toString regular", () => {
+Deno.test("[Decimal128] toString regular", () => {
   let decimal = new Decimal128(
     Buffer.from(
       [
@@ -1661,7 +1661,7 @@ Deno.test("toString regular", () => {
   assertEquals("0.1234567890123456789012345678901234", decimal.toString());
 });
 
-Deno.test("toString scientific", () => {
+Deno.test("[Decimal128] toString scientific", () => {
   let decimal = new Decimal128(
     Buffer.from(
       [
@@ -1960,7 +1960,7 @@ Deno.test("toString scientific", () => {
   assertEquals("1E+3", decimal.toString());
 });
 
-Deno.test("toString zeros", () => {
+Deno.test("[Decimal128] toString zeros", () => {
   let decimal = new Decimal128(
     Buffer.from(
       [
@@ -2034,7 +2034,7 @@ Deno.test("toString zeros", () => {
   assertEquals("0E-600", decimal.toString());
 });
 
-Deno.test("Serialize and Deserialize tests", () => {
+Deno.test("[Decimal128] Serialize and Deserialize tests", () => {
   // Test all methods around a simple serialization at object top level
   let doc: Document = { value: Decimal128.fromString("1") };
   let buffer = serialize(doc);
@@ -2067,7 +2067,7 @@ Deno.test("Serialize and Deserialize tests", () => {
   assertEquals("1", doc.value.a.toString());
 });
 
-Deno.test("accepts strings in the constructor", () => {
+Deno.test("[Decimal128] accepts strings in the constructor", () => {
   assertEquals(new Decimal128("0").toString(), "0");
   assertEquals(new Decimal128("00").toString(), "0");
   assertEquals(new Decimal128("0.5").toString(), "0.5");
