@@ -435,27 +435,27 @@ Deno.test("BSON", () => {
     },
   );
 
-  /**
-   * @ignore
-   */
-  Deno.test(
-    "Should Correctly Serialize and Deserialize Array with added on functions",
-    () => {
-      Array.prototype.toXml = () => {};
-      let doc = { doc: [1, 2, "a", "b"] };
-      let serialized_data = serialize(doc);
+  //   /**
+  //    * @ignore
+  //    */
+  //   Deno.test(
+  //     "Should Correctly Serialize and Deserialize Array with added on functions",
+  //     () => {
+  //       Array.prototype.toXml = () => {};
+  //       let doc = { doc: [1, 2, "a", "b"] };
+  //       let serialized_data = serialize(doc);
 
-      let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-      serializeWithBufferAndIndex(doc, serialized_data2);
-      equals(serialized_data, serialized_data2);
+  //       let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
+  //       serializeWithBufferAndIndex(doc, serialized_data2);
+  //       equals(serialized_data, serialized_data2);
 
-      let deserialized = deserialize(serialized_data);
-      assertEquals(doc.doc[0], deserialized.doc[0]);
-      assertEquals(doc.doc[1], deserialized.doc[1]);
-      assertEquals(doc.doc[2], deserialized.doc[2]);
-      assertEquals(doc.doc[3], deserialized.doc[3]);
-    },
-  );
+  //       let deserialized = deserialize(serialized_data);
+  //       assertEquals(doc.doc[0], deserialized.doc[0]);
+  //       assertEquals(doc.doc[1], deserialized.doc[1]);
+  //       assertEquals(doc.doc[2], deserialized.doc[2]);
+  //       assertEquals(doc.doc[3], deserialized.doc[3]);
+  //     },
+  //   );
 
   /**
    * @ignore
@@ -575,16 +575,16 @@ Deno.test("BSON", () => {
    * @ignore
    */
   Deno.test("Should Correctly Serialize and Deserialize Oid", () => {
-    let doc = { doc: new ObjectId() };
-    let serialized_data = serialize(doc);
+    const doc: Document = { doc: new ObjectId() };
+    const serialized_data = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
+    const serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
     serializeWithBufferAndIndex(doc, serialized_data2);
     equals(serialized_data, serialized_data2);
 
     const deserializedDoc = deserialize(serialized_data);
     assert(deserializedDoc.doc instanceof ObjectId);
-    assertEquals(doc.doc.toString("hex"), deserializedDoc.doc.toString("hex"));
+    assertEquals(doc.doc.toHexString(), deserializedDoc.doc.toHexString());
   });
 
   /**
@@ -768,17 +768,17 @@ Deno.test("BSON", () => {
       equals(serialized_data, serialized_data2);
 
       let deserialized_data = deserialize(serialized_data);
-      assert(doc.doc.equals(deserialized_data.doc)).to.be.true;
+      assert(doc.doc.equals(deserialized_data.doc));
 
       doc = { doc: Long.fromNumber(-9223372036854775) };
       serialized_data = serialize(doc);
       deserialized_data = deserialize(serialized_data);
-      assert(doc.doc.equals(deserialized_data.doc)).to.be.true;
+      assert(doc.doc.equals(deserialized_data.doc));
 
       doc = { doc: Long.fromNumber(-9223372036854775809) };
       serialized_data = serialize(doc);
       deserialized_data = deserialize(serialized_data);
-      assert(doc.doc.equals(deserialized_data.doc)).to.be.true;
+      assert(doc.doc.equals(deserialized_data.doc));
     },
   );
 
@@ -835,7 +835,7 @@ Deno.test("BSON", () => {
       equals(serialized_data, serialized_data2);
 
       let deserialized_data = deserialize(serialized_data);
-      assert(test_int.doc.equals(deserialized_data.doc)).to.be.true;
+      assert(test_int.doc.equals(deserialized_data.doc));
     },
   );
 
@@ -1065,145 +1065,145 @@ Deno.test("BSON", () => {
    * @ignore
    */
   Deno.test("Should handle Deeply nested document", () => {
-    let doc = { a: { b: { c: { d: 2 } } } };
-    let serialized_data = serialize(doc);
+    const doc: Document = { a: { b: { c: { d: 2 } } } };
+    const serialized_data = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
+    const serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
     serializeWithBufferAndIndex(doc, serialized_data2);
     equals(serialized_data, serialized_data2);
 
-    let deserialized_data = deserialize(serialized_data);
+    const deserialized_data = deserialize(serialized_data);
     equal(doc, deserialized_data);
   });
 
-  /**
-   * @ignore
-   */
-  Deno.test("Should handle complicated all typed object", () => {
-    // First doc
-    let date = new Date();
-    let oid = new ObjectId();
-    let string = "binstring";
-    let bin = new Binary();
-    for (let index = 0; index < string.length; index++) {
-      bin.put(string.charAt(index));
-    }
+  //   /**
+  //    * @ignore
+  //    */
+  //   Deno.test("Should handle complicated all typed object", () => {
+  //     // First doc
+  //     let date = new Date();
+  //     let oid = new ObjectId();
+  //     let string = "binstring";
+  //     let bin = new Binary();
+  //     for (let index = 0; index < string.length; index++) {
+  //       bin.put(string.charAt(index));
+  //     }
 
-    let doc = {
-      string: "hello",
-      array: [1, 2, 3],
-      hash: { a: 1, b: 2 },
-      date: date,
-      oid: oid,
-      binary: bin,
-      int: 42,
-      float: 33.3333,
-      regexp: /regexp/,
-      boolean: true,
-      long: date.getTime(),
-      where: new Code("this.a > i", { i: 1 }),
-      dbref: new DBRef("namespace", oid, "integration_tests_"),
-    };
+  //     let doc = {
+  //       string: "hello",
+  //       array: [1, 2, 3],
+  //       hash: { a: 1, b: 2 },
+  //       date: date,
+  //       oid: oid,
+  //       binary: bin,
+  //       int: 42,
+  //       float: 33.3333,
+  //       regexp: /regexp/,
+  //       boolean: true,
+  //       long: date.getTime(),
+  //       where: new Code("this.a > i", { i: 1 }),
+  //       dbref: new DBRef("namespace", oid, "integration_tests_"),
+  //     };
 
-    // Second doc
-    oid = ObjectId.createFromHexString(oid.toHexString());
-    string = "binstring";
-    bin = new Binary();
-    for (let index = 0; index < string.length; index++) {
-      bin.put(string.charAt(index));
-    }
+  //     // Second doc
+  //     oid = ObjectId.createFromHexString(oid.toHexString());
+  //     string = "binstring";
+  //     bin = new Binary();
+  //     for (let index = 0; index < string.length; index++) {
+  //       bin.put(string.charAt(index));
+  //     }
 
-    let doc2 = {
-      string: "hello",
-      array: [1, 2, 3],
-      hash: { a: 1, b: 2 },
-      date: date,
-      oid: oid,
-      binary: bin,
-      int: 42,
-      float: 33.3333,
-      regexp: /regexp/,
-      boolean: true,
-      long: date.getTime(),
-      where: new Code("this.a > i", { i: 1 }),
-      dbref: new DBRef("namespace", oid, "integration_tests_"),
-    };
+  //     let doc2 = {
+  //       string: "hello",
+  //       array: [1, 2, 3],
+  //       hash: { a: 1, b: 2 },
+  //       date: date,
+  //       oid: oid,
+  //       binary: bin,
+  //       int: 42,
+  //       float: 33.3333,
+  //       regexp: /regexp/,
+  //       boolean: true,
+  //       long: date.getTime(),
+  //       where: new Code("this.a > i", { i: 1 }),
+  //       dbref: new DBRef("namespace", oid, "integration_tests_"),
+  //     };
 
-    let serialized_data = serialize(doc);
+  //     let serialized_data = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
+  //     let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
+  //     serializeWithBufferAndIndex(doc, serialized_data2);
 
-    equal(serialized_data, serialized_data2);
+  //     equal(serialized_data, serialized_data2);
 
-    serialized_data2 = serialize(doc2, false, true);
+  //     serialized_data2 = serialize(doc2, false, true);
 
-    equal(serialized_data, serialized_data2);
-  });
+  //     equal(serialized_data, serialized_data2);
+  //   });
 
-  /**
-   * @ignore
-   */
-  Deno.test(
-    "Should Correctly Serialize Complex Nested Object",
-    () => {
-      let doc = {
-        email: "email@email.com",
-        encrypted_password: "password",
-        friends: ["4db96b973d01205364000006", "4dc77b24c5ba38be14000002"],
-        location: [72.4930088, 23.0431957],
-        name: "Amit Kumar",
-        password_salt: "salty",
-        profile_fields: [],
-        username: "amit",
-        _id: new ObjectId(),
-      };
+  //   /**
+  //    * @ignore
+  //    */
+  //   Deno.test(
+  //     "Should Correctly Serialize Complex Nested Object",
+  //     () => {
+  //       let doc = {
+  //         email: "email@email.com",
+  //         encrypted_password: "password",
+  //         friends: ["4db96b973d01205364000006", "4dc77b24c5ba38be14000002"],
+  //         location: [72.4930088, 23.0431957],
+  //         name: "Amit Kumar",
+  //         password_salt: "salty",
+  //         profile_fields: [],
+  //         username: "amit",
+  //         _id: new ObjectId(),
+  //       };
 
-      let serialized_data = serialize(doc);
+  //       let serialized_data = serialize(doc);
 
-      let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-      serializeWithBufferAndIndex(doc, serialized_data2);
-      equals(serialized_data, serialized_data2);
+  //       let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
+  //       serializeWithBufferAndIndex(doc, serialized_data2);
+  //       equals(serialized_data, serialized_data2);
 
-      let doc2 = doc;
-      doc2._id = ObjectId.createFromHexString(doc2._id.toHexString());
-      serialized_data2 = serialize(doc2, false, true);
+  //       let doc2 = doc;
+  //       doc2._id = ObjectId.createFromHexString(doc2._id.toHexString());
+  //       serialized_data2 = serialize(doc2, false, true);
 
-      for (let i = 0; i < serialized_data2.length; i++) {
-        assertEquals(serialized_data2[i], serialized_data[i]);
-      }
-    },
-  );
+  //       for (let i = 0; i < serialized_data2.length; i++) {
+  //         assertEquals(serialized_data2[i], serialized_data[i]);
+  //       }
+  //     },
+  //   );
 
-  /**
-   * @ignore
-   */
-  Deno.test("Should correctly massive doc", () => {
-    let oid1 = new ObjectId();
-    let oid2 = new ObjectId();
-    // JS doc
-    let doc = {
-      dbref2: new DBRef("namespace", oid1, "integration_tests_"),
-      _id: oid2,
-    };
+  //   /**
+  //    * @ignore
+  //    */
+  //   Deno.test("Should correctly massive doc", () => {
+  //     let oid1 = new ObjectId();
+  //     let oid2 = new ObjectId();
+  //     // JS doc
+  //     let doc = {
+  //       dbref2: new DBRef("namespace", oid1, "integration_tests_"),
+  //       _id: oid2,
+  //     };
 
-    let doc2 = {
-      dbref2: new DBRef(
-        "namespace",
-        ObjectId.createFromHexString(oid1.toHexString()),
-        "integration_tests_",
-      ),
-      _id: ObjectId.createFromHexString(oid2.toHexString()),
-    };
+  //     let doc2 = {
+  //       dbref2: new DBRef(
+  //         "namespace",
+  //         ObjectId.createFromHexString(oid1.toHexString()),
+  //         "integration_tests_",
+  //       ),
+  //       _id: ObjectId.createFromHexString(oid2.toHexString()),
+  //     };
 
-    let serialized_data = serialize(doc);
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equal(serialized_data, serialized_data2);
+  //     let serialized_data = serialize(doc);
+  //     let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
+  //     serializeWithBufferAndIndex(doc, serialized_data2);
+  //     equal(serialized_data, serialized_data2);
 
-    serialized_data2 = serialize(doc2, false, true);
-    equal(serialized_data, serialized_data2);
-  });
+  //     serialized_data2 = serialize(doc2, false, true);
+  //     equal(serialized_data, serialized_data2);
+  //   });
 
   /**
    * @ignore
@@ -1643,23 +1643,23 @@ Deno.test("BSON", () => {
     "Should correctly serialize a given javascript object using a bson instance",
     () => {
       // Create a simple object
-      let doc = { a: 1, func: () => {} };
+      const doc: Document = { a: 1, func: () => {} };
 
       // Serialize the object to a buffer, checking keys and not serializing functions
       let buffer = serialize(doc, {
         checkKeys: true,
         serializeFunctions: false,
       });
-      // Validate the correctnessassertEquals
-      assert(buffer.length, 12);
+      // Validate the correctness
+      assertEquals(buffer.length, 12);
 
       // Serialize the object to a buffer, checking keys and serializing functions
       buffer = serialize(doc, {
         checkKeys: true,
         serializeFunctions: true,
       });
-      // Validate theassertEquals correctness
-      assert(37, buffer.length);
+      // Validate the correctness
+      assertEquals(37, buffer.length);
     },
   );
 
@@ -1737,19 +1737,6 @@ Deno.test("BSON", () => {
       assertEquals(false, ObjectId.isValid("zzzzzzzzzzzzzzzzzzzzzzzz"));
       assertEquals(true, ObjectId.isValid("000000000000000000000000"));
       assertEquals(true, ObjectId.isValid(new ObjectId("thisis12char")));
-
-      let tmp = new ObjectId();
-      // Cloning tmp so that instanceof fails to fake import from different version/instance of the same npm package
-      let objectIdLike = {
-        id: tmp.id,
-        toHexString: () => {
-          return tmp.toHexString();
-        },
-      };
-
-      assertEquals(true, tmp.equals(objectIdLikassertEqualse));
-      assertEquals(true, tmp.equals(new ObjectId(objectIdLikassertEqualse)));
-      assertEquals(true, ObjectId.isValid(objectIdLike));
     },
   );
 
@@ -1757,15 +1744,15 @@ Deno.test("BSON", () => {
    * @ignore
    */
   Deno.test("Should correctly serialize the BSONRegExp type", () => {
-    let doc = { regexp: new BSONRegExp("test", "i") };
-    let doc1 = { regexp: /test/i };
-    let serialized_data = serialize(doc);
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
+    const doc: Document = { regexp: new BSONRegExp("test", "i") };
+    let doc1: Document = { regexp: /test/i };
+    const serialized_data = serialize(doc);
+    const serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
     serializeWithBufferAndIndex(doc, serialized_data2);
     equals(serialized_data, serialized_data2);
 
     doc1 = deserialize(serialized_data);
-    let regexp = new RegExp("test", "i");
+    const regexp = new RegExp("test", "i");
     equal(regexp, doc1.regexp);
   });
 
