@@ -1,6 +1,17 @@
-import { Buffer } from "buffer";
+import { hex } from "../deps.ts";
 import { BSONTypeError } from "./error.ts";
 import { randomBytes } from "./parser/utils.ts";
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+function uint8arrayFromHexString(hexString: string): Uint8Array {
+  return hex.decode(textEncoder.encode(hexString));
+}
+
+function uint8arrayToHexString(uint8Array: Uint8Array): string {
+  return textDecoder.decode(hex.encode(uint8Array));
+}
 
 // Regular expression that checks for hex value
 const checkForHexRegExp = new RegExp("^[0-9a-fA-F]{24}$");
@@ -37,7 +48,7 @@ export class ObjectId {
       }
       workingId =
         "toHexString" in inputId && typeof inputId.toHexString === "function"
-          ? new Uint8Array(Buffer.from(inputId.toHexString(), "hex"))
+          ? uint8arrayFromHexString(inputId.toHexString())
           : inputId.id;
     } else {
       workingId = inputId;
@@ -47,14 +58,14 @@ export class ObjectId {
     if (workingId == null || typeof workingId === "number") {
       // The most common use case (blank id, new objectId instance)
       // Generate a new id
-      this.#bytesBuffer = Buffer.from(ObjectId.generate(
+      this.#bytesBuffer = new Uint8Array(ObjectId.generate(
         typeof workingId === "number" ? workingId : undefined,
       ));
-    } else if (workingId instanceof Uint8Array) {
+    } else if (ArrayBuffer.isView(workingId) && workingId.byteLength === 12) {
       this.#bytesBuffer = workingId;
     } else if (typeof workingId === "string") {
       if (workingId.length === 12) {
-        const bytes = Buffer.from(workingId);
+        const bytes = textEncoder.encode(workingId);
         if (bytes.byteLength === 12) {
           this.#bytesBuffer = bytes;
         } else {
@@ -63,9 +74,7 @@ export class ObjectId {
           );
         }
       } else if (workingId.length === 24 && checkForHexRegExp.test(workingId)) {
-        this.#bytesBuffer = new Uint8Array(
-          Buffer.from(workingId, "hex").buffer,
-        );
+        this.#bytesBuffer = uint8arrayFromHexString(workingId);
       } else {
         throw new BSONTypeError(
           "Argument passed in must be a string of 12 bytes or a string of 24 hex characters",
@@ -78,7 +87,7 @@ export class ObjectId {
     }
     // If we are caching the hex string
     if (ObjectId.cacheHexString) {
-      this.#id = Buffer.from(this.id).toString("hex");
+      this.#id = uint8arrayToHexString(this.id);
     }
   }
 
@@ -93,7 +102,7 @@ export class ObjectId {
   set id(value: Uint8Array) {
     this.#bytesBuffer = value;
     if (ObjectId.cacheHexString) {
-      this.#id = Buffer.from(value).toString("hex");
+      this.#id = uint8arrayToHexString(value);
     }
   }
 
@@ -103,7 +112,7 @@ export class ObjectId {
       return this.#id;
     }
 
-    const hexString = Buffer.from(this.id).toString("hex");
+    const hexString = uint8arrayToHexString(this.id);
 
     if (ObjectId.cacheHexString && !this.#id) {
       this.#id = hexString;
@@ -123,10 +132,10 @@ export class ObjectId {
     }
 
     const inc = (this.#index = (this.#index + 1) % 0xff_ff_ff);
-    const buffer = Buffer.alloc(12);
+    const objectId = new Uint8Array(12);
 
     // 4-byte timestamp
-    buffer.writeUInt32BE(time, 0);
+    new DataView(objectId.buffer, 0, 4).setUint32(0, time);
 
     // set PROCESS_UNIQUE if yet not initialized
     if (PROCESS_UNIQUE === null) {
@@ -134,28 +143,24 @@ export class ObjectId {
     }
 
     // 5-byte process unique
-    buffer[4] = PROCESS_UNIQUE[0];
-    buffer[5] = PROCESS_UNIQUE[1];
-    buffer[6] = PROCESS_UNIQUE[2];
-    buffer[7] = PROCESS_UNIQUE[3];
-    buffer[8] = PROCESS_UNIQUE[4];
+    objectId[4] = PROCESS_UNIQUE[0];
+    objectId[5] = PROCESS_UNIQUE[1];
+    objectId[6] = PROCESS_UNIQUE[2];
+    objectId[7] = PROCESS_UNIQUE[3];
+    objectId[8] = PROCESS_UNIQUE[4];
 
     // 3-byte counter
-    buffer[11] = inc & 0xff;
-    buffer[10] = (inc >> 8) & 0xff;
-    buffer[9] = (inc >> 16) & 0xff;
+    objectId[11] = inc & 0xff;
+    objectId[10] = (inc >> 8) & 0xff;
+    objectId[9] = (inc >> 16) & 0xff;
 
-    return new Uint8Array(buffer.buffer);
+    return objectId;
   }
 
   /**
    * Converts the id into a 24 character hex string for printing
-   *
-   * @param format - The Buffer toString format parameter.
    */
-  toString(format?: string): string {
-    // Is the id a buffer then use the buffer toString method to return the format
-    if (format) return Buffer.from(this.id).toString(format);
+  toString(): string {
     return this.toHexString();
   }
 
@@ -184,7 +189,8 @@ export class ObjectId {
       otherId.length === 12 &&
       this.id instanceof Uint8Array
     ) {
-      return otherId === Buffer.prototype.toString.call(this.id, "latin1");
+      // return otherId === Buffer.prototype.toString.call(this.id, "latin1");
+      return otherId === textDecoder.decode(this.id);
     }
 
     if (
@@ -198,7 +204,15 @@ export class ObjectId {
       typeof otherId === "string" && ObjectId.isValid(otherId) &&
       otherId.length === 12
     ) {
-      return Buffer.from(otherId).equals(this.id);
+      const otherIdUint8Array = textEncoder.encode(otherId);
+      // compare two Uint8arrays
+      for (let i = 0; i < 12; i++) {
+        if (otherIdUint8Array[i] !== this.id[i]) {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     return false;
@@ -207,7 +221,7 @@ export class ObjectId {
   /** Returns the generation date (accurate up to the second) that this ID was generated. */
   getTimestamp(): Date {
     const timestamp = new Date();
-    const time = Buffer.from(this.id).readUInt32BE(0);
+    const time = new DataView(this.id.buffer, 0, 4).getUint32(0);
     timestamp.setTime(Math.floor(time) * 1000);
     return timestamp;
   }
@@ -218,9 +232,9 @@ export class ObjectId {
    * @param time - an integer number representing a number of seconds.
    */
   static createFromTime(time: number): ObjectId {
-    const buffer = Buffer.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const buffer = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     // Encode time into first 4 bytes
-    buffer.writeUInt32BE(time, 0);
+    new DataView(buffer.buffer, 0, 4).setUint32(0, time);
     // Return the new objectId
     return new ObjectId(buffer);
   }
@@ -241,7 +255,7 @@ export class ObjectId {
       );
     }
 
-    return new ObjectId(Buffer.from(hexString, "hex"));
+    return new ObjectId(uint8arrayFromHexString(hexString));
   }
 
   /**
@@ -263,6 +277,6 @@ export class ObjectId {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `ObjectId("${this.toHexString()}")`;
+    return `new ObjectId("${this.toHexString()}")`;
   }
 }
