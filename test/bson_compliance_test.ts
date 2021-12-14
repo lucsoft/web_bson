@@ -19,11 +19,11 @@ import {
 import { corruptScenarios } from "./compliance/corrupt.ts";
 import { validScenarios } from "./compliance/valid.ts";
 
-Deno.test("BSON Compliance", () => {
+Deno.test("BSON Compliance", ({ step }) => {
   /**
    * @ignore
    */
-  Deno.test(
+  step(
     "Pass all corrupt BSON scenarios ./compliance/corrupt.json",
     () => {
       // Read and parse the json file
@@ -42,7 +42,7 @@ Deno.test("BSON Compliance", () => {
   /**
    * @ignore
    */
-  Deno.test(
+  step(
     "Pass all valid BSON serialization scenarios ./compliance/valid.json",
     () => {
       // Translate extended json to correctly typed doc
