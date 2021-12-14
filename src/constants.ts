@@ -2,22 +2,18 @@
 export const BSON_INT32_MAX = 0x7fffffff;
 /** @internal */
 export const BSON_INT32_MIN = -0x80000000;
-/** @internal */
-export const BSON_INT64_MAX = Math.pow(2, 63) - 1;
-/** @internal */
-export const BSON_INT64_MIN = -Math.pow(2, 63);
 
 /**
  * Any integer up to 2^53 can be precisely represented by a double.
  * @internal
  */
-export const JS_INT_MAX = Math.pow(2, 53);
+export const JS_INT_MAX = 2 ** 53;
 
 /**
  * Any integer down to -2^53 can be precisely represented by a double.
  * @internal
  */
-export const JS_INT_MIN = -Math.pow(2, 53);
+export const JS_INT_MIN = -(2 ** 53);
 
 /** Number BSON Type @internal */
 export const BSON_DATA_NUMBER = 1;
@@ -84,27 +80,3 @@ export const BSON_DATA_MAX_KEY = 0x7f;
 
 /** Binary Default Type @internal */
 export const BSON_BINARY_SUBTYPE_DEFAULT = 0;
-
-/** Binary Function Type @internal */
-export const BSON_BINARY_SUBTYPE_FUNCTION = 1;
-
-/** Binary Byte Array Type @internal */
-export const BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
-
-/** Binary Deprecated UUID Type @deprecated Please use BSON_BINARY_SUBTYPE_UUID_NEW @internal */
-export const BSON_BINARY_SUBTYPE_UUID = 3;
-
-/** Binary UUID Type @internal */
-export const BSON_BINARY_SUBTYPE_UUID_NEW = 4;
-
-/** Binary MD5 Type @internal */
-export const BSON_BINARY_SUBTYPE_MD5 = 5;
-
-/** Encrypted BSON type @internal */
-export const BSON_BINARY_SUBTYPE_ENCRYPTED = 6;
-
-/** Column BSON type @internal */
-export const BSON_BINARY_SUBTYPE_COLUMN = 7;
-
-/** Binary User Defined Type @internal */
-export const BSON_BINARY_SUBTYPE_USER_DEFINED = 128;

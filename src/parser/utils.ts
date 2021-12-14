@@ -1,123 +1,144 @@
-import { Buffer } from 'buffer';
-import { getGlobal } from '../utils/global';
-
-type RandomBytesFunction = (size: number) => Uint8Array;
+import { asciiToBytes } from "https://deno.land/std@0.117.0/node/internal_binding/_utils.ts";
 
 /**
  * Normalizes our expected stringified form of a function across versions of node
  * @param fn - The function to stringify
  */
 export function normalizedFunctionString(fn: Function): string {
-  return fn.toString().replace('function(', 'function (');
+  return fn.toString().replace("function(", "function (");
 }
 
-function isReactNative() {
-  const g = getGlobal<{ navigator?: { product?: string } }>();
-  return typeof g.navigator === 'object' && g.navigator.product === 'ReactNative';
-}
-
-const insecureRandomBytes: RandomBytesFunction = function insecureRandomBytes(size: number) {
-  const insecureWarning = isReactNative()
-    ? 'BSON: For React Native please polyfill crypto.getRandomValues, e.g. using: https://www.npmjs.com/package/react-native-get-random-values.'
-    : 'BSON: No cryptographic implementation for random bytes present, falling back to a less secure implementation.';
-  console.warn(insecureWarning);
-
-  const result = Buffer.alloc(size);
-  for (let i = 0; i < size; ++i) result[i] = Math.floor(Math.random() * 256);
-  return result;
-};
-
-/* We do not want to have to include DOM types just for this check */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare let window: any;
-declare let require: Function;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare let global: any;
-declare const self: unknown;
-
-const detectRandomBytes = (): RandomBytesFunction => {
-  if (typeof window !== 'undefined') {
-    // browser crypto implementation(s)
-    const target = window.crypto || window.msCrypto; // allow for IE11
-    if (target && target.getRandomValues) {
-      return size => target.getRandomValues(Buffer.alloc(size));
-    }
-  }
-
-  if (typeof global !== 'undefined' && global.crypto && global.crypto.getRandomValues) {
-    // allow for RN packages such as https://www.npmjs.com/package/react-native-get-random-values to populate global
-    return size => global.crypto.getRandomValues(Buffer.alloc(size));
-  }
-
-  let requiredRandomBytes: RandomBytesFunction | null | undefined;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    requiredRandomBytes = require('crypto').randomBytes;
-  } catch (e) {
-    // keep the fallback
-  }
-
-  // NOTE: in transpiled cases the above require might return null/undefined
-
-  return requiredRandomBytes || insecureRandomBytes;
-};
-
-export const randomBytes = detectRandomBytes();
-
-export function isAnyArrayBuffer(value: unknown): value is ArrayBuffer {
-  return ['[object ArrayBuffer]', '[object SharedArrayBuffer]'].includes(
-    Object.prototype.toString.call(value)
-  );
-}
-
-export function isUint8Array(value: unknown): value is Uint8Array {
-  return Object.prototype.toString.call(value) === '[object Uint8Array]';
-}
-
-export function isBigInt64Array(value: unknown): value is BigInt64Array {
-  return Object.prototype.toString.call(value) === '[object BigInt64Array]';
-}
-
-export function isBigUInt64Array(value: unknown): value is BigUint64Array {
-  return Object.prototype.toString.call(value) === '[object BigUint64Array]';
-}
-
-export function isRegExp(d: unknown): d is RegExp {
-  return Object.prototype.toString.call(d) === '[object RegExp]';
-}
-
-export function isMap(d: unknown): d is Map<unknown, unknown> {
-  return Object.prototype.toString.call(d) === '[object Map]';
-}
-
-/** Call to check if your environment has `Buffer` */
-export function haveBuffer(): boolean {
-  return typeof global !== 'undefined' && typeof global.Buffer !== 'undefined';
-}
-
-// To ensure that 0.4 of node works correctly
-export function isDate(d: unknown): d is Date {
-  return isObjectLike(d) && Object.prototype.toString.call(d) === '[object Date]';
-}
+export const randomBytes = (size: number) =>
+  crypto.getRandomValues(new Uint8Array(size));
 
 /**
  * @internal
  * this is to solve the `'someKey' in x` problem where x is unknown.
  * https://github.com/typescript-eslint/typescript-eslint/issues/1071#issuecomment-541955753
  */
-export function isObjectLike(candidate: unknown): candidate is Record<string, unknown> {
-  return typeof candidate === 'object' && candidate !== null;
+export function isObjectLike(
+  candidate: unknown,
+): candidate is Record<string, unknown> {
+  return typeof candidate === "object" && candidate !== null;
 }
 
-declare let console: { warn(...message: unknown[]): void };
-export function deprecate<T extends Function>(fn: T, message: string): T {
-  let warned = false;
-  function deprecated(this: unknown, ...args: unknown[]) {
-    if (!warned) {
-      console.warn(message);
-      warned = true;
+export function bytesCopy(
+  target: Uint8Array,
+  targetStart: number,
+  source: Uint8Array,
+  sourceStart: number,
+  sourceEnd: number,
+) {
+  Uint8Array.prototype.set.call(
+    target,
+    source.subarray(sourceStart, sourceEnd),
+    targetStart,
+  );
+}
+
+function blitBuffer(
+  src: number[] | Uint8Array,
+  dst: Uint8Array,
+  offset: number,
+  length: number,
+) {
+  let i;
+  for (i = 0; i < length; ++i) {
+    if (i + offset >= dst.length || i >= src.length) {
+      break;
     }
-    return fn.apply(this, args);
+    dst[i + offset] = src[i];
   }
-  return deprecated as unknown as T;
+  return i;
+}
+
+function utf8ToBytes(string: string, units: number) {
+  units = units || Infinity;
+  let codePoint;
+  const length = string.length;
+  let leadSurrogate = null;
+  const bytes = [];
+  for (let i = 0; i < length; ++i) {
+    codePoint = string.charCodeAt(i);
+    if (codePoint > 55295 && codePoint < 57344) {
+      if (!leadSurrogate) {
+        if (codePoint > 56319) {
+          if ((units -= 3) > -1) {
+            bytes.push(239, 191, 189);
+          }
+          continue;
+        } else if (i + 1 === length) {
+          if ((units -= 3) > -1) {
+            bytes.push(239, 191, 189);
+          }
+          continue;
+        }
+        leadSurrogate = codePoint;
+        continue;
+      }
+      if (codePoint < 56320) {
+        if ((units -= 3) > -1) {
+          bytes.push(239, 191, 189);
+        }
+        leadSurrogate = codePoint;
+        continue;
+      }
+      codePoint = (leadSurrogate - 55296 << 10 | codePoint - 56320) + 65536;
+    } else if (leadSurrogate) {
+      if ((units -= 3) > -1) {
+        bytes.push(239, 191, 189);
+      }
+    }
+    leadSurrogate = null;
+    if (codePoint < 128) {
+      if ((units -= 1) < 0) {
+        break;
+      }
+      bytes.push(codePoint);
+    } else if (codePoint < 2048) {
+      if ((units -= 2) < 0) {
+        break;
+      }
+      bytes.push(codePoint >> 6 | 192, codePoint & 63 | 128);
+    } else if (codePoint < 65536) {
+      if ((units -= 3) < 0) {
+        break;
+      }
+      bytes.push(
+        codePoint >> 12 | 224,
+        codePoint >> 6 & 63 | 128,
+        codePoint & 63 | 128,
+      );
+    } else if (codePoint < 1114112) {
+      if ((units -= 4) < 0) {
+        break;
+      }
+      bytes.push(
+        codePoint >> 18 | 240,
+        codePoint >> 12 & 63 | 128,
+        codePoint >> 6 & 63 | 128,
+        codePoint & 63 | 128,
+      );
+    } else {
+      throw new Error("Invalid code point");
+    }
+  }
+  return bytes;
+}
+export function writeToBytes(
+  bytes: Uint8Array,
+  data: string,
+  offset: number,
+  encoding: "utf8" | "ascii" | "latin1",
+) {
+  return blitBuffer(
+    {
+      ascii: asciiToBytes(data),
+      utf8: utf8ToBytes(data, bytes.length - offset),
+      latin1: asciiToBytes(data),
+    }[encoding],
+    bytes,
+    offset,
+    bytes.length,
+  );
 }
