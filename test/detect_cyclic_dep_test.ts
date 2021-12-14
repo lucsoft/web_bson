@@ -34,7 +34,7 @@ Deno.test("Cyclic Dependencies", async ({ step }) => {
         // Attempt to serialize cyclic dependency
         serialize(a);
       } catch (err) {
-        assert("cyclic dependency detected").to.equal(err.message);
+        assertEquals("cyclic dependency detected", err.message);
       }
     },
   );
@@ -52,7 +52,7 @@ Deno.test("Cyclic Dependencies", async ({ step }) => {
         // Attempt to serialize cyclic dependency
         serialize(a);
       } catch (err) {
-        assert("cyclic dependency detected").to.equal(err.message);
+        assertEquals("cyclic dependency detected", err.message);
       }
     },
   );
