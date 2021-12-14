@@ -72,20 +72,20 @@ Deno.test("Decimal128", () => {
    * @ignore
    */
   Deno.test("fromString invalid input", () => {
-    assertThrows(() => {Decimal128.fromString("E02"));
-    assertThrows(() => {Decimal128.fromString("E+02"));
-    assertThrows(() => {Decimal128.fromString("e+02"));
-    assertThrows(() => {Decimal128.fromString("."));
-    assertThrows(() => {Decimal128.fromString(".e"));
-    assertThrows(() => {Decimal128.fromString(""));
-    assertThrows(() => {Decimal128.fromString("invalid"));
-    assertThrows(() => {Decimal128.fromString("in"));
-    assertThrows(() => {Decimal128.fromString("i"));
-    assertThrows(() => {Decimal128.fromString("..1"));
-    assertThrows(() => {Decimal128.fromString("1abcede"));
-    assertThrows(() => {Decimal128.fromString("1.24abc"));
-    assertThrows(() => {Decimal128.fromString("1.24abcE+02"));
-    assertThrows(() => {Decimal128.fromString("1.24E+02abc2d"));
+    assertThrows(() => Decimal128.fromString("E02"));
+    assertThrows(() => Decimal128.fromString("E+02"));
+    assertThrows(() => Decimal128.fromString("e+02"));
+    assertThrows(() => Decimal128.fromString("."));
+    assertThrows(() => Decimal128.fromString(".e"));
+    assertThrows(() => Decimal128.fromString(""));
+    assertThrows(() => Decimal128.fromString("invalid"));
+    assertThrows(() => Decimal128.fromString("in"));
+    assertThrows(() => Decimal128.fromString("i"));
+    assertThrows(() => Decimal128.fromString("..1"));
+    assertThrows(() => Decimal128.fromString("1abcede"));
+    assertThrows(() => Decimal128.fromString("1.24abc"));
+    assertThrows(() => Decimal128.fromString("1.24abcE+02"));
+    assertThrows(() => Decimal128.fromString("1.24E+02abc2d"));
   });
 
   Deno.test("fromString NaN input", () => {
