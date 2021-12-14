@@ -24,7 +24,7 @@ Deno.test("Double", async ({ step }) => {
     const testRadices = [2, 8, 10, 16, 22];
 
     for (const radix of testRadices) {
-      step(`should support radix argument: ${radix}`, () => {
+      await step(`should support radix argument: ${radix}`, () => {
         const testNumber = Math.random() * Number.MAX_VALUE;
         const double = new Double(testNumber);
         assertEquals(double.toString(radix), testNumber.toString(radix));
