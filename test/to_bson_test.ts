@@ -1,4 +1,9 @@
-import { ObjectId } from "../src/bson.ts";
+import {
+  assertEquals,
+  equal,
+} from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { Document, ObjectId, serialize } from "../src/bson.ts";
+import { deserialize } from "../src/parser/deserializer.ts";
 
 Deno.test("toBSON", () => {
   /**
@@ -6,9 +11,9 @@ Deno.test("toBSON", () => {
    */
   Deno.test(
     "Should correctly handle toBson function for an object",
-    () =>
+    () => {
       // Test object
-      var doc = {
+      const doc: Document = {
         hello: new ObjectId(),
         a: 1,
       };
@@ -19,14 +24,14 @@ Deno.test("toBSON", () => {
       };
 
       // Serialize the data
-      var serialized_data = serialize(doc, false, true);
-      var deserialized_doc = deserialize(serialized_data);
-      assert({ b: 1 }).to.deep.equal(deserialized_doc);
+      let serialized_data = serialize(doc, false, true);
+      let deserialized_doc = deserialize(serialized_data);
+      equal({ b: 1 }, deserialized_doc);
 
       // Serialize the data
       serialized_data = serialize(doc, false, true);
       deserialized_doc = deserialize(serialized_data);
-      assert({ b: 1 }).to.deep.equal(deserialized_doc);
+      equal({ b: 1 }, deserialized_doc);
     },
   );
 
@@ -35,9 +40,9 @@ Deno.test("toBSON", () => {
    */
   Deno.test(
     "Should correctly handle embedded toBson function for an object",
-    () =>
+    () => {
       // Test object
-      var doc = {
+      const doc: Document = {
         hello: new ObjectId(),
         a: 1,
         b: {
@@ -51,13 +56,13 @@ Deno.test("toBSON", () => {
       };
 
       // Serialize the data
-      var serialized_data = serialize(doc, false, true);
-      var deserialized_doc = deserialize(serialized_data);
-      assert({ e: 1 }).to.deep.equal(deserialized_doc.b);
+      let serialized_data = serialize(doc, false, true);
+      let deserialized_doc = deserialize(serialized_data);
+      equal({ e: 1 }, deserialized_doc.b);
 
       serialized_data = serialize(doc, false, true);
       deserialized_doc = deserialize(serialized_data);
-      assert({ e: 1 }).to.deep.equal(deserialized_doc.b);
+      equal({ e: 1 }, deserialized_doc.b);
     },
   );
 
@@ -66,9 +71,9 @@ Deno.test("toBSON", () => {
    */
   Deno.test(
     "Should correctly serialize when embedded non object returned by toBSON",
-    () =>
+    () => {
       // Test object
-      var doc = {
+      const doc: Document = {
         hello: new ObjectId(),
         a: 1,
         b: {
@@ -82,14 +87,14 @@ Deno.test("toBSON", () => {
       };
 
       // Serialize the data
-      var serialized_data = serialize(doc, false, true);
-      var deserialized_doc = deserialize(serialized_data);
-      assert("hello").to.deep.equal(deserialized_doc.b);
+      let serialized_data = serialize(doc, false, true);
+      let deserialized_doc = deserialize(serialized_data);
+      equal("hello", deserialized_doc.b);
 
       // Serialize the data
       serialized_data = serialize(doc, false, true);
       deserialized_doc = deserialize(serialized_data);
-      assert("hello").to.deep.equal(deserialized_doc.b);
+      equal("hello", deserialized_doc.b);
     },
   );
 
@@ -98,9 +103,9 @@ Deno.test("toBSON", () => {
    */
   Deno.test(
     "Should fail when top level object returns a non object type",
-    () =>
+    () => {
       // Test object
-      var doc = {
+      const doc: Document = {
         hello: new ObjectId(),
         a: 1,
         b: {
@@ -113,25 +118,25 @@ Deno.test("toBSON", () => {
         return "hello";
       };
 
-      var test1 = false;
-      var test2 = false;
+      let test1 = false;
+      let test2 = false;
 
       try {
         var serialized_data = serialize(doc, false, true);
         deserialize(serialized_data);
-      } catch (err) {
+      } catch (_err) {
         test1 = true;
       }
 
       try {
         serialized_data = serialize(doc, false, true);
         deserialize(serialized_data);
-      } catch (err) {
+      } catch (_err) {
         test2 = true;
       }
 
-      assert(true).to.equal(test1);
-      assert(true).to.equal(test2);
+      assertEquals(true, test1);
+      assertEquals(true, test2);
     },
   );
 });

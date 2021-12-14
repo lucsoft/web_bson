@@ -65,11 +65,10 @@ const functionCache: { [hash: string]: Function } = {};
 
 export function deserialize(
   buffer: Uint8Array,
-  options: DeserializeOptions,
+  options: DeserializeOptions = {},
   isArray?: boolean,
 ): Document {
-  options = options == null ? {} : options;
-  const index = options && options.index ? options.index : 0;
+  const index = options?.index ? options.index : 0;
   // Read the document size
   const size = buffer[index] |
     (buffer[index + 1] << 8) |
