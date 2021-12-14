@@ -7,7 +7,7 @@ import { BSONTypeError, Long, serialize } from "../src/bson.ts";
 Deno.test("BSON BigInt Support", () => {
   Deno.test("Should serialize an int that fits in int32", () => {
     const testDoc = { b: BigInt(32) };
-    assertThrows(() => {serialize(testDoc), BSONTypeError);
+    assertThrows(() => serialize(testDoc), BSONTypeError);
 
     // const serializedDoc = serialize(testDoc);
     // // prettier-ignore
@@ -19,7 +19,7 @@ Deno.test("BSON BigInt Support", () => {
 
   Deno.test("Should serialize an int that fits in int64", () => {
     const testDoc = { b: BigInt(0x1_ff_ff_ff_ff) };
-    assertThrows(() => {serialize(testDoc), BSONTypeError);
+    assertThrows(() => serialize(testDoc), BSONTypeError);
 
     // const serializedDoc = serialize(testDoc);
     // // prettier-ignore
@@ -31,7 +31,7 @@ Deno.test("BSON BigInt Support", () => {
 
   Deno.test("Should serialize an int that fits in decimal128", () => {
     const testDoc = { b: BigInt("9223372036854776001") }; // int64 max + 1
-    assertThrows(() => {serialize(testDoc), BSONTypeError);
+    assertThrows(() => serialize(testDoc), BSONTypeError);
 
     // const serializedDoc = serialize(testDoc);
     // // prettier-ignore
@@ -46,7 +46,7 @@ Deno.test("BSON BigInt Support", () => {
     const testDoc = {
       b: BigInt("9".repeat(35)),
     }; // decimal 128 can only encode 34 digits of precision
-    assertThrows(() => {serialize(testDoc), BSONTypeError);
+    assertThrows(() => serialize(testDoc), BSONTypeError);
     // assert(() => {serialize(testDoc)).to.throw();
   });
 

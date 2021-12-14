@@ -229,7 +229,7 @@ export function deserializeStream(
   numberOfDocuments: number,
   documents: Document[],
   docStartIndex: number,
-  options: DeserializeOptions,
+  options?: DeserializeOptions,
 ): number {
   const internalOptions = Object.assign(
     { allowObjectSmallerThanBufferSize: true, index: 0 },

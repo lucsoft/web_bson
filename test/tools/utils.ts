@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 export const assertArrayEqual = (array1: [], array2: []) => {
   if (array1.length !== array2.length) return false;
   for (let i = 0; i < array1.length; i++) {
@@ -81,21 +82,6 @@ export const Utf8 = { // public => method for url encoding
     return string;
   },
 };
-
-export const assertBuffersEqual = (
-  done: string,
-  buffer1: Uint8Array,
-  buffer2: Uint8Array,
-) => {
-  if (buffer1.length !== buffer2.length) {
-    done("Buffers do not have the same length", buffer1, buffer2);
-  }
-
-  for (var i = 0; i < buffer1.length; i++) {
-    assert(buffer1[i]).to.equal(buffer2[i]);
-  }
-};
-
 /**
  * A helper to turn hex string sequences into BSON.
  * Omit the first 8 hex digits for the document it will be calculated
