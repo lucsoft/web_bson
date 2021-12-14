@@ -5,11 +5,11 @@ import {
 import { Document, ObjectId, serialize } from "../src/bson.ts";
 import { deserialize } from "../src/parser/deserializer.ts";
 
-Deno.test("toBSON", ({ step }) => {
+Deno.test("toBSON", async ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should correctly handle toBson function for an object",
     () => {
       // Test object
@@ -40,7 +40,7 @@ Deno.test("toBSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should correctly handle embedded toBson function for an object",
     () => {
       // Test object
@@ -74,7 +74,7 @@ Deno.test("toBSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should correctly serialize when embedded non object returned by toBSON",
     () => {
       // Test object
@@ -108,7 +108,7 @@ Deno.test("toBSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should fail when top level object returns a non object type",
     () => {
       // Test object

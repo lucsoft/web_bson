@@ -1,8 +1,8 @@
 import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Long } from "../src/bson.ts";
 
-Deno.test("Long", () => {
-  Deno.test("accepts strings in the constructor", () => {
+Deno.test("Long", async ({ step }) => {
+  await step("accepts strings in the constructor", () => {
     assertEquals(new Long("0").toString(), "0");
     assertEquals(new Long("00").toString(), "0");
     assertEquals(new Long("-1").toString(), "-1");

@@ -4,8 +4,8 @@ import {
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { BSONTypeError, Long, serialize } from "../src/bson.ts";
 
-Deno.test("BSON BigInt Support", () => {
-  Deno.test("Should serialize an int that fits in int32", () => {
+Deno.test("BSON BigInt Support", async ({ step }) => {
+  await step("Should serialize an int that fits in int32", () => {
     const testDoc = { b: BigInt(32) };
     assertThrows(() => serialize(testDoc), BSONTypeError);
 
@@ -17,7 +17,7 @@ Deno.test("BSON BigInt Support", () => {
     // assert(BigInt(resultDoc.b)).to.equal(testDoc.b);
   });
 
-  Deno.test("Should serialize an int that fits in int64", () => {
+  await step("Should serialize an int that fits in int64", () => {
     const testDoc = { b: BigInt(0x1_ff_ff_ff_ff) };
     assertThrows(() => serialize(testDoc), BSONTypeError);
 
@@ -29,7 +29,7 @@ Deno.test("BSON BigInt Support", () => {
     // assert(BigInt(resultDoc.b)).to.equal(testDoc.b);
   });
 
-  Deno.test("Should serialize an int that fits in decimal128", () => {
+  await step("Should serialize an int that fits in decimal128", () => {
     const testDoc = { b: BigInt("9223372036854776001") }; // int64 max + 1
     assertThrows(() => serialize(testDoc), BSONTypeError);
 
@@ -42,7 +42,7 @@ Deno.test("BSON BigInt Support", () => {
     // assert(BigInt(resultDoc.b.toString())).to.equal(testDoc.b);
   });
 
-  Deno.test("Should throw if BigInt is too large to serialize", () => {
+  await step("Should throw if BigInt is too large to serialize", () => {
     const testDoc = {
       b: BigInt("9".repeat(35)),
     }; // decimal 128 can only encode 34 digits of precision
@@ -50,7 +50,7 @@ Deno.test("BSON BigInt Support", () => {
     // assert(() => {serialize(testDoc)).to.throw();
   });
 
-  Deno.test("Should accept BigInts in Long constructor", () => {
+  await step("Should accept BigInts in Long constructor", () => {
     assertEquals(new Long(BigInt("0")).toString(), "0");
     assertEquals(new Long(BigInt("-1")).toString(), "-1");
     assertEquals(

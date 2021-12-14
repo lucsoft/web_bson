@@ -2,8 +2,8 @@ import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { serialize } from "../src/bson.ts";
 import { Int32 } from "../src/int_32.ts";
 
-Deno.test("Int32", () => {
-  Deno.test("Constructor", () => {
+Deno.test("Int32", async ({ step }) => {
+  await step("Constructor", () => {
     const strHexValue = "0x2a";
     const hexValue = 0x2a;
     const octalValue = 0o5_2;

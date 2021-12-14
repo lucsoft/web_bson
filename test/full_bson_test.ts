@@ -11,11 +11,11 @@ import {
 import { equal } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Document } from "../src/bson.ts";
 
-Deno.test("Full BSON", ({ step }) => {
+Deno.test("Full BSON", async ({ step }) => {
   /**
    * @ignore
    */
-  step("Should Correctly Deserialize object", () => {
+  await step("Should Correctly Deserialize object", () => {
     // deno-fmt-ignore
     var bytes = [ 95, 0, 0, 0, 2, 110, 115, 0, 42, 0, 0, 0, 105, 110, 116, 101, 103, 114, 97, 116, 105, 111, 110, 95, 116, 101, 115, 116, 115, 95, 46, 116, 101, 115, 116, 95, 105, 110, 100, 101, 120, 95, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 8, 117, 110, 105, 113, 117, 101, 0, 0, 3, 107, 101, 121, 0, 12, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0, 2, 110, 97, 109, 101, 0, 4, 0, 0, 0, 97, 95, 49, 0, 0,
     ];
@@ -34,7 +34,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Deserialize object with all types",
     () => {
       // deno-fmt-ignore
@@ -66,7 +66,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step("Should Serialize and Deserialize String", () => {
+  await step("Should Serialize and Deserialize String", () => {
     var test_string = { hello: "world" };
     var serialized_data = serialize(test_string);
     equal(test_string, deserialize(serialized_data));
@@ -75,7 +75,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Integer 5",
     () => {
       var test_number = { doc: 5 };
@@ -87,7 +87,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize null value",
     () => {
       const test_null = { doc: null };
@@ -100,7 +100,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize undefined value",
     () => {
       const test_undefined = { doc: undefined };
@@ -113,7 +113,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Number 3",
     () => {
       var test_number = { doc: 5.5 };
@@ -125,7 +125,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Integers",
     () => {
       var test_int = { doc: 42 };
@@ -149,7 +149,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Object",
     () => {
       var doc = { doc: { age: 42, name: "Spongebob", shoe_size: 9.5 } };
@@ -161,7 +161,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Array",
     () => {
       var doc = { doc: [1, 2, "a", "b"] };
@@ -173,7 +173,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Array with added on functions",
     () => {
       var doc = { doc: [1, 2, "a", "b"] };
@@ -185,7 +185,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize A Boolean",
     () => {
       var doc = { doc: true };
@@ -197,7 +197,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize a Date",
     () => {
       var date = new Date();
@@ -217,7 +217,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step("Should Correctly Serialize and Deserialize Oid", () => {
+  await step("Should Correctly Serialize and Deserialize Oid", () => {
     var doc: Document = { doc: new ObjectId() };
     var serialized_data = serialize(doc);
     //@ts-ignore
@@ -230,7 +230,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Buffer",
     () => {
       var doc = { doc: Buffer.from("123451234512345") };
@@ -246,7 +246,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Buffer with promoteBuffers option",
     () => {
       var doc = { doc: Buffer.from("123451234512345") };
@@ -263,7 +263,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step("Should Correctly encode Empty Hash", () => {
+  await step("Should Correctly encode Empty Hash", () => {
     var test_code = {};
     var serialized_data = serialize(test_code);
     equal(test_code, deserialize(serialized_data));
@@ -272,7 +272,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Ordered Hash",
     () => {
       var doc = { doc: { b: 1, a: 2, c: 3, d: 4 } };
@@ -287,7 +287,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize Regular Expression",
     () => {
       var doc = { doc: /foobar/im };
@@ -300,7 +300,7 @@ Deno.test("Full BSON", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize a Binary object",
     () => {
       var bin = new Binary();
@@ -315,7 +315,7 @@ Deno.test("Full BSON", ({ step }) => {
     },
   );
 
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize a ArrayBuffer object",
     () => {
       const arrayBuffer = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]);
@@ -327,7 +327,7 @@ Deno.test("Full BSON", ({ step }) => {
     },
   );
 
-  step(
+  await step(
     "Should Correctly Serialize and Deserialize a Float64Array object",
     () => {
       const floats = new Float64Array([12.34]);
@@ -340,7 +340,7 @@ Deno.test("Full BSON", ({ step }) => {
     },
   );
 
-  step(
+  await step(
     "Should Correctly fail due to attempting serialization of illegal key values",
     () => {
       var k = Buffer.alloc(15);
@@ -365,7 +365,7 @@ Deno.test("Full BSON", ({ step }) => {
     },
   );
 
-  step(
+  await step(
     "Should correctly fail to serialize regexp with null bytes",
     () => {
       const doc: Document = {};
@@ -378,7 +378,7 @@ Deno.test("Full BSON", ({ step }) => {
     },
   );
 
-  step(
+  await step(
     "Should correctly fail to serialize BSONRegExp with null bytes",
     () => {
       const doc: Document = {};

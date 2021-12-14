@@ -14,8 +14,8 @@ import {
   Timestamp,
 } from "../src/bson.ts";
 
-Deno.test("Constructing BSON types", () => {
-  Deno.test("with new keyword should work", () => {
+Deno.test("Constructing BSON types", async ({ step }) => {
+  await step("with new keyword should work", () => {
     const oid = new ObjectId();
     new DBRef("test", oid);
     new BSONRegExp("aaa");

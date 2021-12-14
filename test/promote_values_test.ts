@@ -8,11 +8,11 @@ import { Double } from "../src/double.ts";
 import { Int32 } from "../src/int_32.ts";
 import { BinaryParser } from "./tools/binary_parser.ts";
 
-Deno.test("promote values", () => {
+Deno.test("promote values", async ({ step }) => {
   /**
    * @ignore
    */
-  Deno.test(
+  await step(
     "Should Correctly Deserialize object with all wrapper types",
     () => {
       // deno-fmt-ignore

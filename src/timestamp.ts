@@ -18,21 +18,15 @@ export class Timestamp extends LongWithoutOverridesClass {
   static readonly MAX_VALUE = Long.MAX_UNSIGNED_VALUE;
 
   constructor(
-    low: number | Long | { t: number; i: number },
+    low: number | Long,
     high?: number,
-    unsigned?: boolean,
+    unsigned: boolean = true,
   ) {
-    super(low, high, unsigned);
-    if (Long.isLong(low)) {
-      super(low.low, low.high, true);
-    } else if (
-      isObjectLike(low) && typeof low.t !== "undefined" &&
-      typeof low.i !== "undefined"
-    ) {
-      super(low.i, low.t, true);
-    } else {
-      super(low, high, true);
-    }
+    super(
+      Long.isLong(low) ? low.low : high,
+      Long.isLong(low) ? low.high : high,
+      unsigned,
+    );
   }
 
   toJSON(): { $timestamp: string } {

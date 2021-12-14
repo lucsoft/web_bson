@@ -12,7 +12,7 @@ import {
   serialize,
 } from "../src/bson.ts";
 
-Deno.test("UTF8 validation", ({ step }) => {
+Deno.test("UTF8 validation", async ({ step }) => {
   // Test both browser shims and node which have different replacement mechanisms
   const replacementChar = "\u{FFFD}\u{FFFD}\u{FFFD}";
   const replacementString = `hi${replacementChar}bye`;
@@ -23,7 +23,7 @@ Deno.test("UTF8 validation", ({ step }) => {
     c: 12345,
   });
 
-  step(
+  await step(
     "should throw error if true and false mixed for validation option passed in with valid utf8 example",
     () => {
       const mixedTrueFalse1 = {
@@ -45,7 +45,7 @@ Deno.test("UTF8 validation", ({ step }) => {
     },
   );
 
-  step(
+  await step(
     "should correctly handle validation if validation option contains all T or all F with valid utf8 example",
     () => {
       const allTrue: DeserializeOptions = {
@@ -59,18 +59,21 @@ Deno.test("UTF8 validation", ({ step }) => {
     },
   );
 
-  step("should throw error if empty utf8 validation option passed in", () => {
-    const doc = { a: "validation utf8 option cant be empty" };
-    const serialized = serialize(doc);
-    const emptyUTF8validation = { validation: { utf8: {} } };
-    assertThrows(
-      () => deserialize(serialized, emptyUTF8validation),
-      BSONError,
-      "UTF-8 validation setting cannot be empty",
-    );
-  });
+  await step(
+    "should throw error if empty utf8 validation option passed in",
+    () => {
+      const doc = { a: "validation utf8 option cant be empty" };
+      const serialized = serialize(doc);
+      const emptyUTF8validation = { validation: { utf8: {} } };
+      assertThrows(
+        () => deserialize(serialized, emptyUTF8validation),
+        BSONError,
+        "UTF-8 validation setting cannot be empty",
+      );
+    },
+  );
 
-  step(
+  await step(
     "should throw error if non-boolean utf8 field for validation option is specified for a key",
     () => {
       const utf8InvalidOptionObj = {
@@ -395,7 +398,7 @@ Deno.test("UTF8 validation", ({ step }) => {
     } of testInputs
   ) {
     const behavior = "validate utf8 if no validation option given";
-    step(`should ${behavior} for ${description}`, () => {
+    await step(`should ${behavior} for ${description}`, () => {
       if (containsInvalid) {
         assertThrows(
           () => deserialize(buffer),
@@ -413,7 +416,7 @@ Deno.test("UTF8 validation", ({ step }) => {
       of testInputs
   ) {
     const behavior = "not validate utf8 and not throw an error";
-    step(
+    await step(
       `should ${behavior} for ${description} with global utf8 validation disabled`,
       () => {
         const validation = Object.freeze({
@@ -438,7 +441,7 @@ Deno.test("UTF8 validation", ({ step }) => {
     const behavior = containsInvalid
       ? "throw error"
       : "validate utf8 with no errors";
-    step(
+    await step(
       `should ${behavior} for ${description} with global utf8 validation enabled`,
       () => {
         const validation = Object.freeze({
@@ -465,7 +468,7 @@ Deno.test("UTF8 validation", ({ step }) => {
       of testInputs
   ) {
     for (const { behavior, validation } of testCases) {
-      step(`should ${behavior} for ${description}`, () => {
+      await step(`should ${behavior} for ${description}`, () => {
         Object.freeze(validation);
         Object.freeze(validation.validation?.utf8);
         if (behavior.substring(0, 3) === "not") {

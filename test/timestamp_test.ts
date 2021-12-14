@@ -5,12 +5,12 @@ import {
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Long, Timestamp } from "../src/bson.ts";
 
-Deno.test("Timestamp", ({ step }) => {
-  step("should have a MAX_VALUE equal to Long.MAX_UNSIGNED_VALUE", () => {
+Deno.test("Timestamp", async ({ step }) => {
+  await step("should have a MAX_VALUE equal to Long.MAX_UNSIGNED_VALUE", () => {
     assertEquals(Timestamp.MAX_VALUE, Long.MAX_UNSIGNED_VALUE);
   });
 
-  step("should always be an unsigned value", () => {
+  await step("should always be an unsigned value", () => {
     [
       //   new Timestamp(),
       new Timestamp(0xff, 0xffffffff),
@@ -26,7 +26,7 @@ Deno.test("Timestamp", ({ step }) => {
     });
   });
 
-  step("should print out an unsigned number", () => {
+  await step("should print out an unsigned number", () => {
     const timestamp = new Timestamp(0xffffffff, 0xffffffff);
     assertEquals(timestamp.toString(), "18446744073709551615");
     equal(timestamp.toJSON(), {

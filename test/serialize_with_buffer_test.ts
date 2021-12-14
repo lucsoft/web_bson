@@ -1,36 +1,40 @@
 import { Buffer } from "buffer";
+import { equal } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { deserialize } from "../src/bson.ts";
+import { serializeWithBufferAndIndex } from "../src/bson.ts";
 import {} from "../src/bson.ts";
 
-Deno.test("serializeWithBuffer", () => {
+Deno.test("serializeWithBuffer", async ({ step }) => {
   /**
    * @ignore
    */
-  Deno.test(
+  await step(
     "correctly serialize into buffer using serializeWithBufferAndIndex",
-    () =>
+    () => {
       // Create a buffer
       var b = Buffer.alloc(256);
       // Serialize from index 0
       var r = serializeWithBufferAndIndex({ a: 1 }, b);
-      assert(11).to.equal(r);
+      assertEquals(11, r);
 
       // Serialize from index r+1
       r = serializeWithBufferAndIndex({ a: 1 }, b, {
         index: r + 1,
       });
-      assert(23).to.equal(r);
+      assertEquals(23, r);
 
       // Deserialize the buffers
       var doc = deserialize(b.slice(0, 12));
-      assert({ a: 1 }).to.deep.equal(doc);
+      equal({ a: 1 }, doc);
       doc = deserialize(b.slice(12, 24));
-      assert({ a: 1 }).to.deep.equal(doc);
+      equal({ a: 1 }, doc);
     },
   );
 
-  Deno.test(
+  await step(
     "correctly serialize 3 different docs into buffer using serializeWithBufferAndIndex",
-    () =>
+    () => {
       const MAXSIZE = 1024 * 1024 * 17;
       let bf = Buffer.alloc(MAXSIZE);
 
@@ -56,9 +60,9 @@ Deno.test("serializeWithBuffer", () => {
         }) + 1;
       });
 
-      assert(deserialize(bf.slice(0, 23))).to.deep.equal(data[0]);
-      assert(deserialize(bf.slice(23, 46))).to.deep.equal(data[1]);
-      assert(deserialize(bf.slice(46, 69))).to.deep.equal(data[2]);
+      equal(deserialize(bf.slice(0, 23)), data[0]);
+      equal(deserialize(bf.slice(23, 46)), data[1]);
+      equal(deserialize(bf.slice(46, 69)), data[2]);
     },
   );
 });

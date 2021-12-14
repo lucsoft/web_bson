@@ -1,11 +1,11 @@
 import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Document, serialize } from "../src/bson.ts";
 
-Deno.test("Cyclic Dependencies", () => {
+Deno.test("Cyclic Dependencies", async ({ step }) => {
   /**
    * @ignore
    */
-  Deno.test(
+  await step(
     "Should correctly detect cyclic dependency in nested objects",
     () => {
       // Force cyclic dependency
@@ -23,7 +23,7 @@ Deno.test("Cyclic Dependencies", () => {
   /**
    * @ignore
    */
-  Deno.test(
+  await step(
     "Should correctly detect cyclic dependency in deeploy nested objects",
     () => {
       // Force cyclic dependency
@@ -42,7 +42,7 @@ Deno.test("Cyclic Dependencies", () => {
   /**
    * @ignore
    */
-  Deno.test(
+  await step(
     "Should correctly detect cyclic dependency in nested array",
     () => {
       // Force cyclic dependency

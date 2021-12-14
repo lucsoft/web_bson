@@ -19,11 +19,11 @@ const LOWERCASE_DASH_SEPARATED_UUID_STRING =
   "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa";
 const LOWERCASE_VALUES_ONLY_UUID_STRING = "aaaaaaaaaaaa4aaaaaaaaaaaaaaaaaaa";
 
-Deno.test("UUID", ({ step }) => {
+Deno.test("UUID", async ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "should correctly generate a valid UUID v4 from empty constructor",
     () => {
       const uuid = new UUID();
@@ -36,7 +36,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "should correctly create UUIDs from UPPERCASE & lowercase 36 char dash-separated hex string",
     () => {
       const uuid1 = new UUID(UPPERCASE_DASH_SEPARATED_UUID_STRING);
@@ -52,7 +52,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "should correctly create UUIDs from UPPERCASE & lowercase 32 char hex string (no dash separators)",
     () => {
       const uuid1 = new UUID(UPPERCASE_VALUES_ONLY_UUID_STRING);
@@ -68,7 +68,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step("should correctly create UUID from Buffer", () => {
+  await step("should correctly create UUID from Buffer", () => {
     const uuid1 = new UUID(
       Buffer.from(UPPERCASE_VALUES_ONLY_UUID_STRING, "hex"),
     );
@@ -85,7 +85,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "should correctly create UUID from UUID (copying existing buffer)",
     () => {
       const org = new UUID();
@@ -98,7 +98,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step("should throw if passed invalid 36-char uuid hex string", () => {
+  await step("should throw if passed invalid 36-char uuid hex string", () => {
     new UUID(LOWERCASE_DASH_SEPARATED_UUID_STRING);
     assertThrows(
       () => new UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
@@ -110,7 +110,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step("should throw if passed unsupported argument", () => {
+  await step("should throw if passed unsupported argument", () => {
     new UUID(LOWERCASE_DASH_SEPARATED_UUID_STRING);
     assertThrows(() => new UUID({} as UUID), BSONTypeError);
   });
@@ -118,7 +118,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step("should correctly check if a buffer isValid", () => {
+  await step("should correctly check if a buffer isValid", () => {
     const validBuffer = Buffer.from(UPPERCASE_VALUES_ONLY_UUID_STRING, "hex");
     const invalidBuffer1 = Buffer.from(
       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -136,7 +136,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step("should correctly convert to and from a Binary instance", () => {
+  await step("should correctly convert to and from a Binary instance", () => {
     const uuid = new UUID(LOWERCASE_DASH_SEPARATED_UUID_STRING);
     assert(UUID.isValid(uuid));
 
@@ -150,7 +150,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step("should correctly convert to and from a Binary instance", () => {
+  await step("should correctly convert to and from a Binary instance", () => {
     const uuid = new UUID(LOWERCASE_DASH_SEPARATED_UUID_STRING);
     assert(UUID.isValid(uuid));
 
@@ -164,7 +164,7 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step(
+  await step(
     "should throw when converted from an incompatible Binary instance",
     () => {
       const validRandomBuffer = Buffer.from("Hello World!");
@@ -185,11 +185,14 @@ Deno.test("UUID", ({ step }) => {
   /**
    * @ignore
    */
-  step("should correctly allow for node.js inspect to work with UUID", () => {
-    const uuid = new UUID(UPPERCASE_DASH_SEPARATED_UUID_STRING);
-    assertEquals(
-      Deno.inspect(uuid),
-      `UUID("${LOWERCASE_DASH_SEPARATED_UUID_STRING}")`,
-    );
-  });
+  await step(
+    "should correctly allow for node.js inspect to work with UUID",
+    () => {
+      const uuid = new UUID(UPPERCASE_DASH_SEPARATED_UUID_STRING);
+      assertEquals(
+        Deno.inspect(uuid),
+        `UUID("${LOWERCASE_DASH_SEPARATED_UUID_STRING}")`,
+      );
+    },
+  );
 });

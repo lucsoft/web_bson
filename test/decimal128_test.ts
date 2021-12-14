@@ -67,11 +67,11 @@ const INF_POSITIVE_BUFFER = Buffer.from(
   ].reverse(),
 );
 
-Deno.test("Decimal128", () => {
+Deno.test("Decimal128", async ({ step }) => {
   /**
    * @ignore
    */
-  Deno.test("fromString invalid input", () => {
+  await step("fromString invalid input", () => {
     assertThrows(() => Decimal128.fromString("E02"));
     assertThrows(() => Decimal128.fromString("E+02"));
     assertThrows(() => Decimal128.fromString("e+02"));
@@ -88,7 +88,7 @@ Deno.test("Decimal128", () => {
     assertThrows(() => Decimal128.fromString("1.24E+02abc2d"));
   });
 
-  Deno.test("fromString NaN input", () => {
+  await step("fromString NaN input", () => {
     let result = Decimal128.fromString("NaN");
     equal(NAN, result.bytes);
     result = Decimal128.fromString("+NaN");
@@ -109,7 +109,7 @@ Deno.test("Decimal128", () => {
     equal(NAN, result.bytes);
   });
 
-  Deno.test("fromString infinity input", () => {
+  await step("fromString infinity input", () => {
     let result = Decimal128.fromString("Infinity");
     assertEquals(INF_POSITIVE_BUFFER, result.bytes);
     result = Decimal128.fromString("+Infinity");
@@ -122,7 +122,7 @@ Deno.test("Decimal128", () => {
     assertEquals(INF_NEGATIVE_BUFFER, result.bytes);
   });
 
-  Deno.test("fromString simple", () => {
+  await step("fromString simple", () => {
     // Create decimal from string value 1
     let result = Decimal128.fromString("1");
     let bytes = Buffer.from(
@@ -364,7 +364,7 @@ Deno.test("Decimal128", () => {
     assertEquals(bytes, result.bytes);
   });
 
-  Deno.test("fromString scientific format", () => {
+  await step("fromString scientific format", () => {
     // Create decimal from string value 10e0
     let result = Decimal128.fromString("10e0");
     let bytes = Buffer.from(
@@ -534,7 +534,7 @@ Deno.test("Decimal128", () => {
     assertEquals(bytes, result.bytes);
   });
 
-  Deno.test("fromString large format", () => {
+  await step("fromString large format", () => {
     // Create decimal from string value 12345689012345789012345
     let result = Decimal128.fromString("12345689012345789012345");
     let bytes = Buffer.from(
@@ -656,7 +656,7 @@ Deno.test("Decimal128", () => {
     assertEquals(bytes, result.bytes);
   });
 
-  Deno.test("fromString exponent normalization", () => {
+  await step("fromString exponent normalization", () => {
     // Create decimal from string value 1000000000000000000000000000000000000000
 
     let result = Decimal128.fromString(
@@ -801,7 +801,7 @@ Deno.test("Decimal128", () => {
     // assertEquals(bytes, result.bytes);
   });
 
-  Deno.test("fromString from string zeros", () => {
+  await step("fromString from string zeros", () => {
     // Create decimal from string value 0
     let result = Decimal128.fromString("0");
     let bytes = Buffer.from(
@@ -899,7 +899,7 @@ Deno.test("Decimal128", () => {
     assertEquals(bytes, result.bytes);
   });
 
-  Deno.test("fromString from string round", () => {
+  await step("fromString from string round", () => {
     // Create decimal from string value 10E-6177
     let result = Decimal128.fromString("10E-6177");
     let bytes = Buffer.from(
@@ -1251,7 +1251,7 @@ Deno.test("Decimal128", () => {
     // assertEquals(bytes, result.bytes);
   });
 
-  Deno.test("toString infinity", () => {
+  await step("toString infinity", () => {
     let decimal = new Decimal128(
       Buffer.from(
         [
@@ -1301,7 +1301,7 @@ Deno.test("Decimal128", () => {
     assertEquals("-Infinity", decimal.toString());
   });
 
-  Deno.test("toString NaN", () => {
+  await step("toString NaN", () => {
     let decimal = new Decimal128(
       Buffer.from(
         [
@@ -1423,7 +1423,7 @@ Deno.test("Decimal128", () => {
     assertEquals("NaN", decimal.toString());
   });
 
-  Deno.test("toString regular", () => {
+  await step("toString regular", () => {
     let decimal = new Decimal128(
       Buffer.from(
         [
@@ -1665,7 +1665,7 @@ Deno.test("Decimal128", () => {
     assertEquals("0.1234567890123456789012345678901234", decimal.toString());
   });
 
-  Deno.test("toString scientific", () => {
+  await step("toString scientific", () => {
     let decimal = new Decimal128(
       Buffer.from(
         [
@@ -1964,7 +1964,7 @@ Deno.test("Decimal128", () => {
     assertEquals("1E+3", decimal.toString());
   });
 
-  Deno.test("toString zeros", () => {
+  await step("toString zeros", () => {
     let decimal = new Decimal128(
       Buffer.from(
         [
@@ -2038,7 +2038,7 @@ Deno.test("Decimal128", () => {
     assertEquals("0E-600", decimal.toString());
   });
 
-  Deno.test("Serialize and Deserialize tests", () => {
+  await step("Serialize and Deserialize tests", () => {
     // Test all methods around a simple serialization at object top level
     let doc: Document = { value: Decimal128.fromString("1") };
     let buffer = serialize(doc);
@@ -2071,7 +2071,7 @@ Deno.test("Decimal128", () => {
     assertEquals("1", doc.value.a.toString());
   });
 
-  Deno.test("accepts strings in the constructor", () => {
+  await step("accepts strings in the constructor", () => {
     assertEquals(new Decimal128("0").toString(), "0");
     assertEquals(new Decimal128("00").toString(), "0");
     assertEquals(new Decimal128("0.5").toString(), "0.5");
