@@ -19,14 +19,14 @@ import {
   serializeWithBufferAndIndex,
   Timestamp,
   UUID,
-} from "../src/ts";
+} from "../src/bson.ts";
 import {
   assert,
   assertEquals,
   equal,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { BinaryParser } from "./tools/binary_parser";
-import { assertBuffersEqual } from "./tools/utils";
+import { BinaryParser } from "./tools/binary_parser.ts";
+import { assertBuffersEqual } from "./tools/utils.ts";
 
 /**
  * Module for parsing an ISO 8601 formatted string into a Date object.
@@ -1986,9 +1986,9 @@ Deno.test("BSON", () => {
       ["c", badArray],
     ]);
 
-    assert(() => {serialize(badDoc)).to.throw();
-    assert(() => {serialize(badArray)).to.throw();
-    assert(() => {serialize(badMap)).to.throw();
+    assert(() => serialize(badDoc)).to.throw();
+    assert(() => serialize(badArray)).to.throw();
+    assert(() => serialize(badMap)).to.throw();
   });
 
   Deno.test("Should support util.inspect for", () => {
@@ -2108,27 +2108,27 @@ Deno.test("BSON", () => {
    */
   Deno.test("null byte handling during serializing", () => {
     Deno.test("should throw when null byte in BSON Field name within a root document", () => {
-      assert(() => {serialize({ "a\x00b": 1 })).to.throw(/null bytes/);
+      assert(() => serialize({ "a\x00b": 1 })).to.throw(/null bytes/);
     });
 
     Deno.test("should throw when null byte in BSON Field name within a sub-document", () => {
-      assert(() => {serialize({ a: { "a\x00b": 1 } })).to.throw(
+      assert(() => serialize({ a: { "a\x00b": 1 } })).to.throw(
         /null bytes/,
       );
     });
 
     Deno.test("should throw when null byte in Pattern for a regular expression", () => {
       // eslint-disable-next-line no-control-regex
-      assert(() => {serialize({ a: new RegExp("a\x00b") })).to.throw(
+      assert(() => serialize({ a: new RegExp("a\x00b") })).to.throw(
         /null bytes/,
       );
-      assert(() => {serialize({ a: new BSONRegExp("a\x00b") })).to.throw(
+      assert(() => serialize({ a: new BSONRegExp("a\x00b") })).to.throw(
         /null bytes/,
       );
     });
 
     Deno.test("should throw when null byte in Flags/options for a regular expression", () => {
-      assert(() => {serialize({ a: new BSONRegExp("a", "i\x00m") })).to
+      assert(() => serialize({ a: new BSONRegExp("a", "i\x00m") })).to
         .throw(/null bytes/);
     });
   });
