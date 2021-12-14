@@ -19,16 +19,18 @@ Deno.test("toBSON", () => {
       };
 
       // Add a toBson method to the object
-      doc.toBSON = () => {
-        return { b: 1 };
-      };
+      doc.toBSON = () => ({ b: 1 });
 
       // Serialize the data
+      // deno-lint-ignore ban-ts-comment
+      //@ts-ignore
       let serialized_data = serialize(doc, false, true);
       let deserialized_doc = deserialize(serialized_data);
       equal({ b: 1 }, deserialized_doc);
 
       // Serialize the data
+      // deno-lint-ignore ban-ts-comment
+      //@ts-ignore
       serialized_data = serialize(doc, false, true);
       deserialized_doc = deserialize(serialized_data);
       equal({ b: 1 }, deserialized_doc);
@@ -51,15 +53,18 @@ Deno.test("toBSON", () => {
       };
 
       // Add a toBson method to the object
-      doc.b.toBSON = () => {
-        return { e: 1 };
-      };
+      doc.b.toBSON = () => ({ e: 1 });
 
       // Serialize the data
+
+      // deno-lint-ignore ban-ts-comment
+      //@ts-ignore
       let serialized_data = serialize(doc, false, true);
       let deserialized_doc = deserialize(serialized_data);
       equal({ e: 1 }, deserialized_doc.b);
 
+      // deno-lint-ignore ban-ts-comment
+      //@ts-ignore
       serialized_data = serialize(doc, false, true);
       deserialized_doc = deserialize(serialized_data);
       equal({ e: 1 }, deserialized_doc.b);
@@ -82,16 +87,18 @@ Deno.test("toBSON", () => {
       };
 
       // Add a toBson method to the object
-      doc.b.toBSON = () => {
-        return "hello";
-      };
+      doc.b.toBSON = () => "hello";
 
       // Serialize the data
+      // deno-lint-ignore ban-ts-comment
+      //@ts-ignore
       let serialized_data = serialize(doc, false, true);
       let deserialized_doc = deserialize(serialized_data);
       equal("hello", deserialized_doc.b);
 
       // Serialize the data
+      // deno-lint-ignore ban-ts-comment
+      //@ts-ignore
       serialized_data = serialize(doc, false, true);
       deserialized_doc = deserialize(serialized_data);
       equal("hello", deserialized_doc.b);
@@ -114,14 +121,14 @@ Deno.test("toBSON", () => {
       };
 
       // Add a toBson method to the object
-      doc.toBSON = () => {
-        return "hello";
-      };
+      doc.toBSON = () => "hello";
 
       let test1 = false;
       let test2 = false;
 
       try {
+        // deno-lint-ignore ban-ts-comment
+        //@ts-ignore
         var serialized_data = serialize(doc, false, true);
         deserialize(serialized_data);
       } catch (_err) {
@@ -129,6 +136,8 @@ Deno.test("toBSON", () => {
       }
 
       try {
+        // deno-lint-ignore ban-ts-comment
+        //@ts-ignore
         serialized_data = serialize(doc, false, true);
         deserialize(serialized_data);
       } catch (_err) {

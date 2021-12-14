@@ -1,22 +1,26 @@
-import {} from "../src/bson.ts";
-const Long = Long;
+import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { Long } from "../src/bson.ts";
 
 Deno.test("Long", () => {
-  Deno.test("accepts strings in the constructor", () =>
-    assert(new Long("0").toString()).to.equal("0");
-    assert(new Long("00").toString()).to.equal("0");
-    assert(new Long("-1").toString()).to.equal("-1");
-    assert(new Long("-1", true).toString()).to.equal("18446744073709551615");
-    assert(new Long("123456789123456789").toString()).to.equal(
+  Deno.test("accepts strings in the constructor", () => {
+    assertEquals(new Long("0").toString(), "0");
+    assertEquals(new Long("00").toString(), "0");
+    assertEquals(new Long("-1").toString(), "-1");
+    assertEquals(new Long("-1", true).toString(), "18446744073709551615");
+    assertEquals(
+      new Long("123456789123456789").toString(),
       "123456789123456789",
     );
-    assert(new Long("123456789123456789", true).toString()).to.equal(
+    assertEquals(
+      new Long("123456789123456789", true).toString(),
       "123456789123456789",
     );
-    assert(new Long("13835058055282163712").toString()).to.equal(
+    assertEquals(
+      new Long("13835058055282163712").toString(),
       "-4611686018427387904",
     );
-    assert(new Long("13835058055282163712", true).toString()).to.equal(
+    assertEquals(
+      new Long("13835058055282163712", true).toString(),
       "13835058055282163712",
     );
   });

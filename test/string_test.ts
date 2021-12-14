@@ -1,4 +1,4 @@
-import {} from "../src/bson.ts";
+import { deserialize, serialize } from "../src/bson.ts";
 
 Deno.test("string tests", () => {
   Deno.test("can serialize and deserialize 0xFFFD", () => {
