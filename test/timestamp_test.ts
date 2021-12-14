@@ -18,8 +18,6 @@ Deno.test("[Timestamp] should always be an unsigned value", () => {
     new Timestamp(new Timestamp(0xffffffff, 0xffffffff)),
     new Timestamp(new Long(0xffffffff, 0xfffffffff, false)),
     new Timestamp(new Long(0xffffffff, 0xfffffffff, true)),
-    new Timestamp({ t: 0xffffffff, i: 0xfffffffff }),
-    new Timestamp({ t: -1, i: -1 }),
   ].forEach((timestamp) => {
     assert(timestamp.unsigned == true);
   });
