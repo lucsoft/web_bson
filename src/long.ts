@@ -1044,6 +1044,6 @@ export class Long {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `Long("${this.toString()}"${this.unsigned ? ", true" : ""})`;
+    return `new Long("${this.toString()}"${this.unsigned ? ", true" : ""})`;
   }
 }

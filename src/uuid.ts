@@ -184,6 +184,6 @@ export class UUID {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `UUID("${this.toHexString()}")`;
+    return `new UUID("${this.toHexString()}")`;
   }
 }

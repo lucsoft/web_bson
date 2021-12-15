@@ -81,7 +81,7 @@ export class DBRef {
     const oid = this.oid === undefined || this.oid.toString === undefined
       ? this.oid
       : this.oid.toString();
-    return `DBRef("${this.collection}", ObjectId("${oid}")${
+    return `new DBRef("${this.collection}", new ObjectId("${oid}")${
       this.db ? `, "${this.db}"` : ""
     })`;
   }

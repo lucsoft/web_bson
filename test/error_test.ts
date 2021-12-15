@@ -1,37 +1,38 @@
-'use strict';
+import {
+  assert,
+  assertEquals,
+} from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { BSONError, BSONTypeError } from "../src/bson.ts";
 
-const BSON = require('../register-bson');
-const BSONTypeError = BSON.BSONTypeError;
-const BSONError = BSON.BSONError;
+Deno.test(
+  "[BSONTypeError] should evaluate true on instanceof BSONTypeError and TypeError",
+  () => {
+    const bsonTypeErr = new BSONTypeError("");
+    assert(bsonTypeErr instanceof BSONTypeError);
+    assert(bsonTypeErr instanceof TypeError);
+  },
+);
 
-describe('BSONTypeError', function () {
-  it('should evaluate true on instanceof BSONTypeError and TypeError', function () {
-    const bsonTypeErr = new BSONTypeError();
-    expect(bsonTypeErr instanceof BSONTypeError).to.be.true;
-    expect(bsonTypeErr instanceof TypeError).to.be.true;
-    expect(bsonTypeErr).to.be.instanceOf(BSONTypeError);
-    expect(bsonTypeErr).to.be.instanceOf(TypeError);
-  });
+Deno.test(
+  "[BSONTypeError] should correctly set BSONTypeError name and message properties",
+  () => {
+    const bsonTypeErr = new BSONTypeError("This is a BSONTypeError message");
+    assertEquals(bsonTypeErr.name, "BSONTypeError");
+    assertEquals(bsonTypeErr.message, "This is a BSONTypeError message");
+  },
+);
 
-  it('should correctly set BSONTypeError name and message properties', function () {
-    const bsonTypeErr = new BSONTypeError('This is a BSONTypeError message');
-    expect(bsonTypeErr.name).equals('BSONTypeError');
-    expect(bsonTypeErr.message).equals('This is a BSONTypeError message');
-  });
+Deno.test("[BSONError] should evaluate true on instanceof BSONError and Error", () => {
+  const bsonErr = new BSONError();
+  assert(bsonErr instanceof BSONError);
+  assert(bsonErr instanceof Error);
 });
 
-describe('BSONError', function () {
-  it('should evaluate true on instanceof BSONError and Error', function () {
-    const bsonErr = new BSONError();
-    expect(bsonErr instanceof BSONError).to.be.true;
-    expect(bsonErr instanceof Error).to.be.true;
-    expect(bsonErr).to.be.instanceOf(BSONError);
-    expect(bsonErr).to.be.instanceOf(Error);
-  });
-
-  it('should correctly set BSONError name and message properties', function () {
-    const bsonErr = new BSONError('This is a BSONError message');
-    expect(bsonErr.name).equals('BSONError');
-    expect(bsonErr.message).equals('This is a BSONError message');
-  });
-});
+Deno.test(
+  "[BSONError] should correctly set BSONError name and message properties",
+  () => {
+    const bsonErr = new BSONError("This is a BSONError message");
+    assertEquals(bsonErr.name, "BSONError");
+    assertEquals(bsonErr.message, "This is a BSONError message");
+  },
+);

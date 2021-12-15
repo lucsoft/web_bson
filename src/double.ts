@@ -36,6 +36,6 @@ export class Double {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `Double(${this.toJSON()})`;
+    return `new Double(${this.toJSON()})`;
   }
 }

@@ -1,5 +1,4 @@
 import { Long } from "./long.ts";
-import { isObjectLike } from "./parser/utils.ts";
 
 /** @public */
 export type LongWithoutOverrides = new (
@@ -17,25 +16,22 @@ export const LongWithoutOverridesClass =
 export class Timestamp extends LongWithoutOverridesClass {
   static readonly MAX_VALUE = Long.MAX_UNSIGNED_VALUE;
 
+  constructor();
   /**
-   * @param low - A 64-bit Long representing the Timestamp.
+   * @param value - A 64-bit Long representing the Timestamp.
    */
-  constructor(long: Long);
+  constructor(value: Long);
   /**
    * @param value - A pair of two values indicating timestamp and increment.
    */
   constructor(value: { t: number; i: number });
-  constructor(low: number | Long | { t: number; i: number }, high?: number) {
-    if (Long.isLong(low)) {
-      super(low.low, low.high, true);
-    } else if (
-      isObjectLike(low) && typeof low.t !== "undefined" &&
-      typeof low.i !== "undefined"
-    ) {
-      super(low.i, low.t, true);
-    } else {
-      super(low, high, true);
-    }
+  constructor(
+    value: Long | { t: number; i: number } = new Long(),
+  ) {
+    const isLong = Long.isLong(value);
+    const low = isLong ? value.low : value.i;
+    const high = isLong ? value.high : value.t;
+    super(low, high, true);
   }
 
   toJSON(): { $timestamp: string } {
@@ -75,6 +71,6 @@ export class Timestamp extends LongWithoutOverridesClass {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `Timestamp(low: ${this.getHighBits()}, high: ${this.getLowBits()})`;
+    return `new Timestamp({ t: ${this.getHighBits()}, i: ${this.getLowBits()} })`;
   }
 }

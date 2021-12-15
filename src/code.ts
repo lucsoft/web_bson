@@ -22,7 +22,7 @@ export class Code {
 
   [Symbol.for("Deno.customInspect")](): string {
     const codeJson = this.toJSON();
-    return `Code("${codeJson.code}"${
+    return `new Code("${codeJson.code}"${
       codeJson.scope ? `, ${JSON.stringify(codeJson.scope)}` : ""
     })`;
   }

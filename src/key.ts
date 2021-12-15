@@ -4,7 +4,7 @@
  */
 export class MaxKey {
   [Symbol.for("Deno.customInspect")](): string {
-    return "MaxKey()";
+    return "new MaxKey()";
   }
 }
 
@@ -14,6 +14,6 @@ export class MaxKey {
  */
 export class MinKey {
   [Symbol.for("Deno.customInspect")](): string {
-    return "MinKey()";
+    return "new MinKey()";
   }
 }

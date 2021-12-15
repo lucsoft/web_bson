@@ -200,7 +200,7 @@ export class Binary {
 
   [Symbol.for("Deno.customInspect")](): string {
     const asBuffer = this.value(true);
-    return `Binary(Buffer.from("${
+    return `new Binary(Buffer.from("${
       Buffer.from(asBuffer).toString("hex")
     }", "hex"), ${this.sub_type})`;
   }

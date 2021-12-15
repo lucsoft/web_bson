@@ -1,132 +1,122 @@
-'use strict';
+import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { Document, ObjectId, serialize } from "../src/bson.ts";
+import { deserialize } from "../src/parser/deserializer.ts";
 
-const BSON = require('../register-bson');
-const ObjectId = BSON.ObjectId;
+Deno.test("[toBSON] Should correctly handle toBson function for an object", () => {
+  // Test object
+  const doc: Document = {
+    hello: new ObjectId(),
+    a: 1,
+  };
 
-describe('toBSON', function () {
-  /**
-   * @ignore
-   */
-  it('Should correctly handle toBson function for an object', function (done) {
-    // Test object
-    var doc = {
-      hello: new ObjectId(),
-      a: 1
-    };
+  // Add a toBson method to the object
+  doc.toBSON = () => ({ b: 1 });
 
-    // Add a toBson method to the object
-    doc.toBSON = function () {
-      return { b: 1 };
-    };
+  // Serialize the data
+  // deno-lint-ignore ban-ts-comment
+  //@ts-ignore
+  let serialized_data = serialize(doc, false, true);
+  let deserialized_doc = deserialize(serialized_data);
+  assertEquals({ b: 1 }, deserialized_doc);
 
-    // Serialize the data
-    var serialized_data = BSON.serialize(doc, false, true);
-    var deserialized_doc = BSON.deserialize(serialized_data);
-    expect({ b: 1 }).to.deep.equal(deserialized_doc);
+  // Serialize the data
+  // deno-lint-ignore ban-ts-comment
+  //@ts-ignore
+  serialized_data = serialize(doc, false, true);
+  deserialized_doc = deserialize(serialized_data);
+  assertEquals({ b: 1 }, deserialized_doc);
+});
 
-    // Serialize the data
-    serialized_data = BSON.serialize(doc, false, true);
-    deserialized_doc = BSON.deserialize(serialized_data);
-    expect({ b: 1 }).to.deep.equal(deserialized_doc);
-    done();
-  });
+Deno.test("[toBSON] Should correctly handle embedded toBson function for an object", () => {
+  // Test object
+  const doc: Document = {
+    hello: new ObjectId(),
+    a: 1,
+    b: {
+      d: 1,
+    },
+  };
 
-  /**
-   * @ignore
-   */
-  it('Should correctly handle embedded toBson function for an object', function (done) {
-    // Test object
-    var doc = {
-      hello: new ObjectId(),
-      a: 1,
-      b: {
-        d: 1
-      }
-    };
+  // Add a toBson method to the object
+  doc.b.toBSON = () => ({ e: 1 });
 
-    // Add a toBson method to the object
-    doc.b.toBSON = function () {
-      return { e: 1 };
-    };
+  // Serialize the data
 
-    // Serialize the data
-    var serialized_data = BSON.serialize(doc, false, true);
-    var deserialized_doc = BSON.deserialize(serialized_data);
-    expect({ e: 1 }).to.deep.equal(deserialized_doc.b);
+  // deno-lint-ignore ban-ts-comment
+  //@ts-ignore
+  let serialized_data = serialize(doc, false, true);
+  let deserialized_doc = deserialize(serialized_data);
+  assertEquals({ e: 1 }, deserialized_doc.b);
 
-    serialized_data = BSON.serialize(doc, false, true);
-    deserialized_doc = BSON.deserialize(serialized_data);
-    expect({ e: 1 }).to.deep.equal(deserialized_doc.b);
-    done();
-  });
+  // deno-lint-ignore ban-ts-comment
+  //@ts-ignore
+  serialized_data = serialize(doc, false, true);
+  deserialized_doc = deserialize(serialized_data);
+  assertEquals({ e: 1 }, deserialized_doc.b);
+});
 
-  /**
-   * @ignore
-   */
-  it('Should correctly serialize when embedded non object returned by toBSON', function (done) {
-    // Test object
-    var doc = {
-      hello: new ObjectId(),
-      a: 1,
-      b: {
-        d: 1
-      }
-    };
+Deno.test("[toBSON] Should correctly serialize when embedded non object returned by toBSON", () => {
+  // Test object
+  const doc: Document = {
+    hello: new ObjectId(),
+    a: 1,
+    b: {
+      d: 1,
+    },
+  };
 
-    // Add a toBson method to the object
-    doc.b.toBSON = function () {
-      return 'hello';
-    };
+  // Add a toBson method to the object
+  doc.b.toBSON = () => "hello";
 
-    // Serialize the data
-    var serialized_data = BSON.serialize(doc, false, true);
-    var deserialized_doc = BSON.deserialize(serialized_data);
-    expect('hello').to.deep.equal(deserialized_doc.b);
+  // Serialize the data
+  // deno-lint-ignore ban-ts-comment
+  //@ts-ignore
+  let serialized_data = serialize(doc, false, true);
+  let deserialized_doc = deserialize(serialized_data);
+  assertEquals("hello", deserialized_doc.b);
 
-    // Serialize the data
-    serialized_data = BSON.serialize(doc, false, true);
-    deserialized_doc = BSON.deserialize(serialized_data);
-    expect('hello').to.deep.equal(deserialized_doc.b);
-    done();
-  });
+  // Serialize the data
+  // deno-lint-ignore ban-ts-comment
+  //@ts-ignore
+  serialized_data = serialize(doc, false, true);
+  deserialized_doc = deserialize(serialized_data);
+  assertEquals("hello", deserialized_doc.b);
+});
 
-  /**
-   * @ignore
-   */
-  it('Should fail when top level object returns a non object type', function (done) {
-    // Test object
-    var doc = {
-      hello: new ObjectId(),
-      a: 1,
-      b: {
-        d: 1
-      }
-    };
+Deno.test("[toBSON] Should fail when top level object returns a non object type", () => {
+  // Test object
+  const doc: Document = {
+    hello: new ObjectId(),
+    a: 1,
+    b: {
+      d: 1,
+    },
+  };
 
-    // Add a toBson method to the object
-    doc.toBSON = function () {
-      return 'hello';
-    };
+  // Add a toBson method to the object
+  doc.toBSON = () => "hello";
 
-    var test1 = false;
-    var test2 = false;
+  let test1 = false;
+  let test2 = false;
 
-    try {
-      var serialized_data = BSON.serialize(doc, false, true);
-      BSON.deserialize(serialized_data);
-    } catch (err) {
-      test1 = true;
-    }
+  try {
+    // deno-lint-ignore ban-ts-comment
+    //@ts-ignore
+    var serialized_data = serialize(doc, false, true);
+    deserialize(serialized_data);
+  } catch (_err) {
+    test1 = true;
+  }
 
-    try {
-      serialized_data = BSON.serialize(doc, false, true);
-      BSON.deserialize(serialized_data);
-    } catch (err) {
-      test2 = true;
-    }
+  try {
+    // deno-lint-ignore ban-ts-comment
+    //@ts-ignore
+    serialized_data = serialize(doc, false, true);
+    deserialize(serialized_data);
+  } catch (_err) {
+    test2 = true;
+  }
 
-    expect(true).to.equal(test1);
-    expect(true).to.equal(test2);
-    done();
-  });
+  assertEquals(true, test1);
+  assertEquals(true, test2);
 });

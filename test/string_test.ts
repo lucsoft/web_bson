@@ -1,12 +1,8 @@
-'use strict';
+import { deserialize, serialize } from "../src/bson.ts";
 
-const BSON = require('../register-bson');
+Deno.test("[string tests] can serialize and deserialize 0xFFFD", () => {
+  const unicodeString = String.fromCharCode(0x41, 0x42, 0xfffd, 0x43, 0x44); // "AB�CD"
 
-describe('string tests', function () {
-  it('can serialize and deserialize 0xFFFD', function () {
-    const unicodeString = String.fromCharCode(0x41, 0x42, 0xfffd, 0x43, 0x44); // "AB�CD"
-
-    const serialized = BSON.serialize({ value: unicodeString });
-    BSON.deserialize(serialized);
-  });
+  const serialized = serialize({ value: unicodeString });
+  deserialize(serialized);
 });
