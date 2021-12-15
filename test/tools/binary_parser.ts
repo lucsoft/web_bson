@@ -278,8 +278,9 @@ export const BinaryParser = new class {
       data += max;
     }
 
+    let r;
     for (
-      var r = [];
+      r = [];
       data;
       r[r.length] = String.fromCharCode(data % 256),
         data = Math.floor(data / 256)
@@ -353,15 +354,14 @@ export const BinaryParser = new class {
 
   // Factor out the encode so it can be shared by add_header and push_int32
   encode_int32(number: number, asArray: number) {
-    var a, b, c, d, unsigned;
-    unsigned = number < 0 ? number + 0x100000000 : number;
-    a = Math.floor(unsigned / 0xffffff);
+    let unsigned = number < 0 ? number + 0x100000000 : number;
+    const a = Math.floor(unsigned / 0xffffff);
     unsigned &= 0xffffff;
-    b = Math.floor(unsigned / 0xffff);
+    const b = Math.floor(unsigned / 0xffff);
     unsigned &= 0xffff;
-    c = Math.floor(unsigned / 0xff);
+    const c = Math.floor(unsigned / 0xff);
     unsigned &= 0xff;
-    d = Math.floor(unsigned);
+    const d = Math.floor(unsigned);
     return asArray
       ? [chr(a), chr(b), chr(c), chr(d)]
       : chr(a) + chr(b) + chr(c) + chr(d);

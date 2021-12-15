@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Buffer } from "buffer";
 import {
   Binary,
@@ -366,7 +367,7 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize Number 4", () => {
 //   /**
 //    * @ignore
 //    */
-//    step(
+//   step(
 //     "Should Correctly Serialize and Deserialize Array with added on functions",
 //     () => {
 //       Array.prototype.toXml = () => {};
@@ -517,7 +518,7 @@ Deno.test(
     const decodedHash = deserialize(serializedData).doc;
     const keys = [];
 
-    for (let name in decodedHash) keys.push(name);
+    for (const name in decodedHash) keys.push(name);
     assertEquals(["b", "a", "c", "d"], keys);
   },
 );
@@ -983,7 +984,7 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //   /**
 //    * @ignore
 //    */
-//    step(
+//   step(
 //     "Should Correctly Serialize Complex Nested Object",
 //     () => {
 //       const doc = {
@@ -1017,7 +1018,7 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //   /**
 //    * @ignore
 //    */
-//    Deno.test("[BSON] Should correctly massive doc", () => {
+//   Deno.test("[BSON] Should correctly massive doc", () => {
 //     const oid1 = new ObjectId();
 //     const oid2 = new ObjectId();
 //     // JS doc

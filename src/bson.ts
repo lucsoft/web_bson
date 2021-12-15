@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Buffer } from "buffer";
 import { Binary, BinarySizes } from "./binary.ts";
 import { Code } from "./code.ts";
@@ -51,7 +52,6 @@ export * from "./error.ts";
 
 /** @public */
 export interface Document {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

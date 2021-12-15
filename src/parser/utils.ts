@@ -4,6 +4,7 @@ import { asciiToBytes } from "https://deno.land/std@0.117.0/node/internal_bindin
  * Normalizes our expected stringified form of a function across versions of node
  * @param fn - The function to stringify
  */
+// deno-lint-ignore ban-types
 export function normalizedFunctionString(fn: Function): string {
   return fn.toString().replace("function(", "function (");
 }

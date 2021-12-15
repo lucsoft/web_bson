@@ -1,26 +1,14 @@
+// deno-lint-ignore-file no-explicit-any
 import { hex } from "../deps.ts";
 import { ObjectId } from "../src/objectid.ts";
 import { BSONTypeError } from "../src/error.ts";
-import { assertEquals, assertThrows } from "./deps.ts";
-import { assert } from "./deps.ts";
+import { assert, assertEquals, assertThrows } from "./deps.ts";
 
 const textEncoder = new TextEncoder();
-
-const textDecoder = new TextDecoder();
-
 function decodeHex(hexString: string): Uint8Array {
   return hex.decode(textEncoder.encode(hexString));
 }
 
-function uint8arrayToHexString(uint8Array: Uint8Array): string {
-  return textDecoder.decode(hex.encode(uint8Array));
-}
-
-function decodeLatin1(latin1String: string): Uint8Array {
-  return textEncoder.encode(latin1String);
-}
-
-// const util = require("util");
 Deno.test("[ObjectId] should correctly handle objectId timestamps", () => {
   const a = ObjectId.createFromTime(1);
   assertEquals(new Uint8Array([0, 0, 0, 1]), a.id.slice(0, 4));

@@ -61,6 +61,7 @@ export interface DeserializeOptions {
 const JS_INT_MAX_LONG = Long.fromNumber(constants.JS_INT_MAX);
 const JS_INT_MIN_LONG = Long.fromNumber(constants.JS_INT_MIN);
 
+// deno-lint-ignore ban-types
 const functionCache: { [hash: string]: Function } = {};
 
 export function deserialize(
@@ -802,6 +803,7 @@ function deserializeObject(
  */
 function isolateEval(
   functionString: string,
+  // deno-lint-ignore ban-types
   functionCache?: { [hash: string]: Function },
   object?: Document,
 ) {
