@@ -1,5 +1,4 @@
 import { Long } from "./long.ts";
-import { isObjectLike } from "./parser/utils.ts";
 
 /** @public */
 export type LongWithoutOverrides = new (
@@ -17,6 +16,7 @@ export const LongWithoutOverridesClass =
 export class Timestamp extends LongWithoutOverridesClass {
   static readonly MAX_VALUE = Long.MAX_UNSIGNED_VALUE;
 
+  constructor();
   /**
    * @param value - A 64-bit Long representing the Timestamp.
    */
@@ -25,15 +25,13 @@ export class Timestamp extends LongWithoutOverridesClass {
    * @param value - A pair of two values indicating timestamp and increment.
    */
   constructor(value: { t: number; i: number });
-  // deno-lint-ignore constructor-super
   constructor(
-    value: Long | { t: number; i: number },
+    value: Long | { t: number; i: number } = new Long(),
   ) {
-    if (Long.isLong(value)) {
-      super(value.low, value.high, true);
-    } else {
-      super(value.i, value.t, true);
-    }
+    const isLong = Long.isLong(value);
+    const low = isLong ? value.low : value.i;
+    const high = isLong ? value.high : value.t;
+    super(low, high, true);
   }
 
   toJSON(): { $timestamp: string } {
