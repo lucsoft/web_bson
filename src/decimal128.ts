@@ -612,9 +612,9 @@ export class Decimal128 {
     // from the sign bit, towards the coefficient.
 
     // decoded biased exponent (14 bits)
-    let biased_exponent;
+    let biasedExponent;
     // the number of significand digits
-    let significand_digits = 0;
+    let significandDigits = 0;
     // the base-10 digits in the significand
     const significand = new Array<number>(36);
     for (let i = 0; i < significand.length; i++) significand[i] = 0;
@@ -622,10 +622,10 @@ export class Decimal128 {
     let index = 0;
 
     // true if the number is zero
-    let is_zero = false;
+    let isZero = false;
 
     // the most significant significand bits (50-46)
-    let significand_msb;
+    let significandMsb;
     // temporary storage for significand decoding
     let significand128: { parts: [number, number, number, number] } = {
       parts: [0, 0, 0, 0],
@@ -684,15 +684,15 @@ export class Decimal128 {
       if (combination === COMBINATION_NAN) {
         return "NaN";
       }
-      biased_exponent = (high >> 15) & EXPONENT_MASK;
-      significand_msb = 0x08 + ((high >> 14) & 0x01);
+      biasedExponent = (high >> 15) & EXPONENT_MASK;
+      significandMsb = 0x08 + ((high >> 14) & 0x01);
     } else {
-      significand_msb = (high >> 14) & 0x07;
-      biased_exponent = (high >> 17) & EXPONENT_MASK;
+      significandMsb = (high >> 14) & 0x07;
+      biasedExponent = (high >> 17) & EXPONENT_MASK;
     }
 
     // unbiased exponent
-    const exponent = biased_exponent - EXPONENT_BIAS;
+    const exponent = biasedExponent - EXPONENT_BIAS;
 
     // Create string of significand digits
 
@@ -700,7 +700,7 @@ export class Decimal128 {
     // (significand_high, significand_low) to at most 34 decimal
     // digits through modulo and division.
     significand128.parts[0] = (high & 0x3f_ff) +
-      ((significand_msb & 0xf) << 14);
+      ((significandMsb & 0xf) << 14);
     significand128.parts[1] = midh;
     significand128.parts[2] = midl;
     significand128.parts[3] = low;
@@ -711,24 +711,24 @@ export class Decimal128 {
       significand128.parts[2] === 0 &&
       significand128.parts[3] === 0
     ) {
-      is_zero = true;
+      isZero = true;
     } else {
       for (k = 3; k >= 0; k--) {
-        let least_digits = 0;
+        let leastDigits = 0;
         // Perform the divide
         const result = divideu128(significand128);
         significand128 = result.quotient;
-        least_digits = result.rem.low;
+        leastDigits = result.rem.low;
 
         // We now have the 9 least significant digits (in base 2).
         // Convert and output to string.
-        if (!least_digits) continue;
+        if (!leastDigits) continue;
 
         for (j = 8; j >= 0; j--) {
-          // significand[k * 9 + j] = Math.round(least_digits % 10);
-          significand[k * 9 + j] = least_digits % 10;
-          // least_digits = Math.round(least_digits / 10);
-          least_digits = Math.floor(least_digits / 10);
+          // significand[k * 9 + j] = Math.round(leastDigits % 10);
+          significand[k * 9 + j] = leastDigits % 10;
+          // leastDigits = Math.round(leastDigits / 10);
+          leastDigits = Math.floor(leastDigits / 10);
         }
       }
     }
@@ -737,19 +737,19 @@ export class Decimal128 {
     // Scientific - [-]d.dddE(+/-)dd or [-]dE(+/-)dd
     // Regular    - ddd.ddd
 
-    if (is_zero) {
-      significand_digits = 1;
+    if (isZero) {
+      significandDigits = 1;
       significand[index] = 0;
     } else {
-      significand_digits = 36;
+      significandDigits = 36;
       while (!significand[index]) {
-        significand_digits -= 1;
+        significandDigits -= 1;
         index += 1;
       }
     }
 
     // the exponent if scientific notation is used
-    const scientific_exponent = significand_digits - 1 + exponent;
+    const scientificExponent = significandDigits - 1 + exponent;
 
     // The scientific exponent checks are dictated by the string conversion
     // specification and are somewhat arbitrary cutoffs.
@@ -759,14 +759,14 @@ export class Decimal128 {
     // because doing so would change the precision of the value, and would
     // change stored data if the string converted number is round tripped.
     if (
-      scientific_exponent >= 34 || scientific_exponent <= -7 || exponent > 0
+      scientificExponent >= 34 || scientificExponent <= -7 || exponent > 0
     ) {
       // Scientific format
 
       // if there are too many significant digits, we should just be treating numbers
       // as + or - 0 and using the non-scientific exponent (this is for the "invalid
       // representation should be treated as 0/-0" spec cases in decimal128-1.json)
-      if (significand_digits > 34) {
+      if (significandDigits > 34) {
         string.push(`${0}`);
         if (exponent > 0) string.push(`E+${exponent}`);
         else if (exponent < 0) string.push(`E${exponent}`);
@@ -774,35 +774,35 @@ export class Decimal128 {
       }
 
       string.push(`${significand[index++]}`);
-      significand_digits -= 1;
+      significandDigits -= 1;
 
-      if (significand_digits) {
+      if (significandDigits) {
         string.push(".");
       }
 
-      for (let i = 0; i < significand_digits; i++) {
+      for (let i = 0; i < significandDigits; i++) {
         string.push(`${significand[index++]}`);
       }
 
       // Exponent
       string.push("E");
-      if (scientific_exponent > 0) {
-        string.push(`+${scientific_exponent}`);
+      if (scientificExponent > 0) {
+        string.push(`+${scientificExponent}`);
       } else {
-        string.push(`${scientific_exponent}`);
+        string.push(`${scientificExponent}`);
       }
     } else {
       // Regular format with no decimal place
       if (exponent >= 0) {
-        for (let i = 0; i < significand_digits; i++) {
+        for (let i = 0; i < significandDigits; i++) {
           string.push(`${significand[index++]}`);
         }
       } else {
-        let radix_position = significand_digits + exponent;
+        let radixPosition = significandDigits + exponent;
 
         // non-zero digits before radix
-        if (radix_position > 0) {
-          for (let i = 0; i < radix_position; i++) {
+        if (radixPosition > 0) {
+          for (let i = 0; i < radixPosition; i++) {
             string.push(`${significand[index++]}`);
           }
         } else {
@@ -811,13 +811,13 @@ export class Decimal128 {
 
         string.push(".");
         // add leading zeros after radix
-        while (radix_position++ < 0) {
+        while (radixPosition++ < 0) {
           string.push("0");
         }
 
         for (
           let i = 0;
-          i < significand_digits - Math.max(radix_position - 1, 0);
+          i < significandDigits - Math.max(radixPosition - 1, 0);
           i++
         ) {
           string.push(`${significand[index++]}`);

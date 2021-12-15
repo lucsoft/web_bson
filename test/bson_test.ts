@@ -30,7 +30,6 @@ import {
   equal,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { BinaryParser } from "./tools/binary_parser.ts";
-import { equals } from "https://deno.land/std@0.117.0/bytes/mod.ts";
 
 /**
  * Module for parsing an ISO 8601 formatted string into a Date object.
@@ -75,19 +74,19 @@ const ISODate = (string: any) => {
 Deno.test("[BSON] Should Correctly convert ObjectId to itself", () => {
   const myObject = new ObjectId();
   const newObject = new ObjectId(myObject);
-  equal(myObject, newObject);
+  assertEquals(myObject, newObject);
 });
 
 Deno.test("[BSON] Should Correctly Deserialize object", () => {
   // deno-fmt-ignore
   const bytes = [95, 0, 0, 0, 2, 110, 115, 0, 42, 0, 0, 0, 105, 110, 116, 101, 103, 114, 97, 116, 105, 111, 110, 95, 116, 101, 115, 116, 115, 95, 46, 116, 101, 115, 116, 95, 105, 110, 100, 101, 120, 95, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 8, 117, 110, 105, 113, 117, 101, 0, 0, 3, 107, 101, 121, 0, 12, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0, 2, 110, 97, 109, 101, 0, 4, 0, 0, 0, 97, 95, 49, 0, 0];
-  let serialized_data = "";
+  let serializedData = "";
   // Convert to chars
   for (let i = 0; i < bytes.length; i++) {
-    serialized_data = serialized_data + BinaryParser.fromByte(bytes[i]);
+    serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
   }
 
-  const object = deserialize(Buffer.from(serialized_data, "binary"));
+  const object = deserialize(Buffer.from(serializedData, "binary"));
   assertEquals("a_1", object.name);
   assertEquals(false, object.unique);
   assertEquals(1, object.key.a);
@@ -96,17 +95,17 @@ Deno.test("[BSON] Should Correctly Deserialize object", () => {
 Deno.test("[BSON] Should Correctly Deserialize object with all types", () => {
   // deno-fmt-ignore
   const bytes = [ 26, 1, 0, 0, 7, 95, 105, 100, 0, 161, 190, 98, 75, 118, 169, 3, 0, 0, 3, 0, 0, 4, 97, 114, 114, 97, 121, 0, 26, 0, 0, 0, 16, 48, 0, 1, 0, 0, 0, 16, 49, 0, 2, 0, 0, 0, 16, 50, 0, 3, 0, 0, 0, 0, 2, 115, 116, 114, 105, 110, 103, 0, 6, 0, 0, 0, 104, 101, 108, 108, 111, 0, 3, 104, 97, 115, 104, 0, 19, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 16, 98, 0, 2, 0, 0, 0, 0, 9, 100, 97, 116, 101, 0, 161, 190, 98, 75, 0, 0, 0, 0, 7, 111, 105, 100, 0, 161, 190, 98, 75, 90, 217, 18, 0, 0, 1, 0, 0, 5, 98, 105, 110, 97, 114, 121, 0, 7, 0, 0, 0, 2, 3, 0, 0, 0, 49, 50, 51, 16, 105, 110, 116, 0, 42, 0, 0, 0, 1, 102, 108, 111, 97, 116, 0, 223, 224, 11, 147, 169, 170, 64, 64, 11, 114, 101, 103, 101, 120, 112, 0, 102, 111, 111, 98, 97, 114, 0, 105, 0, 8, 98, 111, 111, 108, 101, 97, 110, 0, 1, 15, 119, 104, 101, 114, 101, 0, 25, 0, 0, 0, 12, 0, 0, 0, 116, 104, 105, 115, 46, 120, 32, 61, 61, 32, 51, 0, 5, 0, 0, 0, 0, 3, 100, 98, 114, 101, 102, 0, 37, 0, 0, 0, 2, 36, 114, 101, 102, 0, 5, 0, 0, 0, 116, 101, 115, 116, 0, 7, 36, 105, 100, 0, 161, 190, 98, 75, 2, 180, 1, 0, 0, 2, 0, 0, 0, 10, 110, 117, 108, 108, 0, 0, ];
-  let serialized_data = "";
+  let serializedData = "";
 
   // Convert to chars
   for (let i = 0; i < bytes.length; i++) {
-    serialized_data = serialized_data + BinaryParser.fromByte(bytes[i]);
+    serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
   }
 
-  const object = deserialize(Buffer.from(serialized_data, "binary"));
+  const object = deserialize(Buffer.from(serializedData, "binary"));
   // Perform tests
   assertEquals("hello", object.string);
-  equal([1, 2, 3], object.array);
+  assertEquals([1, 2, 3], object.array);
   assertEquals(1, object.hash.a);
   assert(2, object.hash.b);
   assert(object.date != null);
@@ -121,155 +120,155 @@ Deno.test("[BSON] Should Correctly Deserialize object with all types", () => {
 });
 
 Deno.test("[BSON] Should Serialize and Deserialize String", () => {
-  let test_string = { hello: "world" };
-  let serialized_data = serialize(test_string, {
+  const testString = { hello: "world" };
+  const serializedData = serialize(testString, {
     checkKeys: false,
   });
 
-  serializeWithBufferAndIndex(test_string, serialized_data, {
+  serializeWithBufferAndIndex(testString, serializedData, {
     checkKeys: false,
     index: 0,
   });
 
-  equal(test_string, deserialize(serialized_data));
+  assertEquals(testString, deserialize(serializedData));
 });
 
 Deno.test("[BSON] Should Serialize and Deserialize Empty String", () => {
-  let test_string = { hello: "" };
-  let serialized_data = serialize(test_string);
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(test_string));
-  serializeWithBufferAndIndex(test_string, serialized_data2);
+  const testString = { hello: "" };
+  const serializedData = serialize(testString);
+  const serializedData2 = new Uint8Array(calculateObjectSize(testString));
+  serializeWithBufferAndIndex(testString, serializedData2);
 
-  equals(serialized_data, serialized_data2);
-  equal(test_string, deserialize(serialized_data));
+  assertEquals(serializedData, serializedData2);
+  assertEquals(testString, deserialize(serializedData));
 });
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Integer 5", () => {
-  let test_number = { doc: 5 };
+  const testNumber = { doc: 5 };
 
-  let serialized_data = serialize(test_number);
-  let serialized_data2 = Buffer.alloc(
-    calculateObjectSize(test_number),
+  const serializedData = serialize(testNumber);
+  const serializedData2 = new Uint8Array(
+    calculateObjectSize(testNumber),
   );
-  serializeWithBufferAndIndex(test_number, serialized_data2);
-  equals(serialized_data, serialized_data2);
-  equal(test_number, deserialize(serialized_data));
-  equal(test_number, deserialize(serialized_data2));
+  serializeWithBufferAndIndex(testNumber, serializedData2);
+  assertEquals(serializedData, serializedData2);
+  assertEquals(testNumber, deserialize(serializedData));
+  assertEquals(testNumber, deserialize(serializedData2));
 });
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize null value",
   () => {
-    let test_null = { doc: null };
-    let serialized_data = serialize(test_null);
+    const testNull = { doc: null };
+    const serializedData = serialize(testNull);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(test_null));
-    serializeWithBufferAndIndex(test_null, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(testNull));
+    serializeWithBufferAndIndex(testNull, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let object = deserialize(serialized_data);
+    const object = deserialize(serializedData);
     assertEquals(null, object.doc);
   },
 );
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Number 1", () => {
-  let test_number = { doc: 5.5 };
-  let serialized_data = serialize(test_number);
+  const testNumber = { doc: 5.5 };
+  const serializedData = serialize(testNumber);
 
-  let serialized_data2 = Buffer.alloc(
-    calculateObjectSize(test_number),
+  const serializedData2 = new Uint8Array(
+    calculateObjectSize(testNumber),
   );
-  serializeWithBufferAndIndex(test_number, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  serializeWithBufferAndIndex(testNumber, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  equal(test_number, deserialize(serialized_data));
+  assertEquals(testNumber, deserialize(serializedData));
 });
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Integer", () => {
-  let test_int = { doc: 42 };
-  let serialized_data = serialize(test_int);
+  let testInt = { doc: 42 };
+  let serializedData = serialize(testInt);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(test_int));
-  serializeWithBufferAndIndex(test_int, serialized_data2);
-  equals(serialized_data, serialized_data2);
-  equal(test_int.doc, deserialize(serialized_data).doc);
+  let serializedData2 = new Uint8Array(calculateObjectSize(testInt));
+  serializeWithBufferAndIndex(testInt, serializedData2);
+  assertEquals(serializedData, serializedData2);
+  assertEquals(testInt.doc, deserialize(serializedData).doc);
 
-  test_int = { doc: -5600 };
-  serialized_data = serialize(test_int);
+  testInt = { doc: -5600 };
+  serializedData = serialize(testInt);
 
-  serialized_data2 = Buffer.alloc(calculateObjectSize(test_int));
-  serializeWithBufferAndIndex(test_int, serialized_data2);
-  equals(serialized_data, serialized_data2);
-  equal(test_int.doc, deserialize(serialized_data).doc);
+  serializedData2 = new Uint8Array(calculateObjectSize(testInt));
+  serializeWithBufferAndIndex(testInt, serializedData2);
+  assertEquals(serializedData, serializedData2);
+  assertEquals(testInt.doc, deserialize(serializedData).doc);
 
-  test_int = { doc: 2147483647 };
-  serialized_data = serialize(test_int);
+  testInt = { doc: 2147483647 };
+  serializedData = serialize(testInt);
 
-  serialized_data2 = Buffer.alloc(calculateObjectSize(test_int));
-  serializeWithBufferAndIndex(test_int, serialized_data2);
-  equals(serialized_data, serialized_data2);
-  equal(test_int.doc, deserialize(serialized_data).doc);
+  serializedData2 = new Uint8Array(calculateObjectSize(testInt));
+  serializeWithBufferAndIndex(testInt, serializedData2);
+  assertEquals(serializedData, serializedData2);
+  assertEquals(testInt.doc, deserialize(serializedData).doc);
 
-  test_int = { doc: -2147483648 };
-  serialized_data = serialize(test_int);
+  testInt = { doc: -2147483648 };
+  serializedData = serialize(testInt);
 
-  serialized_data2 = Buffer.alloc(calculateObjectSize(test_int));
-  serializeWithBufferAndIndex(test_int, serialized_data2);
-  equals(serialized_data, serialized_data2);
-  equal(test_int.doc, deserialize(serialized_data).doc);
+  serializedData2 = new Uint8Array(calculateObjectSize(testInt));
+  serializeWithBufferAndIndex(testInt, serializedData2);
+  assertEquals(serializedData, serializedData2);
+  assertEquals(testInt.doc, deserialize(serializedData).doc);
 });
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Object", () => {
-  let doc = { doc: { age: 42, name: "Spongebob", shoe_size: 9.5 } };
-  let serialized_data = serialize(doc);
+  const doc = { doc: { age: 42, name: "Spongebob", shoe_size: 9.5 } };
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  equal(doc.doc.age, deserialize(serialized_data).doc.age);
-  equal(doc.doc.name, deserialize(serialized_data).doc.name);
-  equal(doc.doc.shoe_size, deserialize(serialized_data).doc.shoe_size);
+  assertEquals(doc.doc.age, deserialize(serializedData).doc.age);
+  assertEquals(doc.doc.name, deserialize(serializedData).doc.name);
+  assertEquals(doc.doc.shoe_size, deserialize(serializedData).doc.shoe_size);
 });
 
 Deno.test("[BSON] Should correctly ignore undefined values in arrays", () => {
-  let doc = { doc: { notdefined: undefined } };
-  let serialized_data = serialize(doc, {
+  const doc = { doc: { notdefined: undefined } };
+  const serializedData = serialize(doc, {
     ignoreUndefined: true,
   });
-  let serialized_data2 = Buffer.alloc(
+  const serializedData2 = new Uint8Array(
     calculateObjectSize(doc, {
       ignoreUndefined: true,
     }),
   );
-  serializeWithBufferAndIndex(doc, serialized_data2, {
+  serializeWithBufferAndIndex(doc, serializedData2, {
     ignoreUndefined: true,
   });
 
-  equals(serialized_data, serialized_data2);
-  let doc1 = deserialize(serialized_data);
+  assertEquals(serializedData, serializedData2);
+  const doc1 = deserialize(serializedData);
 
-  equal(undefined, doc1.doc.notdefined);
+  assertEquals(undefined, doc1.doc.notdefined);
 });
 
 Deno.test(
   "[BSON] Should correctly serialize undefined array entries as null values",
   () => {
-    let doc = { doc: { notdefined: undefined }, a: [1, 2, undefined, 3] };
-    let serialized_data = serialize(doc, {
+    const doc = { doc: { notdefined: undefined }, a: [1, 2, undefined, 3] };
+    const serializedData = serialize(doc, {
       ignoreUndefined: true,
     });
-    let serialized_data2 = Buffer.alloc(
+    const serializedData2 = new Uint8Array(
       calculateObjectSize(doc, {
         ignoreUndefined: true,
       }),
     );
-    serializeWithBufferAndIndex(doc, serialized_data2, {
+    serializeWithBufferAndIndex(doc, serializedData2, {
       ignoreUndefined: true,
     });
-    equals(serialized_data, serialized_data2);
-    let doc1 = deserialize(serialized_data);
-    equal(undefined, doc1.doc.notdefineassertEqualsd);
+    assertEquals(serializedData, serializedData2);
+    const doc1 = deserialize(serializedData);
+    assertEquals(undefined, doc1.doc.notdefineassertEqualsd);
     assert(null, doc1.a[2]);
   },
 );
@@ -277,44 +276,44 @@ Deno.test(
 Deno.test(
   "[BSON] Should correctly serialize undefined array entries as undefined values",
   () => {
-    let doc = { doc: { notdefined: undefined }, a: [1, 2, undefined, 3] };
-    let serialized_data = serialize(doc, {
+    const doc = { doc: { notdefined: undefined }, a: [1, 2, undefined, 3] };
+    const serializedData = serialize(doc, {
       ignoreUndefined: false,
     });
-    let serialized_data2 = Buffer.alloc(
+    const serializedData2 = new Uint8Array(
       calculateObjectSize(doc, {
         ignoreUndefined: false,
       }),
     );
-    serializeWithBufferAndIndex(doc, serialized_data2, {
+    serializeWithBufferAndIndex(doc, serializedData2, {
       ignoreUndefined: false,
     });
 
     // console.log("======================================== 0")
-    // console.log(serialized_data.toString('hex'))
-    // console.log(serialized_data2.toString('hex'))
+    // console.log(serializedData.toString('hex'))
+    // console.log(serializedData2.toString('hex'))
 
-    equals(serialized_data, serialized_data2);
-    let doc1 = deserialize(serialized_data);
-    let doc2 = deserialize(serialized_data2);
+    assertEquals(serializedData, serializedData2);
+    const doc1 = deserialize(serializedData);
+    const doc2 = deserialize(serializedData2);
     // console.log("======================================== 0")
     // console.dir(doc1)
     // console.dir(doc2)
 
-    equal(null, doc1.doc.notdefined);
-    equal(null, doc2.doc.notdefined);
+    assertEquals(null, doc1.doc.notdefined);
+    assertEquals(null, doc2.doc.notdefined);
   },
 );
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Array", () => {
-  let doc = { doc: [1, 2, "a", "b"] };
-  let serialized_data = serialize(doc);
+  const doc = { doc: [1, 2, "a", "b"] };
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  let deserialized = deserialize(serialized_data);
+  const deserialized = deserialize(serializedData);
   assertEquals(doc.doc[0], deserialized.doc[0]);
   assertEquals(doc.doc[1], deserialized.doc[1]);
   assertEquals(doc.doc[2], deserialized.doc[2]);
@@ -322,14 +321,14 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize Array", () => {
 });
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Buffer", () => {
-  let doc = { doc: Buffer.from("hello world") };
-  let serialized_data = serialize(doc);
+  const doc = { doc: Buffer.from("hello world") };
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  let deserialized = deserialize(serialized_data);
+  const deserialized = deserialize(serializedData);
   assert(deserialized.doc instanceof Binary);
   assertEquals("hello world", deserialized.doc.toString());
 });
@@ -337,14 +336,14 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize Buffer", () => {
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize Buffer with promoteBuffers option",
   () => {
-    let doc = { doc: Buffer.from("hello world") };
-    let serialized_data = serialize(doc);
+    const doc = { doc: Buffer.from("hello world") };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized = deserialize(serialized_data, {
+    const deserialized = deserialize(serializedData, {
       promoteBuffers: true,
     });
     assert(Buffer.isBuffer(deserialized.doc));
@@ -353,14 +352,14 @@ Deno.test(
 );
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Number 4", () => {
-  let doc: Document = { doc: BSON_INT32_MAX + 10 };
-  let serialized_data = serialize(doc);
+  const doc: Document = { doc: BSON_INT32_MAX + 10 };
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  let deserialized = deserialize(serialized_data);
+  const deserialized = deserialize(serializedData);
   // assert(deserialized.doc instanceof Binary);
   assertEquals(BSON_INT32_MAX + 10, deserialized.doc);
 });
@@ -372,14 +371,14 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize Number 4", () => {
 //     "Should Correctly Serialize and Deserialize Array with added on functions",
 //     () => {
 //       Array.prototype.toXml = () => {};
-//       let doc = { doc: [1, 2, "a", "b"] };
-//       let serialized_data = serialize(doc);
+//       const doc = { doc: [1, 2, "a", "b"] };
+//       const serializedData = serialize(doc);
 
-//       let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-//       serializeWithBufferAndIndex(doc, serialized_data2);
-//       equals(serialized_data, serialized_data2);
+//       const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+//       serializeWithBufferAndIndex(doc, serializedData2);
+//       assertEquals(serializedData, serializedData2);
 
-//       let deserialized = deserialize(serialized_data);
+//       const deserialized = deserialize(serializedData);
 //       assertEquals(doc.doc[0], deserialized.doc[0]);
 //       assertEquals(doc.doc[1], deserialized.doc[1]);
 //       assertEquals(doc.doc[2], deserialized.doc[2]);
@@ -388,29 +387,29 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize Number 4", () => {
 //   );
 
 Deno.test("[BSON] Should correctly deserialize a nested object", () => {
-  let doc = { doc: { doc: 1 } };
-  let serialized_data = serialize(doc);
+  const doc = { doc: { doc: 1 } };
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  equal(doc.doc.doc, deserialize(serialized_data).doc.doc);
+  assertEquals(doc.doc.doc, deserialize(serializedData).doc.doc);
 });
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize A Boolean", () => {
-  let doc = { doc: true };
-  let serialized_data = serialize(doc);
+  const doc = { doc: true };
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  assertEquals(doc.doc, deserialize(serialized_data).doc);
+  assertEquals(doc.doc, deserialize(serializedData).doc);
 });
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize a Date", () => {
-  let date = new Date();
+  const date = new Date();
   //(2009, 11, 12, 12, 00, 30)
   date.setUTCDate(12);
   date.setUTCFullYear(2009);
@@ -418,28 +417,28 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize a Date", () => {
   date.setUTCHours(12);
   date.setUTCMinutes(0);
   date.setUTCSeconds(30);
-  let doc = { doc: date };
-  let serialized_data = serialize(doc);
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
+  const doc = { doc: date };
+  const serializedData = serialize(doc);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
 
-  equals(serialized_data, serialized_data2);
+  assertEquals(serializedData, serializedData2);
 
-  let doc1 = deserialize(serialized_data);
-  equal(doc, doc1);
+  const doc1 = deserialize(serializedData);
+  assertEquals(doc, doc1);
 });
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize a Date from another VM",
   () => {
     const vm: any = undefined;
-    let script = "date1 = new Date();",
+    const script = "date1 = new Date();",
       ctx = vm.createContext({
         date1: null,
       });
     vm.runInContext(script, ctx, "myfile.vm");
 
-    let date = ctx.date1;
+    const date = ctx.date1;
     //(2009, 11, 12, 12, 00, 30)
     date.setUTCDate(12);
     date.setUTCFullYear(2009);
@@ -447,18 +446,18 @@ Deno.test(
     date.setUTCHours(12);
     date.setUTCMinutes(0);
     date.setUTCSeconds(30);
-    let doc = { doc: date };
-    let serialized_data = serialize(doc);
+    const doc = { doc: date };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
-    assertEquals(doc.doc.date, deserialize(serialized_data).doc.date);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
+    assertEquals(doc.doc.date, deserialize(serializedData).doc.date);
   },
 );
 
 Deno.test("[BSON] Should Correctly Serialize nested doc", () => {
-  let doc = {
+  const doc = {
     string: "Strings are great",
     decimal: 3.14159265,
     bool: true,
@@ -473,52 +472,52 @@ Deno.test("[BSON] Should Correctly Serialize nested doc", () => {
     anotherString: "another string",
   };
 
-  let serialized_data = serialize(doc);
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 });
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Oid", () => {
   const doc: Document = { doc: new ObjectId() };
-  const serialized_data = serialize(doc);
+  const serializedData = serialize(doc);
 
-  const serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  const deserializedDoc = deserialize(serialized_data);
+  const deserializedDoc = deserialize(serializedData);
   assert(deserializedDoc.doc instanceof ObjectId);
   assertEquals(doc.doc.toHexString(), deserializedDoc.doc.toHexString());
 });
 
 Deno.test("[BSON] Should Correctly encode Empty Hash", () => {
-  let doc = {};
-  let serialized_data = serialize(doc);
+  const doc = {};
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  equal(doc, deserialize(serialized_data));
+  assertEquals(doc, deserialize(serializedData));
 });
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize Ordered Hash",
   () => {
-    let doc = { doc: { b: 1, a: 2, c: 3, d: 4 } };
-    let serialized_data = serialize(doc);
+    const doc = { doc: { b: 1, a: 2, c: 3, d: 4 } };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let decoded_hash = deserialize(serialized_data).doc;
-    let keys = [];
+    const decodedHash = deserialize(serializedData).doc;
+    const keys = [];
 
-    for (let name in decoded_hash) keys.push(name);
-    equal(["b", "a", "c", "d"], keys);
+    for (let name in decodedHash) keys.push(name);
+    assertEquals(["b", "a", "c", "d"], keys);
   },
 );
 
@@ -526,14 +525,14 @@ Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize Regular Expression",
   () => {
     // Serialize the regular expression
-    let doc = { doc: /foobar/im };
-    let serialized_data = serialize(doc);
+    const doc = { doc: /foobar/im };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let doc2 = deserialize(serialized_data);
+    const doc2 = deserialize(serializedData);
 
     assertEquals(doc.doc.toString(), doc2.doc.toString());
   },
@@ -542,76 +541,76 @@ Deno.test(
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize a Binary object",
   () => {
-    let bin = new Binary();
-    let string = "binstring";
+    const bin = new Binary();
+    const string = "binstring";
     for (let index = 0; index < string.length; index++) {
       bin.put(string.charAt(index));
     }
 
-    let doc = { doc: bin };
-    let serialized_data = serialize(doc);
+    const doc = { doc: bin };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
+    const deserializedData = deserialize(serializedData);
 
-    equal(doc.doc.value(), deserialized_data.doc.value());
+    assertEquals(doc.doc.value(), deserializedData.doc.value());
   },
 );
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize a Type 2 Binary object",
   () => {
-    let bin = new Binary(
+    const bin = new Binary(
       Buffer.from("binstring"),
       BinarySizes.SUBTYPE_BYTE_ARRAY,
     );
-    let string = "binstring";
+    const string = "binstring";
     for (let index = 0; index < string.length; index++) {
       bin.put(string.charAt(index));
     }
 
-    let doc = { doc: bin };
-    let serialized_data = serialize(doc);
+    const doc = { doc: bin };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
+    const deserializedData = deserialize(serializedData);
 
-    equal(doc.doc.value(), deserialized_data.doc.value());
+    assertEquals(doc.doc.value(), deserializedData.doc.value());
   },
 );
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize DBRef", () => {
-  let oid = new ObjectId();
-  let doc = { dbref: new DBRef("namespace", oid, undefined, {}) };
+  const oid = new ObjectId();
+  const doc = { dbref: new DBRef("namespace", oid, undefined, {}) };
 
-  let serialized_data = serialize(doc);
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equal(serialized_data, serialized_data2);
+  const serializedData = serialize(doc);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  let doc2 = deserialize(serialized_data);
-  equal(doc, doc2);
+  const doc2 = deserialize(serializedData);
+  assertEquals(doc, doc2);
   assert(doc2.dbref.oid.equal(), oid.toHexString());
 });
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize partial DBRef",
   () => {
-    let id = new ObjectId();
-    let doc = { name: "something", user: { $ref: "username", $id: id } };
-    let serialized_data = serialize(doc);
+    const id = new ObjectId();
+    const doc = { name: "something", user: { $ref: "username", $id: id } };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let doc2 = deserialize(serialized_data);
+    const doc2 = deserialize(serializedData);
     assertEquals("something", doc2.name);
     assertEquals("username", doc2.user.collection);
     assertEquals(id.toString(), doc2.user.oid.toString());
@@ -621,15 +620,15 @@ Deno.test(
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize simple Int",
   () => {
-    let doc = { doc: 2147483648 };
-    let serialized_data = serialize(doc);
+    const doc = { doc: 2147483648 };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let doc2 = deserialize(serialized_data);
-    equal(doc.doc, doc2.doc);
+    const doc2 = deserialize(serializedData);
+    assertEquals(doc.doc, doc2.doc);
   },
 );
 
@@ -637,38 +636,38 @@ Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize Long Integer",
   () => {
     let doc = { doc: Long.fromNumber(9223372036854775807) };
-    let serialized_data = serialize(doc);
+    let serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    assert(doc.doc.equals(deserialized_data.doc));
+    let deserializedData = deserialize(serializedData);
+    assert(doc.doc.equals(deserializedData.doc));
 
     doc = { doc: Long.fromNumber(-9223372036854775) };
-    serialized_data = serialize(doc);
-    deserialized_data = deserialize(serialized_data);
-    assert(doc.doc.equals(deserialized_data.doc));
+    serializedData = serialize(doc);
+    deserializedData = deserialize(serializedData);
+    assert(doc.doc.equals(deserializedData.doc));
 
     doc = { doc: Long.fromNumber(-9223372036854775809) };
-    serialized_data = serialize(doc);
-    deserialized_data = deserialize(serialized_data);
-    assert(doc.doc.equals(deserialized_data.doc));
+    serializedData = serialize(doc);
+    deserializedData = deserialize(serializedData);
+    assert(doc.doc.equals(deserializedData.doc));
   },
 );
 
 Deno.test("[BSON] Should Deserialize Large Integers as Number not Long", () => {
   function roundTrip(val: number) {
-    let doc = { doc: val };
-    let serialized_data = serialize(doc);
+    const doc = { doc: val };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    equal(doc, deserialized_data.doc);
+    const deserializedData = deserialize(serializedData);
+    assertEquals(doc, deserializedData.doc);
   }
 
   roundTrip(2 ** 52);
@@ -687,88 +686,88 @@ Deno.test("[BSON] Should Deserialize Large Integers as Number not Long", () => {
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize Timestamp as subclass of Long",
   () => {
-    let long = Long.fromNumber(9223372036854775807);
-    let timestamp = Timestamp.fromNumber(9223372036854775807);
+    const long = Long.fromNumber(9223372036854775807);
+    const timestamp = Timestamp.fromNumber(9223372036854775807);
     assert(long instanceof Long);
     assert(!(long instanceof Timestamp));
     assert(timestamp instanceof Timestamp);
     assert(timestamp instanceof Long);
 
-    let test_int = { doc: long, doc2: timestamp };
-    let serialized_data = serialize(test_int);
+    const testInt = { doc: long, doc2: timestamp };
+    const serializedData = serialize(testInt);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(test_int));
-    serializeWithBufferAndIndex(test_int, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(testInt));
+    serializeWithBufferAndIndex(testInt, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    assert(test_int.doc.equals(deserialized_data.doc));
+    const deserializedData = deserialize(serializedData);
+    assert(testInt.doc.equals(deserializedData.doc));
   },
 );
 
 Deno.test("[BSON] Should Always put the id as the first item in a hash", () => {
-  let hash = { doc: { not_id: 1, _id: 2 } };
-  let serialized_data = serialize(hash);
+  const hash = { doc: { not_id: 1, _id: 2 } };
+  const serializedData = serialize(hash);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(hash));
-  serializeWithBufferAndIndex(hash, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(hash));
+  serializeWithBufferAndIndex(hash, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  let deserialized_data = deserialize(serialized_data);
-  let keys = [];
+  const deserializedData = deserialize(serializedData);
+  const keys = [];
 
-  for (let name in deserialized_data.doc) {
+  for (let name in deserializedData.doc) {
     keys.push(name);
   }
 
-  equal(["not_id", "equal"], keys);
+  assertEquals(["not_id", "equal"], keys);
 });
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize a User defined Binary object",
   () => {
-    let bin = new Binary();
+    const bin = new Binary();
     bin.sub_type = BinarySizes.SUBTYPE_USER_DEFINE;
-    let string = "binstring";
+    const string = "binstring";
     for (let index = 0; index < string.length; index++) {
       bin.put(string.charAt(index));
     }
 
-    let doc = { doc: bin };
-    let serialized_data = serialize(doc);
+    const doc = { doc: bin };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
-    let deserialized_data = deserialize(serialized_data);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
+    const deserializedData = deserialize(serializedData);
 
-    equal(
-      deserialized_data.equal.sub_type,
+    assertEquals(
+      deserializedData.equal.sub_type,
       BinarySizes.SUBTYPE_USER_DEFINE,
     );
-    equal(doc.doc.value(), deserialized_data.doc.value());
+    assertEquals(doc.doc.value(), deserializedData.doc.value());
   },
 );
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize a Code object",
   () => {
-    let doc = { doc: { doc2: new Code("this.a > i", { i: 1 }) } };
-    let serialized_data = serialize(doc);
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const doc = { doc: { doc2: new Code("this.a > i", { i: 1 }) } };
+    const serializedData = serialize(doc);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    equal(doc.doc.doc2.code, deserialized_data.doc.doc2.code);
-    equal(doc.doc.doc2.scope?.i, deserialized_data.doc.doc2.scope.i);
+    const deserializedData = deserialize(serializedData);
+    assertEquals(doc.doc.doc2.code, deserializedData.doc.doc2.code);
+    assertEquals(doc.doc.doc2.scope?.i, deserializedData.doc.doc2.scope.i);
   },
 );
 
 Deno.test(
   "[BSON] Should Correctly serialize and deserialize and embedded array",
   () => {
-    let doc = {
+    const doc = {
       a: 0,
       b: [
         "tmp1",
@@ -790,21 +789,21 @@ Deno.test(
       ],
     };
 
-    let serialized_data = serialize(doc);
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    equal(doc.a, deserialized_data.a);
-    equal(doc.b, deserialized_data.b);
+    const deserializedData = deserialize(serializedData);
+    assertEquals(doc.a, deserializedData.a);
+    assertEquals(doc.b, deserializedData.b);
   },
 );
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize UTF8", () => {
   // Serialize utf8
-  let doc = {
+  const doc = {
     name: "本荘由利地域に洪水警報",
     name1: "öüóőúéáűíÖÜÓŐÚÉÁŰÍ",
     name2: "abcdedede",
@@ -817,63 +816,63 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize UTF8", () => {
       洪水警報本荘地域に洪水警報本荘由利: "本荘由利地域に洪水警報",
     },
   };
-  let serialized_data = serialize(doc);
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  let deserialized_data = deserialize(serialized_data);
-  equal(doc, deserialized_data);
+  const deserializedData = deserialize(serializedData);
+  assertEquals(doc, deserializedData);
 });
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize query object",
   () => {
-    let doc = {
+    const doc = {
       count: "remove_with_no_callback_bug_test",
       query: {},
       fields: null,
     };
-    let serialized_data = serialize(doc);
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    equal(doc, deserialized_data);
+    const deserializedData = deserialize(serializedData);
+    assertEquals(doc, deserializedData);
   },
 );
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize empty query object",
   () => {
-    let doc = {};
-    let serialized_data = serialize(doc);
+    const doc = {};
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    equal(doc, deserialized_data);
+    const deserializedData = deserialize(serializedData);
+    assertEquals(doc, deserializedData);
   },
 );
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize array based doc",
   () => {
-    let doc = { b: [1, 2, 3], _id: new ObjectId() };
-    let serialized_data = serialize(doc);
+    const doc = { b: [1, 2, 3], _id: new ObjectId() };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    assert(doc.b, deserialized_data.b);
-    equal(doc, deserialized_data);
+    const deserializedData = deserialize(serializedData);
+    assert(doc.b, deserializedData.b);
+    assertEquals(doc, deserializedData);
   },
 );
 
@@ -881,30 +880,30 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize Symbol", () => {
   if (BSONSymbol != null) {
     // symbols are deprecated, so upgrade to strings... so I'm not sure
     // we really need this test anymore...
-    //let doc = { b: [new BSONSymbol('test')] };
+    //const doc = { b: [new BSONSymbol('test')] };
 
-    let doc = { b: ["test"] };
-    let serialized_data = serialize(doc);
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const doc = { b: ["test"] };
+    const serializedData = serialize(doc);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let deserialized_data = deserialize(serialized_data);
-    equal(doc, deserialized_data);
-    assertEquals(typeof deserialized_data.b[0], "string");
+    const deserializedData = deserialize(serializedData);
+    assertEquals(doc, deserializedData);
+    assertEquals(typeof deserializedData.b[0], "string");
   }
 });
 
 Deno.test("[BSON] Should handle Deeply nested document", () => {
   const doc: Document = { a: { b: { c: { d: 2 } } } };
-  const serialized_data = serialize(doc);
+  const serializedData = serialize(doc);
 
-  const serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  const deserialized_data = deserialize(serialized_data);
-  equal(doc, deserialized_data);
+  const deserializedData = deserialize(serializedData);
+  assertEquals(doc, deserializedData);
 });
 
 //   /**
@@ -912,15 +911,15 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //    */
 //    Deno.test("[BSON] Should handle complicated all typed object", () => {
 //     // First doc
-//     let date = new Date();
-//     let oid = new ObjectId();
-//     let string = "binstring";
-//     let bin = new Binary();
+//     const date = new Date();
+//     const oid = new ObjectId();
+//     const string = "binstring";
+//     const bin = new Binary();
 //     for (let index = 0; index < string.length; index++) {
 //       bin.put(string.charAt(index));
 //     }
 
-//     let doc = {
+//     const doc = {
 //       string: "hello",
 //       array: [1, 2, 3],
 //       hash: { a: 1, b: 2 },
@@ -944,7 +943,7 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //       bin.put(string.charAt(index));
 //     }
 
-//     let doc2 = {
+//     const doc2 = {
 //       string: "hello",
 //       array: [1, 2, 3],
 //       hash: { a: 1, b: 2 },
@@ -960,16 +959,16 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //       dbref: new DBRef("namespace", oid, "integration_tests_"),
 //     };
 
-//     let serialized_data = serialize(doc);
+//     const serializedData = serialize(doc);
 
-//     let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-//     serializeWithBufferAndIndex(doc, serialized_data2);
+//     const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+//     serializeWithBufferAndIndex(doc, serializedData2);
 
-//     equal(serialized_data, serialized_data2);
+//     assertEquals(serializedData, serializedData2);
 
-//     serialized_data2 = serialize(doc2, false, true);
+//     serializedData2 = serialize(doc2, false, true);
 
-//     equal(serialized_data, serialized_data2);
+//     assertEquals(serializedData, serializedData2);
 //   });
 
 //   /**
@@ -978,7 +977,7 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //    step(
 //     "Should Correctly Serialize Complex Nested Object",
 //     () => {
-//       let doc = {
+//       const doc = {
 //         email: "email@email.com",
 //         encrypted_password: "password",
 //         friends: ["4db96b973d01205364000006", "4dc77b24c5ba38be14000002"],
@@ -990,18 +989,18 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //         _id: new ObjectId(),
 //       };
 
-//       let serialized_data = serialize(doc);
+//       const serializedData = serialize(doc);
 
-//       let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-//       serializeWithBufferAndIndex(doc, serialized_data2);
-//       equals(serialized_data, serialized_data2);
+//       const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+//       serializeWithBufferAndIndex(doc, serializedData2);
+//       assertEquals(serializedData, serializedData2);
 
-//       let doc2 = doc;
+//       const doc2 = doc;
 //       doc2._id = ObjectId.createFromHexString(doc2._id.toHexString());
-//       serialized_data2 = serialize(doc2, false, true);
+//       serializedData2 = serialize(doc2, false, true);
 
-//       for (let i = 0; i < serialized_data2.length; i++) {
-//         assertEquals(serialized_data2[i], serialized_data[i]);
+//       for (let i = 0; i < serializedData2.length; i++) {
+//         assertEquals(serializedData2[i], serializedData[i]);
 //       }
 //     },
 //   );
@@ -1010,15 +1009,15 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //    * @ignore
 //    */
 //    Deno.test("[BSON] Should correctly massive doc", () => {
-//     let oid1 = new ObjectId();
-//     let oid2 = new ObjectId();
+//     const oid1 = new ObjectId();
+//     const oid2 = new ObjectId();
 //     // JS doc
-//     let doc = {
+//     const doc = {
 //       dbref2: new DBRef("namespace", oid1, "integration_tests_"),
 //       _id: oid2,
 //     };
 
-//     let doc2 = {
+//     const doc2 = {
 //       dbref2: new DBRef(
 //         "namespace",
 //         ObjectId.createFromHexString(oid1.toHexString()),
@@ -1027,53 +1026,53 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //       _id: ObjectId.createFromHexString(oid2.toHexString()),
 //     };
 
-//     let serialized_data = serialize(doc);
-//     let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-//     serializeWithBufferAndIndex(doc, serialized_data2);
-//     equal(serialized_data, serialized_data2);
+//     const serializedData = serialize(doc);
+//     const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+//     serializeWithBufferAndIndex(doc, serializedData2);
+//     assertEquals(serializedData, serializedData2);
 
-//     serialized_data2 = serialize(doc2, false, true);
-//     equal(serialized_data, serialized_data2);
+//     serializedData2 = serialize(doc2, false, true);
+//     assertEquals(serializedData, serializedData2);
 //   });
 
 Deno.test("[BSON] Should Correctly Serialize/Deserialize regexp object", () => {
-  let doc = { b: /foobaré/ };
+  const doc = { b: /foobaré/ };
 
-  let serialized_data = serialize(doc);
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = new Uint8Array(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  let serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  serialized_data2 = serialize(doc);
+  serializedData2 = serialize(doc);
 
-  for (let i = 0; i < serialized_data2.length; i++) {
-    assertEquals(serialized_data2[i], serialized_data[i]);
+  for (let i = 0; i < serializedData2.length; i++) {
+    assertEquals(serializedData2[i], serializedData[i]);
   }
 });
 
 Deno.test(
   "[BSON] Should Correctly Serialize/Deserialize complicated object",
   () => {
-    let doc = {
+    const doc = {
       a: { b: { c: [new ObjectId(), new ObjectId()] } },
       d: { f: 1332.3323 },
     };
 
-    let serialized_data = serialize(doc);
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let doc2 = deserialize(serialized_data);
+    const doc2 = deserialize(serializedData);
 
-    equal(doc, doc2);
+    assertEquals(doc, doc2);
   },
 );
 
 Deno.test("[BSON] Should Correctly Serialize/Deserialize nested object", () => {
-  let doc = {
+  const doc = {
     _id: { date: new Date(), gid: "6f35f74d2bea814e21000000" },
     value: {
       b: { countries: { "--": 386 }, total: 1599 },
@@ -1083,21 +1082,21 @@ Deno.test("[BSON] Should Correctly Serialize/Deserialize nested object", () => {
     },
   };
 
-  let serialized_data = serialize(doc);
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  let doc2 = deserialize(serialized_data);
+  const doc2 = deserialize(serializedData);
 
-  equal(doc, doc2);
+  assertEquals(doc, doc2);
 });
 
 Deno.test(
   "[BSON] Should Correctly Serialize/Deserialize nested object with even more nesting",
   () => {
-    let doc = {
+    const doc = {
       _id: {
         date: { a: 1, b: 2, c: new Date() },
         gid: "6f35f74d2bea814e21000000",
@@ -1110,24 +1109,24 @@ Deno.test(
       },
     };
 
-    let serialized_data = serialize(doc);
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let doc2 = deserialize(serialized_data);
-    equal(doc, doc2);
+    const doc2 = deserialize(serializedData);
+    assertEquals(doc, doc2);
   },
 );
 
 Deno.test("[BSON] Should Correctly Serialize empty name object", () => {
-  let doc = {
+  const doc = {
     "": "test",
     bbbb: 1,
   };
-  let serialized_data = serialize(doc);
-  let doc2 = deserialize(serialized_data);
+  const serializedData = serialize(doc);
+  const doc2 = deserialize(serializedData);
   assertEquals(doc2[""], "test");
   assertEquals(doc2["bbbb"], 1);
 });
@@ -1153,7 +1152,7 @@ Deno.test(
 );
 
 Deno.test("[BSON] Should deserialize correctly", () => {
-  let doc = {
+  const doc = {
     _id: new ObjectId("4e886e687ff7ef5e00000162"),
     str: "foreign",
     type: 2,
@@ -1163,11 +1162,11 @@ Deno.test("[BSON] Should deserialize correctly", () => {
     ],
   };
 
-  let serialized_data = serialize(doc);
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
-  let doc2 = deserialize(serialized_data);
+  const serializedData = serialize(doc);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
+  const doc2 = deserialize(serializedData);
 
   assert(JSON.stringify(equal), JSON.stringify(doc2));
 });
@@ -1175,17 +1174,17 @@ Deno.test("[BSON] Should deserialize correctly", () => {
 Deno.test(
   "[BSON] Should correctly serialize and deserialize MinKey and MaxKey values",
   () => {
-    let doc = {
+    const doc = {
       _id: new ObjectId("4e886e687ff7ef5e00000162"),
       minKey: new MinKey(),
       maxKey: new MaxKey(),
     };
 
-    let serialized_data = serialize(doc);
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
-    let doc2 = deserialize(serialized_data);
+    const serializedData = serialize(doc);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
+    const doc2 = deserialize(serializedData);
 
     // Peform equality checks
     assertEquals(JSON.stringify(doc), JSON.stringify(doc2));
@@ -1196,15 +1195,15 @@ Deno.test(
 );
 
 Deno.test("[BSON] Should correctly serialize Double value", () => {
-  let doc = {
+  const doc = {
     value: new Double(34343.2222),
   };
 
-  let serialized_data = serialize(doc);
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
-  let doc2 = deserialize(serialized_data);
+  const serializedData = serialize(doc);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
+  const doc2 = deserialize(serializedData);
 
   assert(doc.value.valueOf(), doc2.value);
   assert(doc.value.value, doc2.value);
@@ -1221,8 +1220,8 @@ Deno.test("[BSON] ObjectId should correctly create objects", () => {
 });
 
 Deno.test("[BSON] ObjectId should correctly retrieve timestamp", () => {
-  let testDate = new Date();
-  let object1 = new ObjectId();
+  const testDate = new Date();
+  const object1 = new ObjectId();
   assertEquals(
     Math.floor(testDate.getTime() / 1000),
     Math.floor(object1.getTimestamp().getTime() / 1000),
@@ -1230,16 +1229,16 @@ Deno.test("[BSON] ObjectId should correctly retrieve timestamp", () => {
 });
 
 Deno.test("[BSON] Should Correctly throw error on bsonparser errors", () => {
-  let data = Buffer.alloc(3);
+  let data = new Uint8Array(3);
 
-  assert(() => {
+  assertThrows(() => {
     deserialize(data);
   });
 
-  data = Buffer.alloc(5);
+  data = new Uint8Array(5);
   data[0] = 0xff;
   data[1] = 0xff;
-  assert(() => {
+  assertThrows(() => {
     deserialize(data);
   });
 
@@ -1257,7 +1256,7 @@ Deno.test(
   "[BSON] Should correctly calculate the size of a given javascript object",
   () => {
     // Create a simple object
-    let doc = { a: 1, func: () => {} };
+    const doc = { a: 1, func: () => {} };
     // Calculate the size of the object without serializing the function
     let size = calculateObjectSize(doc, {
       serializeFunctions: false,
@@ -1283,7 +1282,7 @@ Deno.test(
   "[BSON] Should correctly calculate the size of a given javascript object using instance method",
   () => {
     // Create a simple object
-    let doc = { a: 1, func: () => {} };
+    const doc = { a: 1, func: () => {} };
     // Calculate the size of the object without serializing the function
     let size = calculateObjectSize(doc, {
       serializeFunctions: false,
@@ -1309,11 +1308,11 @@ Deno.test(
   "[BSON] Should correctly serializeWithBufferAndIndex a given javascript object",
   () => {
     // Create a simple object
-    let doc = { a: 1, func: () => {} };
+    const doc = { a: 1, func: () => {} };
 
     // Calculate the size of the document, no function serialization
     let size = calculateObjectSize(doc, { serializeFunctions: false });
-    let buffer = Buffer.alloc(size);
+    let buffer = new Uint8Array(size);
     // Serialize the object to the buffer, checking keys and not serializing functions
     let index = serializeWithBufferAndIndex(doc, buffer, {
       serializeFunctions: false,
@@ -1330,7 +1329,7 @@ Deno.test(
       serializeFunctions: true,
     });
     // Allocate a buffer
-    buffer = Buffer.alloc(size);
+    buffer = new Uint8Array(size);
     // Serialize the object to the buffer, checking keys and not serializing functions
     index = serializeWithBufferAndIndex(doc, buffer, {
       serializeFunctions: true,
@@ -1354,14 +1353,14 @@ Deno.test(
   "[BSON] Should correctly serializeWithBufferAndIndex a given javascript object using a BSON instance",
   () => {
     // Create a simple object
-    let doc = { a: 1, func: () => {} };
+    const doc = { a: 1, func: () => {} };
 
     // Calculate the size of the document, no function serialization
     let size = calculateObjectSize(doc, {
       serializeFunctions: false,
     });
     // Allocate a buffer
-    let buffer = Buffer.alloc(size);
+    let buffer = new Uint8Array(size);
     // Serialize the object to the buffer, checking keys and not serializing functions
     let index = serializeWithBufferAndIndex(doc, buffer, {
       serializeFunctions: false,
@@ -1376,7 +1375,7 @@ Deno.test(
       serializeFunctions: true,
     });
     // Allocate a buffer
-    buffer = Buffer.alloc(size);
+    buffer = new Uint8Array(size);
     // Serialize the object to the buffer, checking keys and not serializing functions
     index = serializeWithBufferAndIndex(doc, buffer, {
       serializeFunctions: true,
@@ -1396,7 +1395,7 @@ Deno.test(
  */
 Deno.test("[BSON] Should correctly serialize a given javascript object", () => {
   // Create a simple object
-  let doc = { a: 1, func: () => {} };
+  const doc = { a: 1, func: () => {} };
 
   let buffer = serialize(doc, {
     checkKeys: true,
@@ -1460,7 +1459,7 @@ Deno.test(
     const parsedDocs: Document[] = [];
     deserializeStream(buf, 0, docs.length, parsedDocs, 0);
 
-    docs.forEach((doc, i) => equal(doc, parsedDocs[i]));
+    docs.forEach((doc, i) => assertEquals(doc, parsedDocs[i]));
   },
 );
 
@@ -1482,7 +1481,7 @@ Deno.test(
     assertEquals(__id, a.toHexString());
 
     // number
-    let genTime = a.getTimestamp().getTime();
+    const genTime = a.getTimestamp().getTime();
     a = new ObjectId(genTime);
     __id = a.toHexString();
     assertEquals(__id, a.toHexString());
@@ -1501,7 +1500,7 @@ Deno.test(
     try {
       new ObjectId("zzzzzzzzzzzzzzzzzzzzzzzz");
       assert(false);
-    } catch (err) {
+    } catch {
       assert(true);
     }
 
@@ -1522,25 +1521,25 @@ Deno.test(
 Deno.test("[BSON] Should correctly serialize the BSONRegExp type", () => {
   const doc: Document = { regexp: new BSONRegExp("test", "i") };
   let doc1: Document = { regexp: /test/i };
-  const serialized_data = serialize(doc);
-  const serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData = serialize(doc);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  doc1 = deserialize(serialized_data);
+  doc1 = deserialize(serializedData);
   const regexp = new RegExp("test", "i");
-  equal(regexp, doc1.regexp);
+  assertEquals(regexp, doc1.regexp);
 });
 
 Deno.test("[BSON] Should correctly deserialize the BSONRegExp type", () => {
-  let doc = { regexp: new BSONRegExp("test", "i") };
-  let serialized_data = serialize(doc);
+  const doc = { regexp: new BSONRegExp("test", "i") };
+  const serializedData = serialize(doc);
 
-  let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serialized_data2);
-  equals(serialized_data, serialized_data2);
+  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+  serializeWithBufferAndIndex(doc, serializedData2);
+  assertEquals(serializedData, serializedData2);
 
-  let doc1 = deserialize(serialized_data, { bsonRegExp: true });
+  const doc1 = deserialize(serializedData, { bsonRegExp: true });
   assert(doc1.regexp instanceof BSONRegExp);
   assertEquals("test", doc1.regexp.pattern);
   assertEquals("i", doc1.regexp.options);
@@ -1565,14 +1564,14 @@ Deno.test(
 Deno.test(
   "[BSON] Should correctly deserialize objects containing __proto__ keys",
   () => {
-    let doc = { ["__proto__"]: { a: 42 } };
-    let serialized_data = serialize(doc);
+    const doc = { ["__proto__"]: { a: 42 } };
+    const serializedData = serialize(doc);
 
-    let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-    serializeWithBufferAndIndex(doc, serialized_data2);
-    equals(serialized_data, serialized_data2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-    let doc1 = deserialize(serialized_data);
+    const doc1 = deserialize(serializedData);
     assertEquals(
       Object.getOwnPropertyDescriptor(doc1, "__proto__")!.enumerable,
       true,
@@ -1582,7 +1581,7 @@ Deno.test(
 );
 
 Deno.test("[BSON] Should return boolean for ObjectId equality check", () => {
-  let id = new ObjectId();
+  const id = new ObjectId();
   assertEquals(true, id.equals(new ObjectId(id.toString())));
   assertEquals(true, id.equals(id.toString()));
   assertEquals(false, id.equals("1234567890abcdef12345678"));
