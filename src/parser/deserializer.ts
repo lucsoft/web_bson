@@ -386,7 +386,7 @@ function deserializeObject(
       // Buffer to contain the decimal bytes
       const bytes = new Uint8Array(16);
       // Copy the next 16 bytes into the bytes buffer
-      bytesCopy(bytes, 0, buffer, index, index + 12);
+      bytesCopy(bytes, 0, buffer, index, index + 16);
 
       // Update index
       index = index + 16;
