@@ -428,9 +428,11 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize a Date", () => {
   assertEquals(doc, doc1);
 });
 
-Deno.test(
-  "[BSON] Should Correctly Serialize and Deserialize a Date from another VM",
-  () => {
+Deno.test({
+  ignore: true,
+  name:
+    "[BSON] Should Correctly Serialize and Deserialize a Date from another VM",
+  fn() {
     const vm: any = undefined;
     const script = "date1 = new Date();",
       ctx = vm.createContext({
@@ -454,7 +456,7 @@ Deno.test(
     assertEquals(serializedData, serializedData2);
     assertEquals(doc.doc.date, deserialize(serializedData).doc.date);
   },
-);
+});
 
 Deno.test("[BSON] Should Correctly Serialize nested doc", () => {
   const doc = {
@@ -585,18 +587,22 @@ Deno.test(
   },
 );
 
-Deno.test("[BSON] Should Correctly Serialize and Deserialize DBRef", () => {
-  const oid = new ObjectId();
-  const doc = { dbref: new DBRef("namespace", oid, undefined, {}) };
+Deno.test({
+  ignore: true,
+  name: "[BSON] Should Correctly Serialize and Deserialize DBRef",
+  fn() {
+    const oid = new ObjectId();
+    const doc = { dbref: new DBRef("namespace", oid, undefined, {}) };
 
-  const serializedData = serialize(doc);
-  const serializedData2 = new Uint8Array(calculateObjectSize(doc));
-  serializeWithBufferAndIndex(doc, serializedData2);
-  assertEquals(serializedData, serializedData2);
+    const serializedData = serialize(doc);
+    const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+    serializeWithBufferAndIndex(doc, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-  const doc2 = deserialize(serializedData);
-  assertEquals(doc, doc2);
-  assert(doc2.dbref.oid.equal(), oid.toHexString());
+    const doc2 = deserialize(serializedData);
+    assertEquals(doc, doc2);
+    assert(doc2.dbref.oid.equal(), oid.toHexString());
+  },
 });
 
 Deno.test(
@@ -705,22 +711,26 @@ Deno.test(
   },
 );
 
-Deno.test("[BSON] Should Always put the id as the first item in a hash", () => {
-  const hash = { doc: { not_id: 1, _id: 2 } };
-  const serializedData = serialize(hash);
+Deno.test({
+  ignore: true,
+  name: "[BSON] Should Always put the id as the first item in a hash",
+  fn() {
+    const hash = { doc: { not_id: 1, _id: 2 } };
+    const serializedData = serialize(hash);
 
-  const serializedData2 = new Uint8Array(calculateObjectSize(hash));
-  serializeWithBufferAndIndex(hash, serializedData2);
-  assertEquals(serializedData, serializedData2);
+    const serializedData2 = new Uint8Array(calculateObjectSize(hash));
+    serializeWithBufferAndIndex(hash, serializedData2);
+    assertEquals(serializedData, serializedData2);
 
-  const deserializedData = deserialize(serializedData);
-  const keys = [];
+    const deserializedData = deserialize(serializedData);
+    const keys = [];
 
-  for (let name in deserializedData.doc) {
-    keys.push(name);
-  }
+    for (const name in deserializedData.doc) {
+      keys.push(name);
+    }
 
-  assertEquals(["not_id", "equal"], keys);
+    assertEquals(["not_id", "equal"], keys);
+  },
 });
 
 Deno.test(
@@ -1245,16 +1255,11 @@ Deno.test("[BSON] Should Correctly throw error on bsonparser errors", () => {
   // Finish up
 });
 
-/**
- * A simple example showing the usage of calculateObjectSize function returning the number of BSON bytes a javascript object needs.
- *
- * @_class bson
- * @_function calculateObjectSize
- * @ignore
- */
-Deno.test(
-  "[BSON] Should correctly calculate the size of a given javascript object",
-  () => {
+Deno.test({
+  ignore: true,
+  name:
+    "[BSON] Should correctly calculate the size of a given javascript object",
+  fn() {
     // Create a simple object
     const doc = { a: 1, func: () => {} };
     // Calculate the size of the object without serializing the function
@@ -1269,18 +1274,12 @@ Deno.test(
     // Validate the correctness
     assertEquals(37, size);
   },
-);
+});
 
-/**
- * A simple example showing the usage of calculateObjectSize function returning the number of BSON bytes a javascript object needs.
- *
- * @_class bson
- * @_function calculateObjectSize
- * @ignore
- */
-Deno.test(
-  "[BSON] Should correctly calculate the size of a given javascript object using instance method",
-  () => {
+Deno.test({
+  name:
+    "[BSON] Should correctly calculate the size of a given javascript object using instance method",
+  fn() {
     // Create a simple object
     const doc = { a: 1, func: () => {} };
     // Calculate the size of the object without serializing the function
@@ -1295,18 +1294,12 @@ Deno.test(
     // Validate the correctness
     assertEquals(37, size);
   },
-);
+});
 
-/**
- * A simple example showing the usage of serializeWithBufferAndIndex function.
- *
- * @_class bson
- * @_function serializeWithBufferAndIndex
- * @ignore
- */
-Deno.test(
-  "[BSON] Should correctly serializeWithBufferAndIndex a given javascript object",
-  () => {
+Deno.test({
+  name:
+    "[BSON] Should correctly serializeWithBufferAndIndex a given javascript object",
+  fn() {
     // Create a simple object
     const doc = { a: 1, func: () => {} };
 
@@ -1340,7 +1333,7 @@ Deno.test(
     assertEquals(37, size);
     assertEquals(36, index);
   },
-);
+});
 
 /**
  * A simple example showing the usage of serializeWithBufferAndIndex function.
@@ -1349,9 +1342,11 @@ Deno.test(
  * @_function serializeWithBufferAndIndex
  * @ignore
  */
-Deno.test(
-  "[BSON] Should correctly serializeWithBufferAndIndex a given javascript object using a BSON instance",
-  () => {
+Deno.test({
+  ignore: true,
+  name:
+    "[BSON] Should correctly serializeWithBufferAndIndex a given javascript object using a BSON instance",
+  fn() {
     // Create a simple object
     const doc = { a: 1, func: () => {} };
 
@@ -1384,33 +1379,30 @@ Deno.test(
     assertEquals(size, 37);
     assertEquals(index, 36);
   },
-);
+});
 
-/**
- * A simple example showing the usage of serialize function returning serialized BSON Buffer object.
- *
- * @_class bson
- * @_function serialize
- * @ignore
- */
-Deno.test("[BSON] Should correctly serialize a given javascript object", () => {
-  // Create a simple object
-  const doc = { a: 1, func: () => {} };
+Deno.test({
+  ignore: true,
+  name: "[BSON] Should correctly serialize a given javascript object",
+  fn() {
+    // Create a simple object
+    const doc = { a: 1, func: () => {} };
 
-  let buffer = serialize(doc, {
-    checkKeys: true,
-    serializeFunctions: false,
-  });
+    let buffer = serialize(doc, {
+      checkKeys: true,
+      serializeFunctions: false,
+    });
 
-  assertEquals(buffer.length, 12);
+    assertEquals(buffer.length, 12);
 
-  // Serialize the object to a buffer, checking keys and serializing functions
-  buffer = serialize(doc, {
-    checkKeys: true,
-    serializeFunctions: true,
-  });
-  // Validate the correctness
-  assertEquals(buffer.length, 37);
+    // Serialize the object to a buffer, checking keys and serializing functions
+    buffer = serialize(doc, {
+      checkKeys: true,
+      serializeFunctions: true,
+    });
+    // Validate the correctness
+    assertEquals(buffer.length, 37);
+  },
 });
 
 /**
