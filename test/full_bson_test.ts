@@ -275,7 +275,7 @@ Deno.test(
     const deserialized_data = deserialize(serialized_data);
 
     assert(deserialized_data.floats != null);
-    assert(deserialized_data.floats == 12.34);
+    equal(deserialized_data.floats, 12.34);
   },
 );
 
