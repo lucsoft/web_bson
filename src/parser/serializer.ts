@@ -1,4 +1,3 @@
-import type { Buffer } from "buffer";
 import { Binary, BinarySizes } from "../binary.ts";
 import { Code } from "../code.ts";
 import * as constants from "../constants.ts";
@@ -330,7 +329,7 @@ function serializeObjectId(
 function serializeBuffer(
   buffer: Uint8Array,
   key: string,
-  value: Buffer | Uint8Array,
+  value: Uint8Array,
   index: number,
   isArray?: boolean,
 ) {
@@ -656,7 +655,7 @@ function serializeBinary(
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
   // Extract the buffer
-  const data = value.value(true) as Buffer | Uint8Array;
+  const data = value.value(true) as Uint8Array;
   // Calculate size
   let size = value.position;
   // Add the deprecated 02 type 4 bytes of size to total
