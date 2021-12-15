@@ -18,7 +18,7 @@ const CONTINUING_CHAR = 0x80;
 export function validateUtf8(
   bytes: { [index: number]: number },
   start: number,
-  end: number
+  end: number,
 ): boolean {
   let continuation = 0;
 

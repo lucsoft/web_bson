@@ -1,5 +1,4 @@
 import { Buffer } from "buffer";
-import { assertNotEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { assert } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import {
@@ -8,8 +7,8 @@ import {
 import { assertThrows } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Binary, BinarySizes, BSONTypeError, UUID } from "../src/bson.ts";
 
-const UUIDv4 =
-  /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
+// const UUIDv4 =
+//   /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
 
 // Test values
 const UPPERCASE_DASH_SEPARATED_UUID_STRING =

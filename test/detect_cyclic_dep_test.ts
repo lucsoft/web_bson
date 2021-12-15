@@ -5,7 +5,7 @@ Deno.test(
   "[Cyclic Dependencies] Should correctly detect cyclic dependency in nested objects",
   () => {
     // Force cyclic dependency
-    let a: Document = { b: {} };
+    const a: Document = { b: {} };
     a.b.c = a;
     try {
       // Attempt to serialize cyclic dependency

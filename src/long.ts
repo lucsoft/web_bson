@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any camelcase
 import type { Timestamp } from "./timestamp.ts";
 
 interface LongWASMHelpers {
@@ -41,7 +42,6 @@ interface LongWASMHelpers {
 let wasm: LongWASMHelpers | undefined = undefined;
 
 /* We do not want to have to include DOM types just for this check */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const WebAssembly: any;
 
 try {
@@ -323,7 +323,6 @@ export class Long {
   /**
    * Tests if the specified object is a Long.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   static isLong(value: any): value is Long {
     return value instanceof Long;
   }
@@ -981,7 +980,7 @@ export class Long {
    * @param radix - Radix (2-36), defaults to 10
    * @throws RangeError If `radix` is out of range
    */
-  toString(radix: number = 10): string {
+  toString(radix = 10): string {
     if (radix < 2 || 36 < radix) throw RangeError("radix");
     if (this.isZero()) return "0";
     if (this.isNegative()) {
@@ -1000,10 +999,9 @@ export class Long {
     // Do several (6) digits each time through the loop, so as to
     // minimize the calls to the very expensive emulated div.
     const radixToPower = Long.fromNumber(radix ** 6, this.unsigned);
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    // deno-lint-ignore no-this-alias
     let rem: Long = this;
     let result = "";
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const remDiv = rem.div(radixToPower);
       const intval = rem.sub(remDiv.mul(radixToPower)).toInt() >>> 0;

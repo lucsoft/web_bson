@@ -1,3 +1,4 @@
+// deno-lint-ignore-file ban-types
 import type { Document } from "./bson.ts";
 
 /**

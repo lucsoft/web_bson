@@ -28,7 +28,8 @@ export interface SerializeOptions {
   index?: number;
 }
 
-const regexp = /\x00/; // eslint-disable-line no-control-regex
+// deno-lint-ignore no-control-regex
+const regexp = /\x00/;
 const ignoreKeys = new Set(["$db", "$ref", "$id", "$clusterTime"]);
 
 /*
@@ -513,6 +514,7 @@ function serializeDouble(
 function serializeFunction(
   buffer: Uint8Array,
   key: string,
+  // deno-lint-ignore ban-types
   value: Function,
   index: number,
   _checkKeys = false,

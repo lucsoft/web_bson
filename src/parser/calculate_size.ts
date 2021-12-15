@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Buffer } from "buffer";
 import { Binary, BinarySizes } from "../binary.ts";
 import {
@@ -58,7 +59,6 @@ export function calculateObjectSize(
 
 function calculateElement(
   name: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any,
   serializeFunctions = false,
   isArray = false,
@@ -168,7 +168,7 @@ function calculateElement(
         );
       } else if (value instanceof DBRef) {
         // Set up correct object for serialization
-        const ordered_values = Object.assign(
+        const orderedValues = Object.assign(
           {
             $ref: value.collection,
             $id: value.oid,
@@ -178,14 +178,14 @@ function calculateElement(
 
         // Add db reference if it exists
         if (value.db != null) {
-          ordered_values.$db = value.db;
+          orderedValues.$db = value.db;
         }
 
         return (
           (name != null ? Buffer.byteLength(name, "utf8") + 1 : 0) +
           1 +
           calculateObjectSize(
-            ordered_values,
+            orderedValues,
             serializeFunctions,
             ignoreUndefined,
           )
