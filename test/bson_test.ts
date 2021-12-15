@@ -1136,18 +1136,18 @@ Deno.test(
   "[BSON] Should Correctly handle Forced Doubles to ensure we allocate enough space for cap collections",
   () => {
     if (Double != null) {
-      let doubleValue = new Double(100);
-      let doc = { value: doubleValue };
+      const doubleValue = new Double(100);
+      const doc = { value: doubleValue };
 
       // Serialize
-      let serialized_data = serialize(doc);
+      const serializedData = serialize(doc);
 
-      let serialized_data2 = Buffer.alloc(calculateObjectSize(doc));
-      serializeWithBufferAndIndex(doc, serialized_data2);
-      equals(serialized_data, serialized_data2);
+      const serializedData2 = new Uint8Array(calculateObjectSize(doc));
+      serializeWithBufferAndIndex(doc, serializedData2);
+      assertEquals(serializedData, serializedData2);
 
-      let doc2 = deserialize(serialized_data);
-      assertEquals({ value: equal }, doc2);
+      const doc2 = deserialize(serializedData);
+      assertEquals({ value: 100 }, doc2);
     }
   },
 );
@@ -1675,7 +1675,7 @@ Deno.test("[BSON-Inspect] MinKey", () => {
 
 Deno.test("[BSON-Inspect] Timestamp", () => {
   const timestamp = new Timestamp(new Long(100, 1));
-  assertEquals(Deno.inspect(timestamp), "new Timestamp({ t: 100, i: 1 })");
+  assertEquals(Deno.inspect(timestamp), "new Timestamp({ t: 1, i: 100 })");
 });
 
 /**

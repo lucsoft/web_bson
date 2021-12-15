@@ -35,6 +35,6 @@ export class Int32 {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `Int32(${this.valueOf()})`;
+    return `new Int32(${this.valueOf()})`;
   }
 }

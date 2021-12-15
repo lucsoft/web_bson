@@ -58,6 +58,6 @@ export class BSONRegExp {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `BSONRegExp("${this.pattern}")`;
+    return `new BSONRegExp("${this.pattern}")`;
   }
 }

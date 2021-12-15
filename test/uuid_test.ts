@@ -146,6 +146,6 @@ Deno.test("[UUID] should correctly allow for node.js inspect to work with UUID",
   const uuid = new UUID(UPPERCASE_DASH_SEPARATED_UUID_STRING);
   assertEquals(
     Deno.inspect(uuid),
-    `UUID("${LOWERCASE_DASH_SEPARATED_UUID_STRING}")`,
+    `new UUID("${LOWERCASE_DASH_SEPARATED_UUID_STRING}")`,
   );
 });

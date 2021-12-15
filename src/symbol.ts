@@ -25,6 +25,6 @@ export class BSONSymbol {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `BSONSymbol("${this.value}")`;
+    return `new BSONSymbol("${this.value}")`;
   }
 }

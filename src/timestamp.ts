@@ -17,16 +17,23 @@ export const LongWithoutOverridesClass =
 export class Timestamp extends LongWithoutOverridesClass {
   static readonly MAX_VALUE = Long.MAX_UNSIGNED_VALUE;
 
+  /**
+   * @param value - A 64-bit Long representing the Timestamp.
+   */
+  constructor(value: Long);
+  /**
+   * @param value - A pair of two values indicating timestamp and increment.
+   */
+  constructor(value: { t: number; i: number });
+  // deno-lint-ignore constructor-super
   constructor(
-    low: number | Long,
-    high?: number,
-    unsigned: boolean = true,
+    value: Long | { t: number; i: number },
   ) {
-    super(
-      Long.isLong(low) ? low.low : high,
-      Long.isLong(low) ? low.high : high,
-      unsigned,
-    );
+    if (Long.isLong(value)) {
+      super(value.low, value.high, true);
+    } else {
+      super(value.i, value.t, true);
+    }
   }
 
   toJSON(): { $timestamp: string } {
@@ -66,6 +73,6 @@ export class Timestamp extends LongWithoutOverridesClass {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `Timestamp(low: ${this.getHighBits()}, high: ${this.getLowBits()})`;
+    return `new Timestamp({ t: ${this.getHighBits()}, i: ${this.getLowBits()} })`;
   }
 }

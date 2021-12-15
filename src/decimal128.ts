@@ -829,6 +829,6 @@ export class Decimal128 {
   }
 
   [Symbol.for("Deno.customInspect")](): string {
-    return `Decimal128("${this.toString()}")`;
+    return `new Decimal128("${this.toString()}")`;
   }
 }
