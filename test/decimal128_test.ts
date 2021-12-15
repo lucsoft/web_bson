@@ -6,7 +6,7 @@ import {
   equal,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { calculateObjectSize, deserialize, serialize } from "../src/bson.ts";
-const NAN = Buffer.from(
+const NAN = new Uint8Array(
   [
     0x7c,
     0x00,
@@ -26,7 +26,7 @@ const NAN = Buffer.from(
     0x00,
   ].reverse(),
 );
-const INF_NEGATIVE_BUFFER = Buffer.from(
+const INF_NEGATIVE_BUFFER = new Uint8Array(
   [
     0xf8,
     0x00,
@@ -46,7 +46,7 @@ const INF_NEGATIVE_BUFFER = Buffer.from(
     0x00,
   ].reverse(),
 );
-const INF_POSITIVE_BUFFER = Buffer.from(
+const INF_POSITIVE_BUFFER = new Uint8Array(
   [
     0x78,
     0x00,
@@ -121,7 +121,7 @@ Deno.test("[Decimal128] fromString infinity input", () => {
 Deno.test("[Decimal128] fromString simple", () => {
   // Create decimal from string value 1
   let result = Decimal128.fromString("1");
-  let bytes = Buffer.from(
+  let bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -145,7 +145,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value 0
   result = Decimal128.fromString("0");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -169,7 +169,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value -0
   result = Decimal128.fromString("-0");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0xb0,
       0x40,
@@ -193,7 +193,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value -1
   result = Decimal128.fromString("-1");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0xb0,
       0x40,
@@ -217,7 +217,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value 12345678901234567
   result = Decimal128.fromString("12345678901234567");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -241,7 +241,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value 989898983458
   result = Decimal128.fromString("989898983458");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -265,7 +265,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value -12345678901234567
   result = Decimal128.fromString("-12345678901234567");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0xb0,
       0x40,
@@ -289,7 +289,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value 0.12345
   result = Decimal128.fromString("0.12345");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x36,
@@ -313,7 +313,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value 0.0012345
   result = Decimal128.fromString("0.0012345");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x32,
@@ -337,7 +337,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 
   // Create decimal from string value 00012345678901234567
   result = Decimal128.fromString("00012345678901234567");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -363,7 +363,7 @@ Deno.test("[Decimal128] fromString simple", () => {
 Deno.test("[Decimal128] fromString scientific format", () => {
   // Create decimal from string value 10e0
   let result = Decimal128.fromString("10e0");
-  let bytes = Buffer.from(
+  let bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -387,7 +387,7 @@ Deno.test("[Decimal128] fromString scientific format", () => {
 
   // Create decimal from string value 1e1
   result = Decimal128.fromString("1e1");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x42,
@@ -411,7 +411,7 @@ Deno.test("[Decimal128] fromString scientific format", () => {
 
   // Create decimal from string value 10e-1
   result = Decimal128.fromString("10e-1");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x3e,
@@ -435,7 +435,7 @@ Deno.test("[Decimal128] fromString scientific format", () => {
 
   // Create decimal from string value 12345678901234567e6111
   result = Decimal128.fromString("12345678901234567e6111");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x5f,
       0xfe,
@@ -459,7 +459,7 @@ Deno.test("[Decimal128] fromString scientific format", () => {
 
   // Create decimal from string value 1e-6176
   result = Decimal128.fromString("1e-6176");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x00,
       0x00,
@@ -483,7 +483,7 @@ Deno.test("[Decimal128] fromString scientific format", () => {
 
   // Create decimal from string value "-100E-10
   result = Decimal128.fromString("-100E-10");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0xb0,
       0x2c,
@@ -507,7 +507,7 @@ Deno.test("[Decimal128] fromString scientific format", () => {
 
   // Create decimal from string value 10.50E8
   result = Decimal128.fromString("10.50E8");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x4c,
@@ -533,7 +533,7 @@ Deno.test("[Decimal128] fromString scientific format", () => {
 Deno.test("[Decimal128] fromString large format", () => {
   // Create decimal from string value 12345689012345789012345
   let result = Decimal128.fromString("12345689012345789012345");
-  let bytes = Buffer.from(
+  let bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -557,7 +557,7 @@ Deno.test("[Decimal128] fromString large format", () => {
 
   // Create decimal from string value 1234567890123456789012345678901234
   result = Decimal128.fromString("1234567890123456789012345678901234");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -581,7 +581,7 @@ Deno.test("[Decimal128] fromString large format", () => {
 
   // Create decimal from string value 9.999999999999999999999999999999999E+6144
   result = Decimal128.fromString("9.999999999999999999999999999999999E+6144");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x5f,
       0xff,
@@ -605,7 +605,7 @@ Deno.test("[Decimal128] fromString large format", () => {
 
   // Create decimal from string value 9.999999999999999999999999999999999E-6143
   result = Decimal128.fromString("9.999999999999999999999999999999999E-6143");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x00,
       0x01,
@@ -629,7 +629,7 @@ Deno.test("[Decimal128] fromString large format", () => {
 
   // Create decimal from string value 5.192296858534827628530496329220095E+33
   result = Decimal128.fromString("5.192296858534827628530496329220095E+33");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -658,7 +658,7 @@ Deno.test("[Decimal128] fromString exponent normalization", () => {
   let result = Decimal128.fromString(
     "1000000000000000000000000000000000000000",
   );
-  let bytes = Buffer.from(
+  let bytes = new Uint8Array(
     [
       0x30,
       0x4c,
@@ -682,7 +682,7 @@ Deno.test("[Decimal128] fromString exponent normalization", () => {
 
   // Create decimal from string value 10000000000000000000000000000000000
   result = Decimal128.fromString("10000000000000000000000000000000000");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x42,
@@ -706,7 +706,7 @@ Deno.test("[Decimal128] fromString exponent normalization", () => {
 
   // Create decimal from string value 1000000000000000000000000000000000
   result = Decimal128.fromString("1000000000000000000000000000000000");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -728,7 +728,7 @@ Deno.test("[Decimal128] fromString exponent normalization", () => {
   );
   assertEquals(bytes, result.bytes);
 
-  let str =
+  const str =
     "100000000000000000000000000000000000000000000000000000000000000000000" +
     "000000000000000000000000000000000000000000000000000000000000000000000" +
     "000000000000000000000000000000000000000000000000000000000000000000000" +
@@ -748,7 +748,7 @@ Deno.test("[Decimal128] fromString exponent normalization", () => {
   // Create decimal from string value str
 
   result = Decimal128.fromString(str);
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x37,
       0xcc,
@@ -774,7 +774,7 @@ Deno.test("[Decimal128] fromString exponent normalization", () => {
   // Create decimal from string value 1E-6177
 
   // let result = Decimal128.fromString('1E-6177');
-  // let bytes = Buffer.from(
+  // let bytes = new Uint8Array(
   //   [
   //     0x00,
   //     0x00,
@@ -800,7 +800,7 @@ Deno.test("[Decimal128] fromString exponent normalization", () => {
 Deno.test("[Decimal128] fromString from string zeros", () => {
   // Create decimal from string value 0
   let result = Decimal128.fromString("0");
-  let bytes = Buffer.from(
+  let bytes = new Uint8Array(
     [
       0x30,
       0x40,
@@ -824,7 +824,7 @@ Deno.test("[Decimal128] fromString from string zeros", () => {
 
   // Create decimal from string value 0e-611
   result = Decimal128.fromString("0e-611");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x2b,
       0x7a,
@@ -848,7 +848,7 @@ Deno.test("[Decimal128] fromString from string zeros", () => {
 
   // Create decimal from string value 0e+6000
   result = Decimal128.fromString("0e+6000");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0x5f,
       0x20,
@@ -872,7 +872,7 @@ Deno.test("[Decimal128] fromString from string zeros", () => {
 
   // Create decimal from string value 1E-6177
   result = Decimal128.fromString("-0e-1");
-  bytes = Buffer.from(
+  bytes = new Uint8Array(
     [
       0xb0,
       0x3e,
@@ -897,8 +897,8 @@ Deno.test("[Decimal128] fromString from string zeros", () => {
 
 Deno.test("[Decimal128] fromString from string round", () => {
   // Create decimal from string value 10E-6177
-  let result = Decimal128.fromString("10E-6177");
-  let bytes = Buffer.from(
+  const result = Decimal128.fromString("10E-6177");
+  const bytes = new Uint8Array(
     [
       0x00,
       0x00,
@@ -923,7 +923,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 15E-6177
   // result = Decimal128.fromString('15E-6177');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x00,
   //     0x00,
@@ -952,13 +952,13 @@ Deno.test("[Decimal128] fromString from string round", () => {
   // // array[6178] = '5';
   // // // Create decimal from string value array
   // // result = Decimal128.fromString(array.join(''));
-  // // bytes = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  // // bytes = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
   // //   , 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02].reverse());
   // // assertEquals(bytes, result.bytes);
 
   // // Create decimal from string value 251E-6178
   // result = Decimal128.fromString('251E-6178');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x00,
   //     0x00,
@@ -982,7 +982,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 250E-6178
   // result = Decimal128.fromString('250E-6178');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x00,
   //     0x00,
@@ -1006,7 +1006,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 10000000000000000000000000000000006
   // result = Decimal128.fromString('10000000000000000000000000000000006');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x30,
   //     0x42,
@@ -1030,7 +1030,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 10000000000000000000000000000000003
   // result = Decimal128.fromString('10000000000000000000000000000000003');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x30,
   //     0x42,
@@ -1054,7 +1054,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 10000000000000000000000000000000005
   // result = Decimal128.fromString('10000000000000000000000000000000005');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x30,
   //     0x42,
@@ -1078,7 +1078,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 100000000000000000000000000000000051
   // result = Decimal128.fromString('100000000000000000000000000000000051');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x30,
   //     0x44,
@@ -1102,7 +1102,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 10000000000000000000000000000000006E6111
   // result = Decimal128.fromString('10000000000000000000000000000000006E6111');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x78,
   //     0x00,
@@ -1126,7 +1126,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 12980742146337069071326240823050239
   // result = Decimal128.fromString('12980742146337069071326240823050239');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x30,
   //     0x42,
@@ -1150,7 +1150,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 99999999999999999999999999999999999
   // result = Decimal128.fromString('99999999999999999999999999999999999');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x30,
   //     0x44,
@@ -1176,7 +1176,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
   // result = Decimal128.fromString(
   //   '9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999'
   // );
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x30,
   //     0xc6,
@@ -1200,7 +1200,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 9999999999999999999999999999999999E6111
   // result = Decimal128.fromString('9999999999999999999999999999999999E6111');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x5f,
   //     0xff,
@@ -1224,7 +1224,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
   // // Create decimal from string value 99999999999999999999999999999999999E6144
   // result = Decimal128.fromString('99999999999999999999999999999999999E6144');
-  // bytes = Buffer.from(
+  // bytes = new Uint8Array(
   //   [
   //     0x78,
   //     0x00,
@@ -1249,7 +1249,7 @@ Deno.test("[Decimal128] fromString from string round", () => {
 
 Deno.test("[Decimal128] toString infinity", () => {
   let decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x78,
         0x00,
@@ -1273,7 +1273,7 @@ Deno.test("[Decimal128] toString infinity", () => {
   assertEquals("Infinity", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0xf8,
         0x00,
@@ -1299,7 +1299,7 @@ Deno.test("[Decimal128] toString infinity", () => {
 
 Deno.test("[Decimal128] toString NaN", () => {
   let decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x7c,
         0x00,
@@ -1323,7 +1323,7 @@ Deno.test("[Decimal128] toString NaN", () => {
   assertEquals("NaN", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0xfc,
         0x00,
@@ -1347,7 +1347,7 @@ Deno.test("[Decimal128] toString NaN", () => {
   assertEquals("NaN", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x7e,
         0x00,
@@ -1371,7 +1371,7 @@ Deno.test("[Decimal128] toString NaN", () => {
   assertEquals("NaN", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0xfe,
         0x00,
@@ -1395,7 +1395,7 @@ Deno.test("[Decimal128] toString NaN", () => {
   assertEquals("NaN", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x7e,
         0x00,
@@ -1421,7 +1421,7 @@ Deno.test("[Decimal128] toString NaN", () => {
 
 Deno.test("[Decimal128] toString regular", () => {
   let decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x40,
@@ -1445,7 +1445,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("1", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x40,
@@ -1469,7 +1469,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("0", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x40,
@@ -1493,7 +1493,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("2", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0xb0,
         0x40,
@@ -1517,7 +1517,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("-1", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0xb0,
         0x40,
@@ -1541,7 +1541,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("-0", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x3e,
@@ -1565,7 +1565,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("0.1", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x34,
@@ -1589,7 +1589,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("0.001234", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x40,
@@ -1613,7 +1613,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("123456789012", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x2a,
@@ -1637,7 +1637,7 @@ Deno.test("[Decimal128] toString regular", () => {
   assertEquals("0.00123400000", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x2f,
         0xfc,
@@ -1663,7 +1663,7 @@ Deno.test("[Decimal128] toString regular", () => {
 
 Deno.test("[Decimal128] toString scientific", () => {
   let decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x5f,
         0xfe,
@@ -1690,7 +1690,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   );
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x00,
         0x00,
@@ -1714,7 +1714,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   assertEquals("1E-6176", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x80,
         0x00,
@@ -1738,7 +1738,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   assertEquals("-1E-6176", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x31,
         0x08,
@@ -1762,7 +1762,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   assertEquals("9.999987654321E+112", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x5f,
         0xff,
@@ -1789,7 +1789,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   );
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x00,
         0x01,
@@ -1816,7 +1816,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   );
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x40,
@@ -1840,7 +1840,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   assertEquals("5192296858534827628530496329220095", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x4c,
@@ -1864,7 +1864,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   assertEquals("1.050E+9", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x42,
@@ -1888,7 +1888,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   assertEquals("1.050E+4", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x40,
@@ -1912,7 +1912,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   assertEquals("105", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x42,
@@ -1936,7 +1936,7 @@ Deno.test("[Decimal128] toString scientific", () => {
   assertEquals("1.05E+3", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x46,
@@ -1962,7 +1962,7 @@ Deno.test("[Decimal128] toString scientific", () => {
 
 Deno.test("[Decimal128] toString zeros", () => {
   let decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x30,
         0x40,
@@ -1986,7 +1986,7 @@ Deno.test("[Decimal128] toString zeros", () => {
   assertEquals("0", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x32,
         0x98,
@@ -2010,7 +2010,7 @@ Deno.test("[Decimal128] toString zeros", () => {
   assertEquals("0E+300", decimal.toString());
 
   decimal = new Decimal128(
-    Buffer.from(
+    new Uint8Array(
       [
         0x2b,
         0x90,
