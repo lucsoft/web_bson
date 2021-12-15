@@ -11,7 +11,7 @@ Deno.test("[Timestamp] should have a MAX_VALUE equal to Long.MAX_UNSIGNED_VALUE"
 
 Deno.test("[Timestamp] should always be an unsigned value", () => {
   [
-    //   new Timestamp(),
+    new Timestamp(),
     new Timestamp({ t: 0xff, i: 0xffffffff }),
     new Timestamp({ t: 0xffffffff, i: 0xffffffff }),
     new Timestamp({ t: -1, i: -1 }),

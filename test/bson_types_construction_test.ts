@@ -25,7 +25,7 @@ Deno.test("[Constructing BSON types] with new keyword should work", () => {
   new Double(2.3);
   new Int32(1);
   new Long(0, 0);
-  new Timestamp(0, 0);
+  new Timestamp();
   new MaxKey();
   new MinKey();
 });
