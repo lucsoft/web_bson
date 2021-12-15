@@ -1,6 +1,7 @@
 import { Buffer } from "buffer";
 import {
   assertEquals,
+  assertThrows,
   equal,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import {
@@ -24,10 +25,12 @@ for (let i = 0; i < corruptScenarios.documents.length; i++) {
   const doc = corruptScenarios.documents[i];
   if (doc.skip) continue;
   Deno.test(`[BSON Compliance] Pass all corrupt BSON scenarios ./compliance/corrupt.json, case: ${i} ${doc.error}`, () => {
-    // Create a buffer containing the payload
-    const buffer = Buffer.from(doc.encoded, "hex");
-    // Attempt to deserialize
-    deserialize(buffer);
+    assertThrows(() => {
+      // Create a buffer containing the payload
+      const buffer = Buffer.from(doc.encoded, "hex");
+      // Attempt to deserialize
+      deserialize(buffer);
+    });
   });
 }
 

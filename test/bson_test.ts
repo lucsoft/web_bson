@@ -742,7 +742,7 @@ Deno.test(
     const deserializedData = deserialize(serializedData);
 
     assertEquals(
-      deserializedData.equal.sub_type,
+      deserializedData.doc.sub_type,
       BinarySizes.SUBTYPE_USER_DEFINE,
     );
     assertEquals(doc.doc.value(), deserializedData.doc.value());
