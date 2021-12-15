@@ -235,14 +235,14 @@ console.log(EJSON.parse(text));
 
 #### _EJSON_.stringify(value, [replacer], [space], [options])
 
-| Param             | Type                                      | Default           | Description                                                                                                                                                                                                                                                                                                                                        |
-| ----------------- | ----------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value             | <code>object</code>                       |                   | The value to convert to extended JSON                                                                                                                                                                                                                                                                                                              |
-| [replacer]        | <code>function</code>| <code>array</code> |                   | A function that alters the behavior of the stringification process, or an array of String and Number objects that serve as a whitelist for selecting/filtering the properties of the value object to be included in the JSON string. If this value is null or not provided, all properties of the object are included in the resulting JSON string |
-| [space]           | <code>string</code>| <code>number</code>  |                   | A String or Number object that's used to insert white space into the output JSON string for readability purposes.                                                                                                                                                                                                                                  |
-| [options]         | <code>object</code>                       |                   | Optional settings                                                                                                                                                                                                                                                                                                                                  |
-| [options.relaxed] | <code>boolean</code>                      | <code>true</code> | Enabled Extended JSON's `relaxed` mode                                                                                                                                                                                                                                                                                                             |
-| [options.legacy]  | <code>boolean</code>                      | <code>true</code> | Output in Extended JSON v1                                                                                                                                                                                                                                                                                                                         |
+| Param             | Type                  | Default             | Description                            |
+| ----------------- | --------------------- | ------------------- | -------------------------------------- |
+| value             | <code>object</code>   |                     | The value to convert to extended JSON  |
+| [replacer]        | <code>function</code> | <code>array</code>  |                                        |
+| [space]           | <code>string</code>   | <code>number</code> |                                        |
+| [options]         | <code>object</code>   |                     | Optional settings                      |
+| [options.relaxed] | <code>boolean</code>  | <code>true</code>   | Enabled Extended JSON's `relaxed` mode |
+| [options.legacy]  | <code>boolean</code>  | <code>true</code>   | Output in Extended JSON v1             |
 
 Converts a BSON document to an Extended JSON string, optionally replacing values
 if a replacer function is specified or optionally including only the specified
