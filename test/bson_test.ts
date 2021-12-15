@@ -1587,26 +1587,6 @@ Deno.test("[BSON] Should return boolean for ObjectId equality check", () => {
   assertEquals(false, id.equals("foo"));
 });
 
-Deno.test(
-  "[BSON] should throw if invalid BSON types are input to BSON serializer",
-  () => {
-    const oid = new ObjectId("111111111111111111111111");
-    const badBsonType = Object.assign({}, oid, { _bsontype: "bogus" });
-    const badDoc = { bad: badBsonType };
-    const badArray = [oid, badDoc];
-
-    const badMap = new Map<string, unknown>([
-      ["a", badBsonType],
-      ["b", badDoc],
-      ["c", badArray],
-    ]);
-
-    assertThrows(() => serialize(badDoc));
-    assertThrows(() => serialize(badArray));
-    assertThrows(() => serialize(badMap));
-  },
-);
-
 Deno.test("[BSON-Inspect] Binary", () => {
   const binary = new Binary(
     Buffer.from("0123456789abcdef0123456789abcdef", "hex"),
