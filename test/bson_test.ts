@@ -1277,6 +1277,7 @@ Deno.test({
 });
 
 Deno.test({
+  ignore: true, // from upstream
   name:
     "[BSON] Should correctly calculate the size of a given javascript object using instance method",
   fn() {
@@ -1297,6 +1298,7 @@ Deno.test({
 });
 
 Deno.test({
+  ignore: true, // from upstream
   name:
     "[BSON] Should correctly serializeWithBufferAndIndex a given javascript object",
   fn() {
@@ -1412,9 +1414,11 @@ Deno.test({
  * @_function serialize
  * @ignore
  */
-Deno.test(
-  "[BSON] Should correctly serialize a given javascript object using a bson instance",
-  () => {
+Deno.test({
+  ignore: true, // from upstream
+  name:
+    "[BSON] Should correctly serialize a given javascript object using a bson instance",
+  fn: () => {
     // Create a simple object
     const doc: Document = { a: 1, func: () => {} };
 
@@ -1434,7 +1438,7 @@ Deno.test(
     // Validate the correctness
     assertEquals(37, buffer.length);
   },
-);
+});
 
 Deno.test(
   "[BSON] should properly deserialize multiple documents using deserializeStream",
@@ -1590,8 +1594,8 @@ Deno.test(
     const badBsonType = Object.assign({}, oid, { _bsontype: "bogus" });
     const badDoc = { bad: badBsonType };
     const badArray = [oid, badDoc];
-    // deno-lint-ignore ban-types
-    const badMap = new Map<string, Object>([
+
+    const badMap = new Map<string, unknown>([
       ["a", badBsonType],
       ["b", badDoc],
       ["c", badArray],
