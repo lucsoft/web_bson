@@ -2038,11 +2038,15 @@ Deno.test("[Decimal128] Serialize and Deserialize tests", () => {
   let buffer = serialize(doc);
   let size = calculateObjectSize(doc);
   let back = deserialize(buffer);
+  console.log(back.value.toString());
 
   assertEquals(buffer.length, size);
   assertEquals(doc, back);
   assertEquals("1", doc.value.toString());
-  assertEquals('{"value":{"$numberDecimal":"1"}}', JSON.stringify(doc, null));
+  assertEquals(
+    '{"value":{"$numberDecimal":"1"}}',
+    JSON.stringify(doc, null),
+  );
 
   // Test all methods around a simple serialization at array top level
   doc = { value: [Decimal128.fromString("1")] };

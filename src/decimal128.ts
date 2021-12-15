@@ -72,7 +72,7 @@ const EXPONENT_REGEX = /^([-+])?(\d+)?$/;
 // Extract least significant 5 bits
 const COMBINATION_MASK = 0x1f;
 // Extract least significant 14 bits
-const EXPONENT_MASK = 0x3f_ff;
+const EXPONENT_MASK = 0x3fff;
 // Value of combination field for Inf
 const COMBINATION_INFINITY = 30;
 // Value of combination field for NaN
@@ -159,6 +159,10 @@ function invalidErr(string: string, message: string) {
   throw new BSONTypeError(
     `"${string}" is not a valid Decimal128 string - ${message}`,
   );
+}
+
+export interface Decimal128Extended {
+  $numberDecimal: string;
 }
 
 /**
@@ -830,5 +834,9 @@ export class Decimal128 {
 
   [Symbol.for("Deno.customInspect")](): string {
     return `new Decimal128("${this.toString()}")`;
+  }
+
+  toJSON(): Decimal128Extended {
+    return { $numberDecimal: this.toString() };
   }
 }
