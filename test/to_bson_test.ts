@@ -1,7 +1,4 @@
-import {
-  assertEquals,
-  equal,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Document, ObjectId, serialize } from "../src/bson.ts";
 import { deserialize } from "../src/parser/deserializer.ts";
 
@@ -20,14 +17,14 @@ Deno.test("[toBSON] Should correctly handle toBson function for an object", () =
   //@ts-ignore
   let serialized_data = serialize(doc, false, true);
   let deserialized_doc = deserialize(serialized_data);
-  equal({ b: 1 }, deserialized_doc);
+  assertEquals({ b: 1 }, deserialized_doc);
 
   // Serialize the data
   // deno-lint-ignore ban-ts-comment
   //@ts-ignore
   serialized_data = serialize(doc, false, true);
   deserialized_doc = deserialize(serialized_data);
-  equal({ b: 1 }, deserialized_doc);
+  assertEquals({ b: 1 }, deserialized_doc);
 });
 
 Deno.test("[toBSON] Should correctly handle embedded toBson function for an object", () => {
@@ -49,13 +46,13 @@ Deno.test("[toBSON] Should correctly handle embedded toBson function for an obje
   //@ts-ignore
   let serialized_data = serialize(doc, false, true);
   let deserialized_doc = deserialize(serialized_data);
-  equal({ e: 1 }, deserialized_doc.b);
+  assertEquals({ e: 1 }, deserialized_doc.b);
 
   // deno-lint-ignore ban-ts-comment
   //@ts-ignore
   serialized_data = serialize(doc, false, true);
   deserialized_doc = deserialize(serialized_data);
-  equal({ e: 1 }, deserialized_doc.b);
+  assertEquals({ e: 1 }, deserialized_doc.b);
 });
 
 Deno.test("[toBSON] Should correctly serialize when embedded non object returned by toBSON", () => {
@@ -76,14 +73,14 @@ Deno.test("[toBSON] Should correctly serialize when embedded non object returned
   //@ts-ignore
   let serialized_data = serialize(doc, false, true);
   let deserialized_doc = deserialize(serialized_data);
-  equal("hello", deserialized_doc.b);
+  assertEquals("hello", deserialized_doc.b);
 
   // Serialize the data
   // deno-lint-ignore ban-ts-comment
   //@ts-ignore
   serialized_data = serialize(doc, false, true);
   deserialized_doc = deserialize(serialized_data);
-  equal("hello", deserialized_doc.b);
+  assertEquals("hello", deserialized_doc.b);
 });
 
 Deno.test("[toBSON] Should fail when top level object returns a non object type", () => {

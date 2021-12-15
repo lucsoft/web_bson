@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 import {
   assertEquals,
   assertThrows,
-  equal,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import {
   Binary,
@@ -113,7 +112,7 @@ Deno.test(
       // Attempt to deserialize
       const object = deserialize(buffer, { promoteLongs: false });
       // Validate the object
-      equal(JSON.stringify(expectedDocument), JSON.stringify(object));
+      assertEquals(JSON.stringify(expectedDocument), JSON.stringify(object));
     });
   },
 );

@@ -1,7 +1,6 @@
 import {
   assert,
   assertEquals,
-  equal,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Long, Timestamp } from "../src/bson.ts";
 
@@ -26,7 +25,7 @@ Deno.test("[Timestamp] should always be an unsigned value", () => {
 Deno.test("[Timestamp] should print out an unsigned number", () => {
   const timestamp = new Timestamp({ t: 0xffffffff, i: 0xffffffff });
   assertEquals(timestamp.toString(), "18446744073709551615");
-  equal(timestamp.toJSON(), {
+  assertEquals(timestamp.toJSON(), {
     $timestamp: "18446744073709551615",
   });
 });

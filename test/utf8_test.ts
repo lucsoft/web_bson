@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import {
   assert,
-  equal,
+  assertEquals,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { assertThrows } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import {
@@ -392,7 +392,7 @@ for (
         "Invalid UTF-8 string in BSON document",
       );
     } else {
-      equal(deserialize(buffer), expectedObjectWithReplacementChars);
+      assertEquals(deserialize(buffer), expectedObjectWithReplacementChars);
     }
   });
 }
@@ -406,7 +406,7 @@ for (
     const validation = Object.freeze({
       validation: Object.freeze({ utf8: false }),
     });
-    equal(
+    assertEquals(
       deserialize(buffer, validation),
       expectedObjectWithReplacementChars,
     );
@@ -435,7 +435,7 @@ for (
         "Invalid UTF-8 string in BSON document",
       );
     } else {
-      equal(
+      assertEquals(
         deserialize(buffer, validation),
         expectedObjectWithReplacementChars,
       );
@@ -452,7 +452,7 @@ for (
       Object.freeze(validation);
       Object.freeze(validation.validation?.utf8);
       if (behavior.substring(0, 3) === "not") {
-        equal(
+        assertEquals(
           deserialize(buffer, validation),
           expectedObjectWithReplacementChars,
         );

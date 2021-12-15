@@ -1,9 +1,7 @@
 import { Decimal128, Document } from "../src/bson.ts";
-import { Buffer } from "buffer";
 import {
   assertEquals,
   assertThrows,
-  equal,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { calculateObjectSize, deserialize, serialize } from "../src/bson.ts";
 const NAN = new Uint8Array(
@@ -86,23 +84,23 @@ Deno.test("[Decimal128] fromString invalid input", () => {
 
 Deno.test("[Decimal128] fromString NaN input", () => {
   let result = Decimal128.fromString("NaN");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
   result = Decimal128.fromString("+NaN");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
   result = Decimal128.fromString("-NaN");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
   result = Decimal128.fromString("-nan");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
   result = Decimal128.fromString("+nan");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
   result = Decimal128.fromString("nan");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
   result = Decimal128.fromString("Nan");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
   result = Decimal128.fromString("+Nan");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
   result = Decimal128.fromString("-Nan");
-  equal(NAN, result.bytes);
+  assertEquals(NAN, result.bytes);
 });
 
 Deno.test("[Decimal128] fromString infinity input", () => {

@@ -27,7 +27,6 @@ import {
   assert,
   assertEquals,
   assertThrows,
-  equal,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { BinaryParser } from "./tools/binary_parser.ts";
 
@@ -919,7 +918,7 @@ Deno.test("[BSON] Should handle Deeply nested document", () => {
 //   /**
 //    * @ignore
 //    */
-//    Deno.test("[BSON] Should handle complicated all typed object", () => {
+//   Deno.test("[BSON] Should handle complicated all typed object", () => {
 //     // First doc
 //     const date = new Date();
 //     const oid = new ObjectId();

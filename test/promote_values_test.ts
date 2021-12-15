@@ -1,7 +1,8 @@
 import { Buffer } from "buffer";
-import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { equal } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { assert } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+} from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { deserialize } from "../src/bson.ts";
 import { Double } from "../src/double.ts";
 import { Int32 } from "../src/int_32.ts";
@@ -23,14 +24,14 @@ Deno.test("[Promote Values] Should Correctly Deserialize object with all wrapper
 
   // Perform tests
   assertEquals("hello", object.string);
-  equal([new Int32(1), new Int32(2), new Int32(3)], object.array);
-  equal(new Int32(1), object.hash.a);
-  equal(new Int32(2), object.hash.b);
+  assertEquals([new Int32(1), new Int32(2), new Int32(3)], object.array);
+  assertEquals(new Int32(1), object.hash.a);
+  assertEquals(new Int32(2), object.hash.b);
   assert(object.date != null);
   assert(object.oid != null);
   assert(object.binary != null);
-  equal(new Int32(42), object.int);
-  equal(new Double(33.3333), object.float);
+  assertEquals(new Int32(42), object.int);
+  assertEquals(new Double(33.3333), object.float);
   assert(object.regexp != null);
   assertEquals(true, object.boolean);
   assert(object.where != null);
