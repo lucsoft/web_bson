@@ -268,8 +268,8 @@ Deno.test(
     });
     assertEquals(serializedData, serializedData2);
     const doc1 = deserialize(serializedData);
-    assertEquals(undefined, doc1.doc.notdefineassertEqualsd);
-    assert(null, doc1.a[2]);
+    assertEquals(undefined, doc1.doc.notdefined);
+    assertEquals(null, doc1.a[2]);
   },
 );
 
@@ -1168,7 +1168,7 @@ Deno.test("[BSON] Should deserialize correctly", () => {
   assertEquals(serializedData, serializedData2);
   const doc2 = deserialize(serializedData);
 
-  assert(JSON.stringify(equal), JSON.stringify(doc2));
+  assertEquals(JSON.stringify(doc), JSON.stringify(doc2));
 });
 
 Deno.test(

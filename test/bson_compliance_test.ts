@@ -19,21 +19,17 @@ import {
 import { corruptScenarios } from "./compliance/corrupt.ts";
 import { validScenarios } from "./compliance/valid.ts";
 
-Deno.test(
-  "[BSON Compliance] Pass all corrupt BSON scenarios ./compliance/corrupt.json",
-  () => {
-    // Read and parse the json file
-    for (let i = 0; i < corruptScenarios.documents.length; i++) {
-      const doc = corruptScenarios.documents[i];
-      if (doc.skip) continue;
-
-      // Create a buffer containing the payload
-      const buffer = Buffer.from(doc.encoded, "hex");
-      // Attempt to deserialize
-      deserialize(buffer);
-    }
-  },
-);
+// Read and parse the json file
+for (let i = 0; i < corruptScenarios.documents.length; i++) {
+  const doc = corruptScenarios.documents[i];
+  if (doc.skip) continue;
+  Deno.test(`[BSON Compliance] Pass all corrupt BSON scenarios ./compliance/corrupt.json, case: ${i} ${doc.error}`, () => {
+    // Create a buffer containing the payload
+    const buffer = Buffer.from(doc.encoded, "hex");
+    // Attempt to deserialize
+    deserialize(buffer);
+  });
+}
 
 Deno.test(
   "[BSON Compliance] Pass all valid BSON serialization scenarios ./compliance/valid.json",
