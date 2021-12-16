@@ -25,4 +25,4 @@ console.log("doc_2:", doc_2);
 ## Documentation
 
 The Documentation can be found under
-[doc.deno.land](https://doc.deno.land/https://raw.githubusercontent.com/lucsoft/web_bson/master/mod.ts)
+[doc.deno.land](https://doc.deno.land/https://deno.land/x/web_bson/mod.ts)
