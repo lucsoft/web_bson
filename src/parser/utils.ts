@@ -232,14 +232,13 @@ const MAX_ARGUMENTS_LENGTH = 4096;
 function decodeCodePointsArray(codePoints: number[]) {
   const len = codePoints.length;
   if (len <= MAX_ARGUMENTS_LENGTH) {
-    return String.fromCharCode.apply(String, codePoints);
+    return String.fromCharCode(...codePoints);
   }
   let res = "";
   let i = 0;
   while (i < len) {
-    res += String.fromCharCode.apply(
-      String,
-      codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH),
+    res += String.fromCharCode(
+      ...codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH),
     );
   }
   return res;

@@ -254,12 +254,12 @@ function deserializeObject(
         index + stringSize - 1,
         shouldValidateKey,
       );
-      index = index + stringSize;
+      index += stringSize;
     } else if (elementType === BSONData.OID) {
       const oid = new Uint8Array(12);
       bytesCopy(oid, 0, buffer, index, index + 12);
       value = new ObjectId(oid);
-      index = index + 12;
+      index += 12;
     } else if (
       elementType === BSONData.INT && promoteValues === false
     ) {
@@ -278,10 +278,10 @@ function deserializeObject(
       value = new Double(
         new DataView(buffer.buffer, index, 8).getFloat64(0, true),
       );
-      index = index + 8;
+      index += 8;
     } else if (elementType === BSONData.NUMBER) {
       value = new DataView(buffer.buffer, index, 8).getFloat64(0, true);
-      index = index + 8;
+      index += 8;
     } else if (elementType === BSONData.DATE) {
       const lowBits = buffer[index++] |
         (buffer[index++] << 8) |
@@ -321,7 +321,7 @@ function deserializeObject(
         value = deserializeObject(buffer, _index, objectOptions, false);
       }
 
-      index = index + objectSize;
+      index += objectSize;
     } else if (elementType === BSONData.ARRAY) {
       const _index = index;
       const objectSize = buffer[index] |
@@ -343,7 +343,7 @@ function deserializeObject(
             }
           )[n] = options[n as keyof DeserializeOptions];
         }
-        arrayOptions["raw"] = true;
+        arrayOptions.raw = true;
       }
       if (!globalUTFValidation) {
         arrayOptions = {
@@ -352,7 +352,7 @@ function deserializeObject(
         };
       }
       value = deserializeObject(buffer, _index, arrayOptions, true);
-      index = index + objectSize;
+      index += objectSize;
 
       if (buffer[index - 1] !== 0) {
         throw new BSONError("invalid array terminator byte");
@@ -389,19 +389,16 @@ function deserializeObject(
       bytesCopy(bytes, 0, buffer, index, index + 16);
 
       // Update index
-      index = index + 16;
+      index += 16;
       // Assign the new Decimal128 value
       const decimal128 = new Decimal128(bytes) as Decimal128 | {
         toObject(): unknown;
       };
       // If we have an alternative mapper use that
-      if (
+      value =
         "toObject" in decimal128 && typeof decimal128.toObject === "function"
-      ) {
-        value = decimal128.toObject();
-      } else {
-        value = decimal128;
-      }
+          ? decimal128.toObject()
+          : decimal128;
     } else if (elementType === BSONData.BINARY) {
       let binarySize = buffer[index++] |
         (buffer[index++] << 8) |
@@ -421,7 +418,7 @@ function deserializeObject(
       }
 
       // Decode as raw Buffer object if options specifies it
-      if (buffer["slice"] != null) {
+      if (buffer.slice != null) {
         // If we have subtype 2 skip the 4 bytes for the size
         if (subType === BinarySizes.SUBTYPE_BYTE_ARRAY) {
           binarySize = buffer[index++] |
@@ -445,11 +442,9 @@ function deserializeObject(
           }
         }
 
-        if (promoteBuffers && promoteValues) {
-          value = buffer.slice(index, index + binarySize);
-        } else {
-          value = new Binary(buffer.slice(index, index + binarySize), subType);
-        }
+        value = promoteBuffers && promoteValues
+          ? buffer.slice(index, index + binarySize)
+          : new Binary(buffer.slice(index, index + binarySize), subType);
       } else {
         const _buffer = new Uint8Array(binarySize);
         // If we have subtype 2 skip the 4 bytes for the size
@@ -480,15 +475,13 @@ function deserializeObject(
           _buffer[i] = buffer[index + i];
         }
 
-        if (promoteBuffers && promoteValues) {
-          value = _buffer;
-        } else {
-          value = new Binary(_buffer, subType);
-        }
+        value = promoteBuffers && promoteValues
+          ? _buffer
+          : new Binary(_buffer, subType);
       }
 
       // Update the index
-      index = index + binarySize;
+      index += binarySize;
     } else if (
       elementType === BSONData.REGEXP && bsonRegExp === false
     ) {
@@ -592,7 +585,7 @@ function deserializeObject(
         shouldValidateKey,
       );
       value = promoteValues ? symbol : new BSONSymbol(symbol);
-      index = index + stringSize;
+      index += stringSize;
     } else if (elementType === BSONData.TIMESTAMP) {
       const lowBits = buffer[index++] |
         (buffer[index++] << 8) |
@@ -630,18 +623,15 @@ function deserializeObject(
       // If we are evaluating the functions
       if (evalFunctions) {
         // If we have cache enabled let's look for the md5 of the function in the cache
-        if (cacheFunctions) {
-          // Got to do this to avoid V8 deoptimizing the call due to finding eval
-          value = isolateEval(functionString, functionCache, object);
-        } else {
-          value = isolateEval(functionString);
-        }
+        value = cacheFunctions
+          ? isolateEval(functionString, functionCache, object)
+          : isolateEval(functionString);
       } else {
         value = new Code(functionString);
       }
 
       // Update parse index position
-      index = index + stringSize;
+      index += stringSize;
     } else if (elementType === BSONData.CODE_W_SCOPE) {
       const totalSize = buffer[index++] |
         (buffer[index++] << 8) |
@@ -677,7 +667,7 @@ function deserializeObject(
         shouldValidateKey,
       );
       // Update parse index position
-      index = index + stringSize;
+      index += stringSize;
       // Parse the element
       const _index = index;
       // Decode the size of the object document
@@ -688,7 +678,7 @@ function deserializeObject(
       // Decode the scope object
       const scopeObject = deserializeObject(buffer, _index, options, false);
       // Adjust the index
-      index = index + objectSize;
+      index += objectSize;
 
       // Check if field length is too short
       if (totalSize < 4 + 4 + objectSize + stringSize) {
@@ -707,12 +697,9 @@ function deserializeObject(
       // If we are evaluating the functions
       if (evalFunctions) {
         // If we have cache enabled let's look for the md5 of the function in the cache
-        if (cacheFunctions) {
-          // Got to do this to avoid V8 deoptimizing the call due to finding eval
-          value = isolateEval(functionString, functionCache, object);
-        } else {
-          value = isolateEval(functionString);
-        }
+        value = cacheFunctions
+          ? isolateEval(functionString, functionCache, object)
+          : isolateEval(functionString);
 
         value.scope = scopeObject;
       } else {
@@ -733,10 +720,10 @@ function deserializeObject(
         throw new BSONError("bad string length in bson");
       }
       // Namespace
-      if (validation != null && validation.utf8) {
-        if (!validateUtf8(buffer, index, index + stringSize - 1)) {
-          throw new BSONError("Invalid UTF-8 string in BSON document");
-        }
+      if (
+        validation?.utf8 && !validateUtf8(buffer, index, index + stringSize - 1)
+      ) {
+        throw new BSONError("Invalid UTF-8 string in BSON document");
       }
       const namespace = utf8Slice(
         buffer,
@@ -744,7 +731,7 @@ function deserializeObject(
         index + stringSize - 1,
       );
       // Update parse index position
-      index = index + stringSize;
+      index += stringSize;
 
       // Read the oid
       const oidBuffer = new Uint8Array(12);
@@ -753,13 +740,13 @@ function deserializeObject(
       const oid = new ObjectId(oidBuffer);
 
       // Update the index
-      index = index + 12;
+      index += 12;
 
       // Upgrade to DBRef type
       value = new DBRef(namespace, oid);
     } else {
       throw new BSONError(
-        "Detected unknown BSON type " + elementType.toString(16) +
+        `Detected unknown BSON type ${elementType.toString(16)}` +
           ' for fieldname "' + name + '"',
       );
     }
@@ -826,7 +813,7 @@ function getValidatedString(
   // if utf8 validation is on, do the check
   if (shouldValidateUtf8) {
     for (let i = 0; i < value.length; i++) {
-      if (value.charCodeAt(i) === 0xfffd) {
+      if (value.charCodeAt(i) === 0xff_fd) {
         if (!validateUtf8(buffer, start, end)) {
           throw new BSONError("Invalid UTF-8 string in BSON document");
         }
