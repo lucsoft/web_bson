@@ -141,10 +141,10 @@ export function writeToBytes(
 ) {
   return blitBuffer(
     {
-      ascii: asciiToBytes(data),
-      utf8: utf8ToBytes(data, bytes.length - offset),
-      latin1: asciiToBytes(data),
-    }[encoding],
+      ascii: () => asciiToBytes(data),
+      utf8: () => utf8ToBytes(data, bytes.length - offset),
+      latin1: () => asciiToBytes(data),
+    }[encoding](),
     bytes,
     offset,
     bytes.length,
