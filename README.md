@@ -1,16 +1,16 @@
-# deno_bson
+# web_bson
 
-deno_bson is a fork of [js-bson](https://github.com/mongodb/js-bson/). Bson is
+web_bson is a fork of [js-bson](https://github.com/mongodb/js-bson/). Bson is
 short for "Binary JSON" and is the binary-encoded serialization of JSON-like
 documents. You can learn more about it in
 [the specification](http://bsonspec.org).
 
 ### Deno & Web
 
-A simple example of how to use deno_bson:
+A simple example of how to use web_bson:
 
 ```js
-import { deserialize, Long, serialize } from "https://deno.land/x/deno_bson";
+import { deserialize, Long, serialize } from "https://deno.land/x/web_bson";
 
 // Serialize a document
 const doc = { long: Long.fromNumber(100) };
@@ -25,4 +25,4 @@ console.log("doc_2:", doc_2);
 ## Documentation
 
 The Documentation can be found under
-[doc.deno.land](https://doc.deno.land/https://raw.githubusercontent.com/lucsoft/deno_bson/master/mod.ts)
+[doc.deno.land](https://doc.deno.land/https://raw.githubusercontent.com/lucsoft/web_bson/master/mod.ts)
