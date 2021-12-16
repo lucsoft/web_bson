@@ -117,7 +117,7 @@ function asciiToBytes(str: string) {
   return byteArray;
 }
 
-export enum Encoding {
+export const enum Encoding {
   Utf8 = 0,
   Ascii = 1,
 }
