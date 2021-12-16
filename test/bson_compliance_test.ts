@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Buffer } from "buffer";
 import {
   assertEquals,
@@ -16,7 +17,7 @@ import {
   serialize,
   Timestamp,
 } from "../src/bson.ts";
-import { decodeHexString, encodeHexString } from "../utils.ts";
+import { decodeHexString } from "../utils.ts";
 import { corruptScenarios } from "./compliance/corrupt.ts";
 import { validScenarios } from "./compliance/valid.ts";
 

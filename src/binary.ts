@@ -1,5 +1,5 @@
 import { UUID } from "./uuid.ts";
-import { BSONError, BSONTypeError } from "./error.ts";
+import { BSONError } from "./error.ts";
 import { b64 } from "../deps.ts";
 
 export type BinarySequence = Uint8Array | number[];
