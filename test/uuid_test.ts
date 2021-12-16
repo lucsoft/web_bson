@@ -1,10 +1,7 @@
-import { Buffer } from "buffer";
-import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { assert } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import {
   validate as uuidStringValidate,
 } from "https://deno.land/std@0.117.0/uuid/v4.ts";
-import { assertThrows } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assert, assertEquals, assertThrows, Buffer } from "../deps.ts";
 import { Binary, BinarySizes, BSONTypeError, UUID } from "../src/bson.ts";
 
 // const UUIDv4 =

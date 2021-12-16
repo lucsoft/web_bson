@@ -1,9 +1,12 @@
-import { Decimal128, Document } from "../src/bson.ts";
 import {
-  assertEquals,
-  assertThrows,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { calculateObjectSize, deserialize, serialize } from "../src/bson.ts";
+  calculateObjectSize,
+  Decimal128,
+  deserialize,
+  Document,
+  serialize,
+} from "../src/bson.ts";
+import { assertEquals, assertThrows } from "../deps.ts";
+
 const NAN = new Uint8Array(
   [
     0x7c,

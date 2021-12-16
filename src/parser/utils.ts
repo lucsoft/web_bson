@@ -1,4 +1,4 @@
-import { asciiToBytes } from "https://deno.land/std@0.117.0/node/internal_binding/_utils.ts";
+import { asciiToBytes } from "../../deps.ts";
 
 /**
  * Normalizes our expected stringified form of a function across versions of node

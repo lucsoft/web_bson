@@ -1,11 +1,5 @@
-import { Buffer } from "buffer";
-import {
-  assert,
-  assertEquals,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { deserialize } from "../src/bson.ts";
-import { Double } from "../src/double.ts";
-import { Int32 } from "../src/int_32.ts";
+import { assert, assertEquals, Buffer } from "../deps.ts";
+import { deserialize, Double, Int32 } from "../src/bson.ts";
 import { BinaryParser } from "./tools/binary_parser.ts";
 
 Deno.test("[Promote Values] Should Correctly Deserialize object with all wrapper types", () => {

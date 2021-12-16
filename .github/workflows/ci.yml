@@ -32,4 +32,4 @@ jobs:
 
       # Tests
       - name: Test TS
-        run: deno test --import-map=import_map.json
+        run: deno test
