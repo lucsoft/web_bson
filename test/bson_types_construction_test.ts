@@ -19,7 +19,7 @@ Deno.test("[Constructing BSON types] with new keyword should work", () => {
   new DBRef("test", oid);
   new BSONRegExp("aaa");
   new BSONSymbol("aaa");
-  new Binary("aaa");
+  new Binary(new TextEncoder().encode("aaa"));
   new Code(() => {});
   new Decimal128("123");
   new Double(2.3);

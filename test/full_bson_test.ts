@@ -185,12 +185,13 @@ Deno.test("[Full BSON] Should Correctly Serialize and Deserialize Oid", () => {
 Deno.test(
   "[Full BSON] Should Correctly Serialize and Deserialize Buffer",
   () => {
-    const doc = { doc: Buffer.from("123451234512345") };
+    const doc = { doc: new TextEncoder().encode("123451234512345") };
     const serializedData = serialize(doc);
+    const deserializedDoc = deserialize(serializedData);
 
     assertEquals(
       "123451234512345",
-      deserialize(serializedData).doc.buffer.toString("ascii"),
+      new TextDecoder().decode(deserializedDoc.doc.buffer),
     );
   },
 );
@@ -198,13 +199,15 @@ Deno.test(
 Deno.test(
   "[Full BSON] Should Correctly Serialize and Deserialize Buffer with promoteBuffers option",
   () => {
-    const doc = { doc: Buffer.from("123451234512345") };
+    const doc = { doc: new TextEncoder().encode("123451234512345") };
     const serializedData = serialize(doc);
+    const deserializedDoc = deserialize(serializedData, {
+      promoteBuffers: true,
+    });
 
-    const options = { promoteBuffers: true };
     assertEquals(
       "123451234512345",
-      deserialize(serializedData, options).doc.toString("ascii"),
+      new TextDecoder().decode(deserializedDoc.doc.buffer),
     );
   },
 );
@@ -240,15 +243,14 @@ Deno.test(
 Deno.test(
   "[Full BSON] Should Correctly Serialize and Deserialize a Binary object",
   () => {
-    const bin = new Binary();
+    const te = new TextEncoder();
+
     const string = "binstring";
-    for (let index = 0; index < string.length; index++) {
-      bin.put(string.charAt(index));
-    }
+    const bin = new Binary(te.encode(string));
     const doc = { doc: bin };
     const serializedData = serialize(doc);
     const deserializedData = deserialize(serializedData);
-    assertEquals(doc.doc.value(), deserializedData.doc.value());
+    assertEquals(doc.doc.buffer, deserializedData.doc.buffer);
   },
 );
 

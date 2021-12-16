@@ -2038,7 +2038,6 @@ Deno.test("[Decimal128] Serialize and Deserialize tests", () => {
   let buffer = serialize(doc);
   let size = calculateObjectSize(doc);
   let back = deserialize(buffer);
-  console.log(back.value.toString());
 
   assertEquals(buffer.length, size);
   assertEquals(doc, back);

@@ -150,14 +150,14 @@ function calculateElement(
         );
       } else if (value instanceof Binary) {
         // Check what kind of subtype we have
-        return value.sub_type === BinarySizes.SUBTYPE_BYTE_ARRAY
+        return value.subType === BinarySizes.SUBTYPE_BYTE_ARRAY
           ? (
             (name != null ? utf8Encoder.encode(name).length + 1 : 0) +
-            (value.position + 1 + 4 + 1 + 4)
+            (value.buffer.length + 1 + 4 + 1 + 4)
           )
           : (
             (name != null ? utf8Encoder.encode(name).length + 1 : 0) +
-            (value.position + 1 + 4 + 1)
+            (value.buffer.length + 1 + 4 + 1)
           );
       } else if (value instanceof BSONSymbol) {
         return (

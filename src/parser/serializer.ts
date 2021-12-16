@@ -1,10 +1,8 @@
-import { Binary, BinarySizes } from "../binary.ts";
 import { Code } from "../code.ts";
 import * as constants from "../constants.ts";
 import { DBRef, DBRefLike } from "../db_ref.ts";
 import { Decimal128 } from "../decimal128.ts";
 import { Double } from "../double.ts";
-import { ensureBuffer } from "../ensure_buffer.ts";
 import { BSONError, BSONTypeError } from "../error.ts";
 import { writeIEEE754 } from "../float_parser.ts";
 import { Int32 } from "../int_32.ts";
@@ -14,7 +12,7 @@ import { ObjectId } from "../objectid.ts";
 import { Timestamp } from "../timestamp.ts";
 import { BSONRegExp } from "../regexp.ts";
 import { normalizedFunctionString, writeToBytes } from "./utils.ts";
-import { BSONSymbol, Document } from "../bson.ts";
+import { Binary, BinarySizes, BSONSymbol, Document } from "../bson.ts";
 /** @public */
 export interface SerializeOptions {
   /** the serializer will check if keys are valid. */
@@ -352,7 +350,7 @@ function serializeBuffer(
   // Write the default subtype
   buffer[index++] = constants.BSON_BINARY_SUBTYPE_DEFAULT;
   // Copy the content form the binary field to the buffer
-  buffer.set(ensureBuffer(value), index);
+  buffer.set(value, index);
   // Adjust the index
   index += size;
   return index;
@@ -655,21 +653,21 @@ function serializeBinary(
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
   // Extract the buffer
-  const data = value.value(true) as Uint8Array;
+  const data = value.buffer;
   // Calculate size
-  let size = value.position;
+  let size = value.buffer.length;
   // Add the deprecated 02 type 4 bytes of size to total
-  if (value.sub_type === BinarySizes.SUBTYPE_BYTE_ARRAY) size += 4;
+  if (value.subType === BinarySizes.SUBTYPE_BYTE_ARRAY) size += 4;
   // Write the size of the string to buffer
   buffer[index++] = size & 0xff;
   buffer[index++] = (size >> 8) & 0xff;
   buffer[index++] = (size >> 16) & 0xff;
   buffer[index++] = (size >> 24) & 0xff;
   // Write the subtype to the buffer
-  buffer[index++] = value.sub_type;
+  buffer[index++] = value.subType;
 
   // If we have binary type 2 the 4 first bytes are the size
-  if (value.sub_type === BinarySizes.SUBTYPE_BYTE_ARRAY) {
+  if (value.subType === BinarySizes.SUBTYPE_BYTE_ARRAY) {
     size -= 4;
     buffer[index++] = size & 0xff;
     buffer[index++] = (size >> 8) & 0xff;
@@ -680,7 +678,7 @@ function serializeBinary(
   // Write the data to the object
   buffer.set(data, index);
   // Adjust the index
-  index += value.position;
+  index += size;
   return index;
 }
 

@@ -1,11 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import { Buffer } from "buffer";
 import { Binary, BinarySizes } from "./binary.ts";
 import { Code } from "./code.ts";
 import { DBRef } from "./db_ref.ts";
 import { Decimal128 } from "./decimal128.ts";
 import { Double } from "./double.ts";
-import { ensureBuffer } from "./ensure_buffer.ts";
 import { Int32 } from "./int_32.ts";
 import { Long } from "./long.ts";
 import { MaxKey, MinKey } from "./key.ts";
@@ -173,7 +171,7 @@ export function deserialize(
   options: DeserializeOptions = {},
 ): Document {
   return internalDeserialize(
-    buffer instanceof Buffer ? buffer : ensureBuffer(buffer),
+    buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer),
     options,
   );
 }
@@ -224,7 +222,7 @@ export function calculateObjectSize(
  * @public
  */
 export function deserializeStream(
-  data: Buffer | ArrayBufferView | ArrayBuffer,
+  data: Uint8Array | ArrayBufferView | ArrayBuffer,
   startIndex: number,
   numberOfDocuments: number,
   documents: Document[],
@@ -235,7 +233,11 @@ export function deserializeStream(
     { allowObjectSmallerThanBufferSize: true, index: 0 },
     options,
   );
-  const bufferData = ensureBuffer(data);
+  const bufferData: Uint8Array = data instanceof Uint8Array
+    ? data
+    : data instanceof ArrayBuffer
+    ? new Uint8Array(data)
+    : new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 
   let index = startIndex;
   // Loop over all documents

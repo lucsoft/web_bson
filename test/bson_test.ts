@@ -336,7 +336,9 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize Buffer", () => {
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize Buffer with promoteBuffers option",
   () => {
-    const doc = { doc: Buffer.from("hello world") };
+    const te = new TextEncoder();
+    const td = new TextDecoder();
+    const doc = { doc: te.encode("hello world") };
     const serializedData = serialize(doc);
 
     const serializedData2 = new Uint8Array(calculateObjectSize(doc));
@@ -346,8 +348,9 @@ Deno.test(
     const deserialized = deserialize(serializedData, {
       promoteBuffers: true,
     });
-    assert(Buffer.isBuffer(deserialized.doc));
-    assertEquals("hello world", deserialized.doc.toString());
+
+    assert(deserialized.doc instanceof Uint8Array);
+    assertEquals("hello world", td.decode(deserialized.doc));
   },
 );
 
@@ -543,12 +546,9 @@ Deno.test(
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize a Binary object",
   () => {
-    const bin = new Binary();
+    const te = new TextEncoder();
     const string = "binstring";
-    for (let index = 0; index < string.length; index++) {
-      bin.put(string.charAt(index));
-    }
-
+    const bin = new Binary(te.encode(string));
     const doc = { doc: bin };
     const serializedData = serialize(doc);
 
@@ -558,21 +558,20 @@ Deno.test(
 
     const deserializedData = deserialize(serializedData);
 
-    assertEquals(doc.doc.value(), deserializedData.doc.value());
+    assertEquals(doc.doc.buffer, deserializedData.doc.buffer);
   },
 );
 
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize a Type 2 Binary object",
   () => {
+    const te = new TextEncoder();
+
+    const string = "binstring";
     const bin = new Binary(
-      Buffer.from("binstring"),
+      te.encode(string),
       BinarySizes.SUBTYPE_BYTE_ARRAY,
     );
-    const string = "binstring";
-    for (let index = 0; index < string.length; index++) {
-      bin.put(string.charAt(index));
-    }
 
     const doc = { doc: bin };
     const serializedData = serialize(doc);
@@ -583,7 +582,7 @@ Deno.test(
 
     const deserializedData = deserialize(serializedData);
 
-    assertEquals(doc.doc.value(), deserializedData.doc.value());
+    assertEquals(doc.doc.buffer, deserializedData.doc.buffer);
   },
 );
 
@@ -736,12 +735,9 @@ Deno.test({
 Deno.test(
   "[BSON] Should Correctly Serialize and Deserialize a User defined Binary object",
   () => {
-    const bin = new Binary();
-    bin.sub_type = BinarySizes.SUBTYPE_USER_DEFINE;
+    const te = new TextEncoder();
     const string = "binstring";
-    for (let index = 0; index < string.length; index++) {
-      bin.put(string.charAt(index));
-    }
+    const bin = new Binary(te.encode(string), BinarySizes.SUBTYPE_USER_DEFINE);
 
     const doc = { doc: bin };
     const serializedData = serialize(doc);
@@ -752,10 +748,10 @@ Deno.test(
     const deserializedData = deserialize(serializedData);
 
     assertEquals(
-      deserializedData.doc.sub_type,
+      deserializedData.doc.subType,
       BinarySizes.SUBTYPE_USER_DEFINE,
     );
-    assertEquals(doc.doc.value(), deserializedData.doc.value());
+    assertEquals(doc.doc.buffer, deserializedData.doc.buffer);
   },
 );
 
@@ -1589,12 +1585,12 @@ Deno.test("[BSON] Should return boolean for ObjectId equality check", () => {
 
 Deno.test("[BSON-Inspect] Binary", () => {
   const binary = new Binary(
-    Buffer.from("0123456789abcdef0123456789abcdef", "hex"),
+    new Uint8Array([1, 2, 3, 4]),
     4,
   );
   assertEquals(
     Deno.inspect(binary),
-    'new Binary(Buffer.from("0123456789abcdef0123456789abcdef", "hex"), 4)',
+    "new Binary(Uint8Array(4) [ 1, 2, 3, 4 ], 4)",
   );
 });
 
