@@ -23,7 +23,6 @@ import { BSONSymbol } from "./symbol.ts";
 import { Timestamp } from "./timestamp.ts";
 import { UUID } from "./uuid.ts";
 import { bytesCopy } from "./parser/utils.ts";
-export type { BinarySequence } from "./binary.ts";
 export * from "./constants.ts";
 export type { DBRefLike } from "./db_ref.ts";
 export { LongWithoutOverridesClass } from "./timestamp.ts";

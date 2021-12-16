@@ -2,8 +2,6 @@ import { UUID } from "./uuid.ts";
 import { BSONError } from "./error.ts";
 import { b64 } from "../deps.ts";
 
-export type BinarySequence = Uint8Array | number[];
-
 export const enum BinarySizes {
   BUFFER_SIZE = 256,
   SUBTYPE_DEFAULT = 0,
