@@ -1,17 +1,9 @@
-import { hex } from "../deps.ts";
+import { decodeHexString, encodeHexString } from "../utils.ts";
 import { BSONTypeError } from "./error.ts";
 import { randomBytes } from "./parser/utils.ts";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
-
-function uint8arrayFromHexString(hexString: string): Uint8Array {
-  return hex.decode(textEncoder.encode(hexString));
-}
-
-function uint8arrayToHexString(uint8Array: Uint8Array): string {
-  return textDecoder.decode(hex.encode(uint8Array));
-}
 
 // Regular expression that checks for hex value
 const checkForHexRegExp = new RegExp("^[0-9a-fA-F]{24}$");
@@ -48,7 +40,7 @@ export class ObjectId {
       }
       workingId =
         "toHexString" in inputId && typeof inputId.toHexString === "function"
-          ? uint8arrayFromHexString(inputId.toHexString())
+          ? decodeHexString(inputId.toHexString())
           : inputId.id;
     } else {
       workingId = inputId;
@@ -74,7 +66,7 @@ export class ObjectId {
           );
         }
       } else if (workingId.length === 24 && checkForHexRegExp.test(workingId)) {
-        this.#bytesBuffer = uint8arrayFromHexString(workingId);
+        this.#bytesBuffer = decodeHexString(workingId);
       } else {
         throw new BSONTypeError(
           "Argument passed in must be a string of 12 bytes or a string of 24 hex characters",
@@ -87,7 +79,7 @@ export class ObjectId {
     }
     // If we are caching the hex string
     if (ObjectId.cacheHexString) {
-      this.#id = uint8arrayToHexString(this.id);
+      this.#id = encodeHexString(this.id);
     }
   }
 
@@ -102,7 +94,7 @@ export class ObjectId {
   set id(value: Uint8Array) {
     this.#bytesBuffer = value;
     if (ObjectId.cacheHexString) {
-      this.#id = uint8arrayToHexString(value);
+      this.#id = encodeHexString(value);
     }
   }
 
@@ -112,7 +104,7 @@ export class ObjectId {
       return this.#id;
     }
 
-    const hexString = uint8arrayToHexString(this.id);
+    const hexString = encodeHexString(this.id);
 
     if (ObjectId.cacheHexString && !this.#id) {
       this.#id = hexString;
@@ -255,7 +247,7 @@ export class ObjectId {
       );
     }
 
-    return new ObjectId(uint8arrayFromHexString(hexString));
+    return new ObjectId(decodeHexString(hexString));
   }
 
   /**

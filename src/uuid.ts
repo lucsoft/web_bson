@@ -7,7 +7,6 @@ import {
 } from "./uuid_utils.ts";
 import { randomBytes } from "./parser/utils.ts";
 import { BSONTypeError } from "./error.ts";
-import { Buffer } from "buffer";
 import { equals } from "https://deno.land/std@0.117.0/bytes/equals.ts";
 const BYTE_LENGTH = 16;
 
@@ -80,12 +79,10 @@ export class UUID {
   }
 
   /**
-   * Converts the id into a 36 character (dashes included) hex string, unless a encoding is specified.
+   * same as to `toHexString` method
    */
-  toString(encoding?: string): string {
-    return encoding
-      ? Buffer.from(this.id).toString(encoding)
-      : this.toHexString();
+  toString(): string {
+    return this.toHexString();
   }
 
   /**

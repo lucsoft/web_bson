@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { decodeHexString, encodeHexString } from "../utils.ts";
 import { BSONTypeError } from "./error.ts";
 
 // Validation regex for v4 uuid (validates with or without dashes)
@@ -16,23 +16,33 @@ export const uuidHexStringToBuffer = (hexString: string): Uint8Array => {
   }
 
   const sanitizedHexString = hexString.replace(/-/g, "");
-  return new Uint8Array(Buffer.from(sanitizedHexString, "hex").buffer);
+  return decodeHexString(sanitizedHexString);
 };
+
+const hexTable = new TextEncoder().encode("0123456789abcdef");
+const textDecoder = new TextDecoder();
 
 export const bufferToUuidHexString = (
   bytes: Uint8Array,
   includeDashes = true,
 ): string => {
-  const buffer = Buffer.from(bytes);
-  return includeDashes
-    ? buffer.toString("hex", 0, 4) +
-      "-" +
-      buffer.toString("hex", 4, 6) +
-      "-" +
-      buffer.toString("hex", 6, 8) +
-      "-" +
-      buffer.toString("hex", 8, 10) +
-      "-" +
-      buffer.toString("hex", 10, 16)
-    : buffer.toString("hex");
+  if (!includeDashes) return encodeHexString(bytes);
+  const dst = new Uint8Array(36);
+  let srcIndex = 0;
+  let dstIndex = 0;
+  while (srcIndex < bytes.length) {
+    if (
+      dstIndex === 8 || dstIndex === 13 || dstIndex === 18 || dstIndex === 23
+    ) {
+      dst[dstIndex] = 45;
+      dstIndex++;
+      continue;
+    }
+    const v = bytes[srcIndex];
+    dst[dstIndex] = hexTable[v >> 4];
+    dst[dstIndex + 1] = hexTable[v & 0x0f];
+    dstIndex += 2;
+    srcIndex++;
+  }
+  return textDecoder.decode(dst);
 };
