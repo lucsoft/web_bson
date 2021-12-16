@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file
 const deno_bson = await import(
   "https://raw.githubusercontent.com/lucsoft/deno_bson/master/mod.ts"
 );
