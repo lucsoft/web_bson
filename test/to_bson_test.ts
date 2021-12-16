@@ -1,4 +1,4 @@
-import { assertEquals } from "../deps.ts";
+import { assertEquals } from "../test_deps.ts";
 import { deserialize, Document, ObjectId, serialize } from "../src/bson.ts";
 
 Deno.test("[toBSON] Should correctly handle toBson function for an object", () => {

@@ -1,4 +1,4 @@
-import { assertEquals } from "../deps.ts";
+import { assertEquals } from "../test_deps.ts";
 import { Long } from "../src/bson.ts";
 
 Deno.test("[Long] accepts strings in the constructor", () => {

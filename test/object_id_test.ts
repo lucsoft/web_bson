@@ -1,11 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { BSONTypeError, ObjectId } from "../src/bson.ts";
-import { assert, assertEquals, assertThrows, hex } from "../deps.ts";
-
-const textEncoder = new TextEncoder();
-function decodeHex(hexString: string): Uint8Array {
-  return hex.decode(textEncoder.encode(hexString));
-}
+import { assert, assertEquals, assertThrows } from "../test_deps.ts";
+import { decodeHexString } from "../utils.ts";
 
 Deno.test("[ObjectId] should correctly handle objectId timestamps", () => {
   const a = ObjectId.createFromTime(1);
@@ -52,7 +48,7 @@ Deno.test(
     const objectValidString12Bytes: any = {
       id: "abcdefghijkl",
     };
-    const buf24Hex = decodeHex("aaaaaaaaaaaaaaaaaaaaaaaa");
+    const buf24Hex = decodeHexString("aaaaaaaaaaaaaaaaaaaaaaaa");
     const buf12Bytes = new TextEncoder().encode("abcdefghijkl");
     assertEquals(new ObjectId(objectValidString24Hex).id, buf24Hex);
     assertEquals(new ObjectId(objectValidString12Bytes).id, buf12Bytes);
@@ -65,7 +61,7 @@ Deno.test(
     function new24HexToHexString() {
       return "BBBBBBBBBBBBBBBBBBBBBBBB";
     }
-    const buf24hex = decodeHex("BBBBBBBBBBBBBBBBBBBBBBBB");
+    const buf24hex = decodeHexString("BBBBBBBBBBBBBBBBBBBBBBBB");
     const objectValidString24Hex: any = {
       id: "aaaaaaaaaaaaaaaaaaaaaaaa",
       toHexString: new24HexToHexString,
@@ -82,7 +78,7 @@ Deno.test(
 Deno.test(
   "[ObjectId] should correctly create ObjectId from object with valid Buffer id",
   () => {
-    const validBuffer24Hex = decodeHex("AAAAAAAAAAAAAAAAAAAAAAAA");
+    const validBuffer24Hex = decodeHexString("AAAAAAAAAAAAAAAAAAAAAAAA");
     const validBuffer12Array = new Uint8Array([
       1,
       2,
@@ -111,7 +107,7 @@ Deno.test(
 Deno.test(
   "[ObjectId] should correctly create ObjectId from object with valid Buffer id and toHexString method",
   () => {
-    const validBuffer24Hex = decodeHex("AAAAAAAAAAAAAAAAAAAAAAAA");
+    const validBuffer24Hex = decodeHexString("AAAAAAAAAAAAAAAAAAAAAAAA");
     const validBuffer12Array = new Uint8Array([
       1,
       2,
@@ -126,7 +122,7 @@ Deno.test(
       11,
       12,
     ]);
-    const bufferNew24Hex = decodeHex("BBBBBBBBBBBBBBBBBBBBBBBB");
+    const bufferNew24Hex = decodeHexString("BBBBBBBBBBBBBBBBBBBBBBBB");
     function newToHexString() {
       return "BBBBBBBBBBBBBBBBBBBBBBBB";
     }
@@ -178,7 +174,7 @@ Deno.test(
       id: "FFFFFFFFFFFFFFFFFFFFFFFG",
       toHexString: newToHexString,
     };
-    const bufferNew24Hex = decodeHex("BBBBBBBBBBBBBBBBBBBBBBBB");
+    const bufferNew24Hex = decodeHexString("BBBBBBBBBBBBBBBBBBBBBBBB");
     assertEquals(new ObjectId(objectInvalid24HexStr).id, bufferNew24Hex);
   },
 );
@@ -203,7 +199,7 @@ Deno.test(
       id: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]),
       toHexString: newToHexString,
     };
-    const bufferNew24Hex = decodeHex("BBBBBBBBBBBBBBBBBBBBBBBB");
+    const bufferNew24Hex = decodeHexString("BBBBBBBBBBBBBBBBBBBBBBBB");
     assertEquals(new ObjectId(objectInvalidBuffer).id, bufferNew24Hex);
   },
 );
@@ -255,7 +251,7 @@ Deno.test(
 
 Deno.test("[ObjectId] should correctly create ObjectId from 24 hex string", () => {
   const validStr24Hex = "FFFFFFFFFFFFFFFFFFFFFFFF";
-  assertEquals(new ObjectId(validStr24Hex).id, decodeHex(validStr24Hex));
+  assertEquals(new ObjectId(validStr24Hex).id, decodeHexString(validStr24Hex));
 });
 
 Deno.test("[ObjectId] should correctly create ObjectId from 12 byte sequence", () => {
@@ -282,11 +278,11 @@ Deno.test(
 
 Deno.test("[ObjectId] should correctly create ObjectId from valid Buffer", () => {
   let a = "AAAAAAAAAAAAAAAAAAAAAAAA";
-  let b = new ObjectId(decodeHex(a));
+  let b = new ObjectId(decodeHexString(a));
   assert(b.equals(a));
 
   a = "aaaaaaaaaaaaaaaaaaaaaaaa";
-  b = new ObjectId(decodeHex(a));
+  b = new ObjectId(decodeHexString(a));
   assert(a, b.toString());
   assert(b.equals(a));
 });

@@ -1,5 +1,3 @@
-import { asciiToBytes } from "../../deps.ts";
-
 /**
  * Normalizes our expected stringified form of a function across versions of node
  * @param fn - The function to stringify
@@ -126,6 +124,15 @@ function utf8ToBytes(string: string, units: number) {
   }
   return bytes;
 }
+
+function asciiToBytes(str: string) {
+  const byteArray = [];
+  for (let i = 0; i < str.length; ++i) {
+    byteArray.push(str.charCodeAt(i) & 255);
+  }
+  return new Uint8Array(byteArray);
+}
+
 export function writeToBytes(
   bytes: Uint8Array,
   data: string,

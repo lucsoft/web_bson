@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "../deps.ts";
+import { assert, assertEquals } from "../test_deps.ts";
 import { Long, Timestamp } from "../src/bson.ts";
 
 Deno.test("[Timestamp] should have a MAX_VALUE equal to Long.MAX_UNSIGNED_VALUE", () => {

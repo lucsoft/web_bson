@@ -1,4 +1,4 @@
-import { assertEquals } from "../deps.ts";
+import { assertEquals } from "../test_deps.ts";
 import { deserialize, serializeWithBufferAndIndex } from "../src/bson.ts";
 
 Deno.test("[serializeWithBuffer] correctly serialize into buffer using serializeWithBufferAndIndex", () => {

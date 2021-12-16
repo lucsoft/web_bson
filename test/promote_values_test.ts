@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "../deps.ts";
+import { assert, assertEquals } from "../test_deps.ts";
 import { deserialize, Double, Int32 } from "../src/bson.ts";
 
 Deno.test("[Promote Values] Should Correctly Deserialize object with all wrapper types", () => {

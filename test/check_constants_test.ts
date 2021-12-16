@@ -1,4 +1,4 @@
-import { assertEquals } from "../deps.ts";
+import { assertEquals } from "../test_deps.ts";
 import {
   BinarySizes,
   BSON_BINARY_SUBTYPE_DEFAULT,

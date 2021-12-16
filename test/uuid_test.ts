@@ -1,7 +1,7 @@
 import {
   validate as uuidStringValidate,
 } from "https://deno.land/std@0.117.0/uuid/v4.ts";
-import { assert, assertEquals, assertThrows } from "../deps.ts";
+import { assert, assertEquals, assertThrows } from "../test_deps.ts";
 import { Binary, BinarySizes, BSONTypeError, UUID } from "../src/bson.ts";
 import { decodeHexString } from "../utils.ts";
 

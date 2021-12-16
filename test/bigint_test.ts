@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "../deps.ts";
+import { assertEquals, assertThrows } from "../test_deps.ts";
 import { BSONTypeError, Long, serialize } from "../src/bson.ts";
 
 Deno.test("[BSON BigInt Support] Should serialize an int that fits in int32", () => {

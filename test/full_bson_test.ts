@@ -6,7 +6,7 @@ import {
   ObjectId,
   serialize,
 } from "../src/bson.ts";
-import { assert, assertEquals, assertThrows } from "../deps.ts";
+import { assert, assertEquals, assertThrows } from "../test_deps.ts";
 
 Deno.test("[Full BSON] Should Correctly Deserialize object", () => {
   // deno-fmt-ignore
