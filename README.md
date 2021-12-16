@@ -1,6 +1,6 @@
 # deno_bson
 
-deno_bson is a fork of the js-bson. Bson is short for "Binary JSON" and is the
+deno_bson is a fork of [js-bson](https://github.com/mongodb/js-bson/). Bson is short for "Binary JSON" and is the
 binary-encoded serialization of JSON-like documents. You can learn more about it
 in [the specification](http://bsonspec.org).
 
