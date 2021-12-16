@@ -1,4 +1,4 @@
-import { assertEquals } from "../deps.ts";
+import { assertEquals } from "../test_deps.ts";
 import { Document, serialize } from "../src/bson.ts";
 
 Deno.test(

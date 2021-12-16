@@ -5,7 +5,7 @@ import {
   Document,
   serialize,
 } from "../src/bson.ts";
-import { assertEquals, assertThrows } from "../deps.ts";
+import { assertEquals, assertThrows } from "../test_deps.ts";
 
 const NAN = new Uint8Array(
   [

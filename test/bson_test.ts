@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { concat } from "../deps.ts";
 import {
   Binary,
   BinarySizes,
@@ -23,7 +24,7 @@ import {
   serializeWithBufferAndIndex,
   Timestamp,
 } from "../src/bson.ts";
-import { assert, assertEquals, assertThrows, concat } from "../deps.ts";
+import { assert, assertEquals, assertThrows } from "../test_deps.ts";
 
 /**
  * Module for parsing an ISO 8601 formatted string into a Date object.

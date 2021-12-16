@@ -1,4 +1,4 @@
-import { assertEquals } from "../deps.ts";
+import { assertEquals } from "../test_deps.ts";
 import { Int32, serialize } from "../src/bson.ts";
 const strHexValue = "0x2a";
 const hexValue = 0x2a;

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { assertEquals, assertThrows } from "../deps.ts";
+import { assertEquals, assertThrows } from "../test_deps.ts";
 import {
   Binary,
   Code,

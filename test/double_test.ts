@@ -1,4 +1,4 @@
-import { assertEquals } from "../deps.ts";
+import { assertEquals } from "../test_deps.ts";
 import { Double } from "../src/bson.ts";
 
 const value = 42.3456;

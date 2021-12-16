@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "../deps.ts";
+import { assert, assertEquals } from "../test_deps.ts";
 import { BSONError, BSONTypeError } from "../src/bson.ts";
 
 Deno.test(
