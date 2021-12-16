@@ -110,11 +110,11 @@ function utf8ToBytes(string: string, units: number) {
 }
 
 function asciiToBytes(str: string) {
-  const byteArray = [];
+  const byteArray = new Uint8Array(str.length);
   for (let i = 0; i < str.length; ++i) {
-    byteArray.push(str.charCodeAt(i) & 255);
+    byteArray[i] = str.charCodeAt(i) & 255;
   }
-  return new Uint8Array(byteArray);
+  return byteArray;
 }
 
 export function writeToBytes(
