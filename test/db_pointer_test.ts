@@ -1,7 +1,6 @@
 import { deserialize } from "../src/bson.ts";
-import { Buffer } from "../deps.ts";
 // 0x0C foo\0 \0\0\07 String.fromCharCode(0x41, 0x42, 0xfffd, 0x43, 0x44) 12
-const bsonSnippet = Buffer.from([
+const bsonSnippet = new Uint8Array([
   // Size
   34,
   0,

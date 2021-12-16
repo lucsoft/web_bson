@@ -23,8 +23,7 @@ import {
   serializeWithBufferAndIndex,
   Timestamp,
 } from "../src/bson.ts";
-import { assert, assertEquals, assertThrows, Buffer } from "../deps.ts";
-import { BinaryParser } from "./tools/binary_parser.ts";
+import { assert, assertEquals, assertThrows, concat } from "../deps.ts";
 
 /**
  * Module for parsing an ISO 8601 formatted string into a Date object.
@@ -74,14 +73,9 @@ Deno.test("[BSON] Should Correctly convert ObjectId to itself", () => {
 
 Deno.test("[BSON] Should Correctly Deserialize object", () => {
   // deno-fmt-ignore
-  const bytes = [95, 0, 0, 0, 2, 110, 115, 0, 42, 0, 0, 0, 105, 110, 116, 101, 103, 114, 97, 116, 105, 111, 110, 95, 116, 101, 115, 116, 115, 95, 46, 116, 101, 115, 116, 95, 105, 110, 100, 101, 120, 95, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 8, 117, 110, 105, 113, 117, 101, 0, 0, 3, 107, 101, 121, 0, 12, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0, 2, 110, 97, 109, 101, 0, 4, 0, 0, 0, 97, 95, 49, 0, 0];
-  let serializedData = "";
-  // Convert to chars
-  for (let i = 0; i < bytes.length; i++) {
-    serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
-  }
+  const bytes = new Uint8Array([95, 0, 0, 0, 2, 110, 115, 0, 42, 0, 0, 0, 105, 110, 116, 101, 103, 114, 97, 116, 105, 111, 110, 95, 116, 101, 115, 116, 115, 95, 46, 116, 101, 115, 116, 95, 105, 110, 100, 101, 120, 95, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 8, 117, 110, 105, 113, 117, 101, 0, 0, 3, 107, 101, 121, 0, 12, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0, 2, 110, 97, 109, 101, 0, 4, 0, 0, 0, 97, 95, 49, 0, 0]);
 
-  const object = deserialize(Buffer.from(serializedData, "binary"));
+  const object = deserialize(bytes);
   assertEquals("a_1", object.name);
   assertEquals(false, object.unique);
   assertEquals(1, object.key.a);
@@ -89,15 +83,9 @@ Deno.test("[BSON] Should Correctly Deserialize object", () => {
 
 Deno.test("[BSON] Should Correctly Deserialize object with all types", () => {
   // deno-fmt-ignore
-  const bytes = [ 26, 1, 0, 0, 7, 95, 105, 100, 0, 161, 190, 98, 75, 118, 169, 3, 0, 0, 3, 0, 0, 4, 97, 114, 114, 97, 121, 0, 26, 0, 0, 0, 16, 48, 0, 1, 0, 0, 0, 16, 49, 0, 2, 0, 0, 0, 16, 50, 0, 3, 0, 0, 0, 0, 2, 115, 116, 114, 105, 110, 103, 0, 6, 0, 0, 0, 104, 101, 108, 108, 111, 0, 3, 104, 97, 115, 104, 0, 19, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 16, 98, 0, 2, 0, 0, 0, 0, 9, 100, 97, 116, 101, 0, 161, 190, 98, 75, 0, 0, 0, 0, 7, 111, 105, 100, 0, 161, 190, 98, 75, 90, 217, 18, 0, 0, 1, 0, 0, 5, 98, 105, 110, 97, 114, 121, 0, 7, 0, 0, 0, 2, 3, 0, 0, 0, 49, 50, 51, 16, 105, 110, 116, 0, 42, 0, 0, 0, 1, 102, 108, 111, 97, 116, 0, 223, 224, 11, 147, 169, 170, 64, 64, 11, 114, 101, 103, 101, 120, 112, 0, 102, 111, 111, 98, 97, 114, 0, 105, 0, 8, 98, 111, 111, 108, 101, 97, 110, 0, 1, 15, 119, 104, 101, 114, 101, 0, 25, 0, 0, 0, 12, 0, 0, 0, 116, 104, 105, 115, 46, 120, 32, 61, 61, 32, 51, 0, 5, 0, 0, 0, 0, 3, 100, 98, 114, 101, 102, 0, 37, 0, 0, 0, 2, 36, 114, 101, 102, 0, 5, 0, 0, 0, 116, 101, 115, 116, 0, 7, 36, 105, 100, 0, 161, 190, 98, 75, 2, 180, 1, 0, 0, 2, 0, 0, 0, 10, 110, 117, 108, 108, 0, 0, ];
-  let serializedData = "";
+  const bytes = new Uint8Array([26, 1, 0, 0, 7, 95, 105, 100, 0, 161, 190, 98, 75, 118, 169, 3, 0, 0, 3, 0, 0, 4, 97, 114, 114, 97, 121, 0, 26, 0, 0, 0, 16, 48, 0, 1, 0, 0, 0, 16, 49, 0, 2, 0, 0, 0, 16, 50, 0, 3, 0, 0, 0, 0, 2, 115, 116, 114, 105, 110, 103, 0, 6, 0, 0, 0, 104, 101, 108, 108, 111, 0, 3, 104, 97, 115, 104, 0, 19, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 16, 98, 0, 2, 0, 0, 0, 0, 9, 100, 97, 116, 101, 0, 161, 190, 98, 75, 0, 0, 0, 0, 7, 111, 105, 100, 0, 161, 190, 98, 75, 90, 217, 18, 0, 0, 1, 0, 0, 5, 98, 105, 110, 97, 114, 121, 0, 7, 0, 0, 0, 2, 3, 0, 0, 0, 49, 50, 51, 16, 105, 110, 116, 0, 42, 0, 0, 0, 1, 102, 108, 111, 97, 116, 0, 223, 224, 11, 147, 169, 170, 64, 64, 11, 114, 101, 103, 101, 120, 112, 0, 102, 111, 111, 98, 97, 114, 0, 105, 0, 8, 98, 111, 111, 108, 101, 97, 110, 0, 1, 15, 119, 104, 101, 114, 101, 0, 25, 0, 0, 0, 12, 0, 0, 0, 116, 104, 105, 115, 46, 120, 32, 61, 61, 32, 51, 0, 5, 0, 0, 0, 0, 3, 100, 98, 114, 101, 102, 0, 37, 0, 0, 0, 2, 36, 114, 101, 102, 0, 5, 0, 0, 0, 116, 101, 115, 116, 0, 7, 36, 105, 100, 0, 161, 190, 98, 75, 2, 180, 1, 0, 0, 2, 0, 0, 0, 10, 110, 117, 108, 108, 0, 0]);
 
-  // Convert to chars
-  for (let i = 0; i < bytes.length; i++) {
-    serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
-  }
-
-  const object = deserialize(Buffer.from(serializedData, "binary"));
+  const object = deserialize(bytes);
   // Perform tests
   assertEquals("hello", object.string);
   assertEquals([1, 2, 3], object.array);
@@ -316,7 +304,8 @@ Deno.test("[BSON] Should Correctly Serialize and Deserialize Array", () => {
 });
 
 Deno.test("[BSON] Should Correctly Serialize and Deserialize Buffer", () => {
-  const doc = { doc: Buffer.from("hello world") };
+  const te = new TextEncoder();
+  const doc = { doc: te.encode("hello world") };
   const serializedData = serialize(doc);
 
   const serializedData2 = new Uint8Array(calculateObjectSize(doc));
@@ -1437,11 +1426,11 @@ Deno.test(
     const docs = [{ foo: "bar" }, { foo: "baz" }, { foo: "quux" }];
 
     // Serialize the test data
-    const serializedDocs = [];
+    const serializedDocs: Uint8Array[] = [];
     for (let i = 0; i < docs.length; i++) {
       serializedDocs[i] = serialize(docs[i]);
     }
-    const buf = Buffer.concat(serializedDocs);
+    const buf = concat(...serializedDocs);
 
     const parsedDocs: Document[] = [];
     deserializeStream(buf, 0, docs.length, parsedDocs, 0);

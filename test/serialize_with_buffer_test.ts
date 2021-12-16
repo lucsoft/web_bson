@@ -1,9 +1,9 @@
-import { assertEquals, Buffer } from "../deps.ts";
+import { assertEquals } from "../deps.ts";
 import { deserialize, serializeWithBufferAndIndex } from "../src/bson.ts";
 
 Deno.test("[serializeWithBuffer] correctly serialize into buffer using serializeWithBufferAndIndex", () => {
   // Create a buffer
-  const b = Buffer.alloc(256);
+  const b = new Uint8Array(256);
   // Serialize from index 0
   let r = serializeWithBufferAndIndex({ a: 1 }, b);
   assertEquals(11, r);

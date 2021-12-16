@@ -1,4 +1,3 @@
-import { Buffer } from "../../deps.ts";
 export const assertArrayEqual = (array1: [], array2: []) => {
   if (array1.length !== array2.length) return false;
   for (let i = 0; i < array1.length; i++) {
@@ -81,53 +80,4 @@ export const Utf8 = { // public => method for url encoding
     }
     return string;
   },
-};
-/**
- * A helper to turn hex string sequences into BSON.
- * Omit the first 8 hex digits for the document it will be calculated
- * As well as the BSON document's null terminator '00'
- *
- * @example
- * ```js
- * const bytes = bufferFromHexArray([
- *   '10', // int32 type
- *   '6100', // 'a' key with key null terminator
- *   '01000000' // little endian int32
- * ])
- * serialize(bytes) // { a: 1 }
- * ```
- */
-export const bufferFromHexArray = (array: string[]) => {
-  const string = array.concat(["00"]).join("");
-  const size = string.length / 2 + 4;
-
-  const byteLength = [
-    size & 0xff,
-    (size >> 8) & 0xff,
-    (size >> 16) & 0xff,
-    (size >> 24) & 0xff,
-  ]
-    .map((n) => {
-      const hexCode = n.toString(16);
-      return hexCode.length === 2 ? hexCode : "0" + hexCode;
-    })
-    .join("");
-
-  return Buffer.from(byteLength + string, "hex");
-};
-
-/** =>
- * A helper to calculate the byte size of a string (including null)
- *
- * ```js
- * const x = stringToUTF8HexBytes('ab') // { x: '03000000616200' }
- */
-export const stringToUTF8HexBytes = (str: string) => {
-  const b = Buffer.from(str, "utf8");
-  const len = b.byteLength;
-  const out = Buffer.alloc(len + 4 + 1);
-  out.writeInt32LE(len + 1, 0);
-  out.set(b, 4);
-  out[len + 1] = 0x00;
-  return out.toString("hex");
 };
