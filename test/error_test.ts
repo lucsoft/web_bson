@@ -1,7 +1,4 @@
-import {
-  assert,
-  assertEquals,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assert, assertEquals } from "../deps.ts";
 import { BSONError, BSONTypeError } from "../src/bson.ts";
 
 Deno.test(

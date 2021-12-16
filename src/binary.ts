@@ -1,7 +1,6 @@
 import { UUID } from "./uuid.ts";
 import { BSONError, BSONTypeError } from "./error.ts";
-import { Buffer } from "buffer";
-import { concat, copy } from "https://deno.land/std@0.117.0/bytes/mod.ts";
+import { Buffer, concat, copy } from "../deps.ts";
 
 export type BinarySequence = Uint8Array | number[];
 
@@ -99,7 +98,9 @@ export class Binary {
     }
 
     if (!(this.buffer.length > this.position)) {
-      const buffer = Buffer.alloc(BinarySizes.BUFFER_SIZE + this.buffer.length);
+      const buffer = new Uint8Array(
+        BinarySizes.BUFFER_SIZE + this.buffer.length,
+      );
       // Combine the two buffers together
       this.buffer = concat(new Uint8Array(buffer.buffer), this.buffer);
     }

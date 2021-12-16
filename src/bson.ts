@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Buffer } from "buffer";
+import { Buffer } from "../deps.ts";
 import { Binary, BinarySizes } from "./binary.ts";
 import { Code } from "./code.ts";
 import { DBRef } from "./db_ref.ts";

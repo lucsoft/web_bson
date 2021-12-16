@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { Buffer } from "buffer";
 import {
   Binary,
   BinarySizes,
@@ -24,11 +23,7 @@ import {
   serializeWithBufferAndIndex,
   Timestamp,
 } from "../src/bson.ts";
-import {
-  assert,
-  assertEquals,
-  assertThrows,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assert, assertEquals, assertThrows, Buffer } from "../deps.ts";
 import { BinaryParser } from "./tools/binary_parser.ts";
 
 /**

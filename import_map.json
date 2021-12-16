@@ -1,5 +1,0 @@
-{
-  "imports": {
-    "buffer": "https://deno.land/std@0.117.0/node/buffer.ts"
-  }
-}

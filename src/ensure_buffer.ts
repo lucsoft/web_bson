@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { Buffer } from "../deps.ts";
 import { BSONTypeError } from "./error.ts";
 
 /**

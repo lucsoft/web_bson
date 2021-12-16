@@ -1,6 +1,11 @@
 import { Binary, BinarySizes } from "../binary.ts";
 import { Code } from "../code.ts";
-import * as constants from "../constants.ts";
+import {
+  BSON_BINARY_SUBTYPE_DEFAULT,
+  BSON_INT32_MAX,
+  BSON_INT32_MIN,
+  BSONData,
+} from "../constants.ts";
 import { DBRef, DBRefLike } from "../db_ref.ts";
 import { Decimal128 } from "../decimal128.ts";
 import { Double } from "../double.ts";
@@ -45,7 +50,7 @@ function serializeString(
   isArray?: boolean,
 ) {
   // Encode String type
-  buffer[index++] = constants.BSON_DATA_STRING;
+  buffer[index++] = BSONData.STRING;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -78,12 +83,12 @@ function serializeNumber(
   // TODO(NODE-2529): Add support for big int
   if (
     Number.isInteger(value) &&
-    value >= constants.BSON_INT32_MIN &&
-    value <= constants.BSON_INT32_MAX
+    value >= BSON_INT32_MIN &&
+    value <= BSON_INT32_MAX
   ) {
     // If the value fits in 32 bits encode as int32
     // Set int type 32 bits or less
-    buffer[index++] = constants.BSON_DATA_INT;
+    buffer[index++] = BSONData.INT;
     // Number of written bytes
     const numberOfWrittenBytes = !isArray
       ? writeToBytes(buffer, key, index, "utf8")
@@ -98,7 +103,7 @@ function serializeNumber(
     buffer[index++] = (value >> 24) & 0xff;
   } else {
     // Encode as double
-    buffer[index++] = constants.BSON_DATA_NUMBER;
+    buffer[index++] = BSONData.NUMBER;
     // Number of written bytes
     const numberOfWrittenBytes = !isArray
       ? writeToBytes(buffer, key, index, "utf8")
@@ -123,7 +128,7 @@ function serializeNull(
   isArray?: boolean,
 ) {
   // Set long type
-  buffer[index++] = constants.BSON_DATA_NULL;
+  buffer[index++] = BSONData.NULL;
 
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
@@ -144,7 +149,7 @@ function serializeBoolean(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_BOOLEAN;
+  buffer[index++] = BSONData.BOOLEAN;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -165,7 +170,7 @@ function serializeDate(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_DATE;
+  buffer[index++] = BSONData.DATE;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -199,7 +204,7 @@ function serializeRegExp(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_REGEXP;
+  buffer[index++] = BSONData.REGEXP;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -233,7 +238,7 @@ function serializeBSONRegExp(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_REGEXP;
+  buffer[index++] = BSONData.REGEXP;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -274,11 +279,11 @@ function serializeMinMax(
 ) {
   // Write the type of either min or max key
   if (value === null) {
-    buffer[index++] = constants.BSON_DATA_NULL;
+    buffer[index++] = BSONData.NULL;
   } else if (value instanceof MinKey) {
-    buffer[index++] = constants.BSON_DATA_MIN_KEY;
+    buffer[index++] = BSONData.MIN_KEY;
   } else {
-    buffer[index++] = constants.BSON_DATA_MAX_KEY;
+    buffer[index++] = BSONData.MAX_KEY;
   }
 
   // Number of written bytes
@@ -299,7 +304,7 @@ function serializeObjectId(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_OID;
+  buffer[index++] = BSONData.OID;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -334,7 +339,7 @@ function serializeBuffer(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_BINARY;
+  buffer[index++] = BSONData.BINARY;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -350,7 +355,7 @@ function serializeBuffer(
   buffer[index++] = (size >> 16) & 0xff;
   buffer[index++] = (size >> 24) & 0xff;
   // Write the default subtype
-  buffer[index++] = constants.BSON_BINARY_SUBTYPE_DEFAULT;
+  buffer[index++] = BSON_BINARY_SUBTYPE_DEFAULT;
   // Copy the content form the binary field to the buffer
   buffer.set(ensureBuffer(value), index);
   // Adjust the index
@@ -377,9 +382,7 @@ function serializeObject(
   // Push value to stack
   path.push(value);
   // Write the type
-  buffer[index++] = Array.isArray(value)
-    ? constants.BSON_DATA_ARRAY
-    : constants.BSON_DATA_OBJECT;
+  buffer[index++] = Array.isArray(value) ? BSONData.ARRAY : BSONData.OBJECT;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -409,7 +412,7 @@ function serializeDecimal128(
   index: number,
   isArray?: boolean,
 ) {
-  buffer[index++] = constants.BSON_DATA_DECIMAL128;
+  buffer[index++] = BSONData.DECIMAL128;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -433,8 +436,8 @@ function serializeLong(
 ) {
   // Write the type
   buffer[index++] = value instanceof Timestamp
-    ? constants.BSON_DATA_TIMESTAMP
-    : constants.BSON_DATA_LONG;
+    ? BSONData.TIMESTAMP
+    : BSONData.LONG;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -467,7 +470,7 @@ function serializeInt32(
 ) {
   value = value.valueOf();
   // Set int type 32 bits or less
-  buffer[index++] = constants.BSON_DATA_INT;
+  buffer[index++] = BSONData.INT;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -491,7 +494,7 @@ function serializeDouble(
   isArray?: boolean,
 ) {
   // Encode as double
-  buffer[index++] = constants.BSON_DATA_NUMBER;
+  buffer[index++] = BSONData.NUMBER;
 
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
@@ -520,7 +523,7 @@ function serializeFunction(
   _depth = 0,
   isArray?: boolean,
 ) {
-  buffer[index++] = constants.BSON_DATA_CODE;
+  buffer[index++] = BSONData.CODE;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -558,7 +561,7 @@ function serializeCode(
 ) {
   if (value.scope && typeof value.scope === "object") {
     // Write the type
-    buffer[index++] = constants.BSON_DATA_CODE_W_SCOPE;
+    buffer[index++] = BSONData.CODE_W_SCOPE;
     // Number of written bytes
     const numberOfWrittenBytes = !isArray
       ? writeToBytes(buffer, key, index, "utf8")
@@ -612,7 +615,7 @@ function serializeCode(
     buffer[startIndex++] = (totalSize >> 16) & 0xff;
     buffer[startIndex++] = (totalSize >> 24) & 0xff;
   } else {
-    buffer[index++] = constants.BSON_DATA_CODE;
+    buffer[index++] = BSONData.CODE;
     // Number of written bytes
     const numberOfWrittenBytes = !isArray
       ? writeToBytes(buffer, key, index, "utf8")
@@ -646,7 +649,7 @@ function serializeBinary(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_BINARY;
+  buffer[index++] = BSONData.BINARY;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -692,7 +695,7 @@ function serializeSymbol(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_SYMBOL;
+  buffer[index++] = BSONData.SYMBOL;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")
@@ -724,7 +727,7 @@ function serializeDBRef(
   isArray?: boolean,
 ) {
   // Write the type
-  buffer[index++] = constants.BSON_DATA_OBJECT;
+  buffer[index++] = BSONData.OBJECT;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
     ? writeToBytes(buffer, key, index, "utf8")

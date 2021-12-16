@@ -1,8 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { hex } from "../deps.ts";
-import { ObjectId } from "../src/objectid.ts";
-import { BSONTypeError } from "../src/error.ts";
-import { assert, assertEquals, assertThrows } from "./deps.ts";
+import { BSONTypeError, ObjectId } from "../src/bson.ts";
+import { assert, assertEquals, assertThrows, hex } from "../deps.ts";
 
 const textEncoder = new TextEncoder();
 function decodeHex(hexString: string): Uint8Array {

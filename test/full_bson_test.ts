@@ -1,14 +1,13 @@
-import { Binary, BSONRegExp, ObjectId } from "../src/bson.ts";
-import { Buffer } from "buffer";
-import { BinaryParser } from "./tools/binary_parser.ts";
-import { deserialize } from "../src/bson.ts";
-import { serialize } from "../src/bson.ts";
 import {
-  assert,
-  assertEquals,
-  assertThrows,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { Document } from "../src/bson.ts";
+  Binary,
+  BSONRegExp,
+  deserialize,
+  Document,
+  ObjectId,
+  serialize,
+} from "../src/bson.ts";
+import { BinaryParser } from "./tools/binary_parser.ts";
+import { assert, assertEquals, assertThrows, Buffer } from "../deps.ts";
 
 Deno.test("[Full BSON] Should Correctly Deserialize object", () => {
   // deno-fmt-ignore

@@ -1,7 +1,7 @@
 import { Binary, BinarySizes } from "../binary.ts";
 import type { Document } from "../bson.ts";
 import { Code } from "../code.ts";
-import * as constants from "../constants.ts";
+import { BSONData, JS_INT_MAX, JS_INT_MIN } from "../constants.ts";
 import { DBRef, DBRefLike, isDBRefLike } from "../db_ref.ts";
 import { Decimal128 } from "../decimal128.ts";
 import { Double } from "../double.ts";
@@ -57,8 +57,8 @@ export interface DeserializeOptions {
 }
 
 // Internal long versions
-const JS_INT_MAX_LONG = Long.fromNumber(constants.JS_INT_MAX);
-const JS_INT_MIN_LONG = Long.fromNumber(constants.JS_INT_MIN);
+const JS_INT_MAX_LONG = Long.fromNumber(JS_INT_MAX);
+const JS_INT_MIN_LONG = Long.fromNumber(JS_INT_MIN);
 
 // deno-lint-ignore ban-types
 const functionCache: { [hash: string]: Function } = {};
@@ -236,7 +236,7 @@ function deserializeObject(
 
     index = i + 1;
 
-    if (elementType === constants.BSON_DATA_STRING) {
+    if (elementType === BSONData.STRING) {
       const stringSize = buffer[index++] |
         (buffer[index++] << 8) |
         (buffer[index++] << 16) |
@@ -255,34 +255,34 @@ function deserializeObject(
         shouldValidateKey,
       );
       index = index + stringSize;
-    } else if (elementType === constants.BSON_DATA_OID) {
+    } else if (elementType === BSONData.OID) {
       const oid = new Uint8Array(12);
       bytesCopy(oid, 0, buffer, index, index + 12);
       value = new ObjectId(oid);
       index = index + 12;
     } else if (
-      elementType === constants.BSON_DATA_INT && promoteValues === false
+      elementType === BSONData.INT && promoteValues === false
     ) {
       value = new Int32(
         buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) |
           (buffer[index++] << 24),
       );
-    } else if (elementType === constants.BSON_DATA_INT) {
+    } else if (elementType === BSONData.INT) {
       value = buffer[index++] |
         (buffer[index++] << 8) |
         (buffer[index++] << 16) |
         (buffer[index++] << 24);
     } else if (
-      elementType === constants.BSON_DATA_NUMBER && promoteValues === false
+      elementType === BSONData.NUMBER && promoteValues === false
     ) {
       value = new Double(
         new DataView(buffer.buffer, index, 8).getFloat64(0, true),
       );
       index = index + 8;
-    } else if (elementType === constants.BSON_DATA_NUMBER) {
+    } else if (elementType === BSONData.NUMBER) {
       value = new DataView(buffer.buffer, index, 8).getFloat64(0, true);
       index = index + 8;
-    } else if (elementType === constants.BSON_DATA_DATE) {
+    } else if (elementType === BSONData.DATE) {
       const lowBits = buffer[index++] |
         (buffer[index++] << 8) |
         (buffer[index++] << 16) |
@@ -292,12 +292,12 @@ function deserializeObject(
         (buffer[index++] << 16) |
         (buffer[index++] << 24);
       value = new Date(new Long(lowBits, highBits).toNumber());
-    } else if (elementType === constants.BSON_DATA_BOOLEAN) {
+    } else if (elementType === BSONData.BOOLEAN) {
       if (buffer[index] !== 0 && buffer[index] !== 1) {
         throw new BSONError("illegal boolean type value");
       }
       value = buffer[index++] === 1;
-    } else if (elementType === constants.BSON_DATA_OBJECT) {
+    } else if (elementType === BSONData.OBJECT) {
       const _index = index;
       const objectSize = buffer[index] |
         (buffer[index + 1] << 8) |
@@ -322,7 +322,7 @@ function deserializeObject(
       }
 
       index = index + objectSize;
-    } else if (elementType === constants.BSON_DATA_ARRAY) {
+    } else if (elementType === BSONData.ARRAY) {
       const _index = index;
       const objectSize = buffer[index] |
         (buffer[index + 1] << 8) |
@@ -358,11 +358,11 @@ function deserializeObject(
         throw new BSONError("invalid array terminator byte");
       }
       if (index !== stopIndex) throw new BSONError("corrupted array bson");
-    } else if (elementType === constants.BSON_DATA_UNDEFINED) {
+    } else if (elementType === BSONData.UNDEFINED) {
       value = undefined;
-    } else if (elementType === constants.BSON_DATA_NULL) {
+    } else if (elementType === BSONData.NULL) {
       value = null;
-    } else if (elementType === constants.BSON_DATA_LONG) {
+    } else if (elementType === BSONData.LONG) {
       // Unpack the low and high bits
       const lowBits = buffer[index++] |
         (buffer[index++] << 8) |
@@ -382,7 +382,7 @@ function deserializeObject(
       } else {
         value = long;
       }
-    } else if (elementType === constants.BSON_DATA_DECIMAL128) {
+    } else if (elementType === BSONData.DECIMAL128) {
       // Buffer to contain the decimal bytes
       const bytes = new Uint8Array(16);
       // Copy the next 16 bytes into the bytes buffer
@@ -402,7 +402,7 @@ function deserializeObject(
       } else {
         value = decimal128;
       }
-    } else if (elementType === constants.BSON_DATA_BINARY) {
+    } else if (elementType === BSONData.BINARY) {
       let binarySize = buffer[index++] |
         (buffer[index++] << 8) |
         (buffer[index++] << 16) |
@@ -490,7 +490,7 @@ function deserializeObject(
       // Update the index
       index = index + binarySize;
     } else if (
-      elementType === constants.BSON_DATA_REGEXP && bsonRegExp === false
+      elementType === BSONData.REGEXP && bsonRegExp === false
     ) {
       // Get the start search index
       i = index;
@@ -541,7 +541,7 @@ function deserializeObject(
 
       value = new RegExp(source, optionsArray.join(""));
     } else if (
-      elementType === constants.BSON_DATA_REGEXP && bsonRegExp === true
+      elementType === BSONData.REGEXP && bsonRegExp === true
     ) {
       // Get the start search index
       i = index;
@@ -573,7 +573,7 @@ function deserializeObject(
 
       // Set the object
       value = new BSONRegExp(source, regExpOptions);
-    } else if (elementType === constants.BSON_DATA_SYMBOL) {
+    } else if (elementType === BSONData.SYMBOL) {
       const stringSize = buffer[index++] |
         (buffer[index++] << 8) |
         (buffer[index++] << 16) |
@@ -593,7 +593,7 @@ function deserializeObject(
       );
       value = promoteValues ? symbol : new BSONSymbol(symbol);
       index = index + stringSize;
-    } else if (elementType === constants.BSON_DATA_TIMESTAMP) {
+    } else if (elementType === BSONData.TIMESTAMP) {
       const lowBits = buffer[index++] |
         (buffer[index++] << 8) |
         (buffer[index++] << 16) |
@@ -604,11 +604,11 @@ function deserializeObject(
         (buffer[index++] << 24);
 
       value = new Timestamp(new Long(lowBits, highBits));
-    } else if (elementType === constants.BSON_DATA_MIN_KEY) {
+    } else if (elementType === BSONData.MIN_KEY) {
       value = new MinKey();
-    } else if (elementType === constants.BSON_DATA_MAX_KEY) {
+    } else if (elementType === BSONData.MAX_KEY) {
       value = new MaxKey();
-    } else if (elementType === constants.BSON_DATA_CODE) {
+    } else if (elementType === BSONData.CODE) {
       const stringSize = buffer[index++] |
         (buffer[index++] << 8) |
         (buffer[index++] << 16) |
@@ -642,7 +642,7 @@ function deserializeObject(
 
       // Update parse index position
       index = index + stringSize;
-    } else if (elementType === constants.BSON_DATA_CODE_W_SCOPE) {
+    } else if (elementType === BSONData.CODE_W_SCOPE) {
       const totalSize = buffer[index++] |
         (buffer[index++] << 8) |
         (buffer[index++] << 16) |
@@ -718,7 +718,7 @@ function deserializeObject(
       } else {
         value = new Code(functionString, scopeObject);
       }
-    } else if (elementType === constants.BSON_DATA_DBPOINTER) {
+    } else if (elementType === BSONData.DBPOINTER) {
       // Get the code string size
       const stringSize = buffer[index++] |
         (buffer[index++] << 8) |

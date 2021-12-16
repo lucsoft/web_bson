@@ -7,7 +7,7 @@ import {
 } from "./uuid_utils.ts";
 import { randomBytes } from "./parser/utils.ts";
 import { BSONTypeError } from "./error.ts";
-import { equals } from "https://deno.land/std@0.117.0/bytes/equals.ts";
+import { equals } from "../deps.ts";
 const BYTE_LENGTH = 16;
 
 /**
