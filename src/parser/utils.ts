@@ -117,15 +117,20 @@ function asciiToBytes(str: string) {
   return byteArray;
 }
 
+export enum Encoding {
+  Utf8 = 0,
+  Ascii = 1,
+}
+
 export function writeToBytes(
   bytes: Uint8Array,
   data: string,
   offset: number,
   /** latin1 is ascii */
-  encoding: "utf8" | "ascii",
+  encoding: Encoding,
 ) {
   const bytesLength = bytes.length;
-  const src = encoding == "ascii"
+  const src = encoding
     ? asciiToBytes(data)
     : utf8ToBytes(data, bytesLength - offset);
 

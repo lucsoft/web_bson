@@ -16,7 +16,7 @@ import { MaxKey, MinKey } from "../key.ts";
 import { ObjectId } from "../objectid.ts";
 import { Timestamp } from "../timestamp.ts";
 import { BSONRegExp } from "../regexp.ts";
-import { normalizedFunctionString, writeToBytes } from "./utils.ts";
+import { Encoding, normalizedFunctionString, writeToBytes } from "./utils.ts";
 import { Binary, BinarySizes, BSONSymbol, Document } from "../bson.ts";
 /** @public */
 export interface SerializeOptions {
@@ -51,13 +51,13 @@ function serializeString(
   buffer[index++] = BSONData.STRING;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index = index + numberOfWrittenBytes + 1;
   buffer[index - 1] = 0;
   // Write the string
-  const size = writeToBytes(buffer, value, index + 4, "utf8");
+  const size = writeToBytes(buffer, value, index + 4, Encoding.Utf8);
   // Write the size of the string to buffer
   buffer[index + 3] = ((size + 1) >> 24) & 0xff;
   buffer[index + 2] = ((size + 1) >> 16) & 0xff;
@@ -89,8 +89,8 @@ function serializeNumber(
     buffer[index++] = BSONData.INT;
     // Number of written bytes
     const numberOfWrittenBytes = !isArray
-      ? writeToBytes(buffer, key, index, "utf8")
-      : writeToBytes(buffer, key, index, "ascii");
+      ? writeToBytes(buffer, key, index, Encoding.Utf8)
+      : writeToBytes(buffer, key, index, Encoding.Ascii);
     // Encode the name
     index += numberOfWrittenBytes;
     buffer[index++] = 0;
@@ -104,8 +104,8 @@ function serializeNumber(
     buffer[index++] = BSONData.NUMBER;
     // Number of written bytes
     const numberOfWrittenBytes = !isArray
-      ? writeToBytes(buffer, key, index, "utf8")
-      : writeToBytes(buffer, key, index, "ascii");
+      ? writeToBytes(buffer, key, index, Encoding.Utf8)
+      : writeToBytes(buffer, key, index, Encoding.Ascii);
     // Encode the name
     index += numberOfWrittenBytes;
     buffer[index++] = 0;
@@ -130,8 +130,8 @@ function serializeNull(
 
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
 
   // Encode the name
   index += numberOfWrittenBytes;
@@ -150,8 +150,8 @@ function serializeBoolean(
   buffer[index++] = BSONData.BOOLEAN;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -171,8 +171,8 @@ function serializeDate(
   buffer[index++] = BSONData.DATE;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -205,8 +205,8 @@ function serializeRegExp(
   buffer[index++] = BSONData.REGEXP;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
 
   // Encode the name
   index += numberOfWrittenBytes;
@@ -215,7 +215,7 @@ function serializeRegExp(
     throw Error(`value ${value.source} must not contain null bytes`);
   }
   // Adjust the index
-  index += writeToBytes(buffer, value.source, index, "utf8");
+  index += writeToBytes(buffer, value.source, index, Encoding.Utf8);
   // Write zero
   buffer[index++] = 0x00;
   // Write the parameters
@@ -239,8 +239,8 @@ function serializeBSONRegExp(
   buffer[index++] = BSONData.REGEXP;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -253,7 +253,7 @@ function serializeBSONRegExp(
   }
 
   // Adjust the index
-  index += writeToBytes(buffer, value.pattern, index, "utf8");
+  index += writeToBytes(buffer, value.pattern, index, Encoding.Utf8);
   // Write zero
   buffer[index++] = 0x00;
   // Write the options
@@ -261,7 +261,7 @@ function serializeBSONRegExp(
     buffer,
     value.options.split("").sort().join(""),
     index,
-    "utf8",
+    Encoding.Utf8,
   );
   // Add ending zero
   buffer[index++] = 0x00;
@@ -286,8 +286,8 @@ function serializeMinMax(
 
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -305,8 +305,8 @@ function serializeObjectId(
   buffer[index++] = BSONData.OID;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
 
   // Encode the name
   index += numberOfWrittenBytes;
@@ -314,7 +314,7 @@ function serializeObjectId(
 
   // Write the objectId into the shared buffer
   if (typeof value.id === "string") {
-    writeToBytes(buffer, value.id, index, "ascii");
+    writeToBytes(buffer, value.id, index, Encoding.Ascii);
   } else if (value.id instanceof Uint8Array) {
     // Use the standard JS methods here because buffer.copy() is buggy with the
     // browser polyfill
@@ -340,8 +340,8 @@ function serializeBuffer(
   buffer[index++] = BSONData.BINARY;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -383,8 +383,8 @@ function serializeObject(
   buffer[index++] = Array.isArray(value) ? BSONData.ARRAY : BSONData.OBJECT;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -413,8 +413,8 @@ function serializeDecimal128(
   buffer[index++] = BSONData.DECIMAL128;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -438,8 +438,8 @@ function serializeLong(
     : BSONData.LONG;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -471,8 +471,8 @@ function serializeInt32(
   buffer[index++] = BSONData.INT;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -496,8 +496,8 @@ function serializeDouble(
 
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
 
   // Encode the name
   index += numberOfWrittenBytes;
@@ -524,8 +524,8 @@ function serializeFunction(
   buffer[index++] = BSONData.CODE;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -533,7 +533,8 @@ function serializeFunction(
   const functionString = normalizedFunctionString(value);
 
   // Write the string
-  const size = writeToBytes(buffer, functionString, index + 4, "utf8") + 1;
+  const size = writeToBytes(buffer, functionString, index + 4, Encoding.Utf8) +
+    1;
   // Write the size of the string to buffer
   buffer[index] = size & 0xff;
   buffer[index + 1] = (size >> 8) & 0xff;
@@ -562,8 +563,8 @@ function serializeCode(
     buffer[index++] = BSONData.CODE_W_SCOPE;
     // Number of written bytes
     const numberOfWrittenBytes = !isArray
-      ? writeToBytes(buffer, key, index, "utf8")
-      : writeToBytes(buffer, key, index, "ascii");
+      ? writeToBytes(buffer, key, index, Encoding.Utf8)
+      : writeToBytes(buffer, key, index, Encoding.Ascii);
     // Encode the name
     index += numberOfWrittenBytes;
     buffer[index++] = 0;
@@ -579,7 +580,8 @@ function serializeCode(
     // Index adjustment
     index += 4;
     // Write string into buffer
-    const codeSize = writeToBytes(buffer, functionString, index + 4, "utf8") +
+    const codeSize =
+      writeToBytes(buffer, functionString, index + 4, Encoding.Utf8) +
       1;
     // Write the size of the string to buffer
     buffer[index] = codeSize & 0xff;
@@ -616,15 +618,16 @@ function serializeCode(
     buffer[index++] = BSONData.CODE;
     // Number of written bytes
     const numberOfWrittenBytes = !isArray
-      ? writeToBytes(buffer, key, index, "utf8")
-      : writeToBytes(buffer, key, index, "ascii");
+      ? writeToBytes(buffer, key, index, Encoding.Utf8)
+      : writeToBytes(buffer, key, index, Encoding.Ascii);
     // Encode the name
     index += numberOfWrittenBytes;
     buffer[index++] = 0;
     // Function string
     const functionString = value.code.toString();
     // Write the string
-    const size = writeToBytes(buffer, functionString, index + 4, "utf8") + 1;
+    const size =
+      writeToBytes(buffer, functionString, index + 4, Encoding.Utf8) + 1;
     // Write the size of the string to buffer
     buffer[index] = size & 0xff;
     buffer[index + 1] = (size >> 8) & 0xff;
@@ -650,8 +653,8 @@ function serializeBinary(
   buffer[index++] = BSONData.BINARY;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
@@ -696,13 +699,13 @@ function serializeSymbol(
   buffer[index++] = BSONData.SYMBOL;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
   // Encode the name
   index += numberOfWrittenBytes;
   buffer[index++] = 0;
   // Write the string
-  const size = writeToBytes(buffer, value.value, index + 4, "utf8") + 1;
+  const size = writeToBytes(buffer, value.value, index + 4, Encoding.Utf8) + 1;
   // Write the size of the string to buffer
   buffer[index] = size & 0xff;
   buffer[index + 1] = (size >> 8) & 0xff;
@@ -728,8 +731,8 @@ function serializeDBRef(
   buffer[index++] = BSONData.OBJECT;
   // Number of written bytes
   const numberOfWrittenBytes = !isArray
-    ? writeToBytes(buffer, key, index, "utf8")
-    : writeToBytes(buffer, key, index, "ascii");
+    ? writeToBytes(buffer, key, index, Encoding.Utf8)
+    : writeToBytes(buffer, key, index, Encoding.Ascii);
 
   // Encode the name
   index += numberOfWrittenBytes;
