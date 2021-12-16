@@ -1,4 +1,3 @@
-import { ensureBuffer } from "./ensure_buffer.ts";
 import { Binary, BinarySizes } from "./binary.ts";
 import {
   bufferToUuidHexString,
@@ -33,7 +32,7 @@ export class UUID {
       this.#bytesBuffer = input.id;
       this.#id = input.#id;
     } else if (ArrayBuffer.isView(input) && input.byteLength === BYTE_LENGTH) {
-      this.id = ensureBuffer(input);
+      this.id = input;
     } else if (typeof input === "string") {
       this.id = uuidHexStringToBuffer(input);
     } else {
