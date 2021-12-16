@@ -35,22 +35,6 @@ export function bytesCopy(
   );
 }
 
-function blitBuffer(
-  src: number[] | Uint8Array,
-  dst: Uint8Array,
-  offset: number,
-  length: number,
-) {
-  let i;
-  for (i = 0; i < length; ++i) {
-    if (i + offset >= dst.length || i >= src.length) {
-      break;
-    }
-    dst[i + offset] = src[i];
-  }
-  return i;
-}
-
 function utf8ToBytes(string: string, units: number) {
   units = units || Infinity;
   let codePoint;
@@ -137,18 +121,22 @@ export function writeToBytes(
   bytes: Uint8Array,
   data: string,
   offset: number,
-  encoding: "utf8" | "ascii" | "latin1",
+  /** latin1 is ascii */
+  encoding: "utf8" | "ascii",
 ) {
-  return blitBuffer(
-    {
-      ascii: () => asciiToBytes(data),
-      utf8: () => utf8ToBytes(data, bytes.length - offset),
-      latin1: () => asciiToBytes(data),
-    }[encoding](),
-    bytes,
-    offset,
-    bytes.length,
-  );
+  const bytesLength = bytes.length;
+  const src = encoding == "ascii"
+    ? asciiToBytes(data)
+    : utf8ToBytes(data, bytesLength - offset);
+
+  let i;
+  for (i = 0; i < bytesLength; ++i) {
+    if (i + offset >= bytesLength || i >= src.length) {
+      break;
+    }
+    bytes[i + offset] = src[i];
+  }
+  return i;
 }
 
 export function utf8Slice(buf: Uint8Array, start: number, end: number) {

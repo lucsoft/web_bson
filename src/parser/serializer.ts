@@ -314,7 +314,7 @@ function serializeObjectId(
 
   // Write the objectId into the shared buffer
   if (typeof value.id === "string") {
-    writeToBytes(buffer, value.id, index, "latin1");
+    writeToBytes(buffer, value.id, index, "ascii");
   } else if (value.id instanceof Uint8Array) {
     // Use the standard JS methods here because buffer.copy() is buggy with the
     // browser polyfill
