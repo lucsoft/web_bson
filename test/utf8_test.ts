@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertThrows, Buffer } from "../deps.ts";
+import { assert, assertEquals, assertThrows } from "../deps.ts";
 import {
   BSONError,
   deserialize,
@@ -6,6 +6,7 @@ import {
   Document,
   serialize,
 } from "../src/bson.ts";
+import { decodeHexString } from "../utils.ts";
 
 const replacementChar = "\u{FFFD}\u{FFFD}\u{FFFD}";
 const replacementString = `hi${replacementChar}bye`;
@@ -97,9 +98,8 @@ const testInputs: {
 }[] = [
   {
     description: "object with valid utf8 top level keys",
-    buffer: Buffer.from(
+    buffer: decodeHexString(
       "2e0000000276616c69644b65794368617200060000006162636465001076616c69644b65794e756d003930000000",
-      "hex",
     ),
     expectedObjectWithReplacementChars: {
       validKeyChar: "abcde",
@@ -110,9 +110,8 @@ const testInputs: {
   },
   {
     description: "object with invalid utf8 top level key",
-    buffer: Buffer.from(
+    buffer: decodeHexString(
       "420000000276616c69644b657943686172000600000061626364650002696e76616c696455746638546f704c6576656c4b657900090000006869f09f906279650000",
-      "hex",
     ),
     expectedObjectWithReplacementChars: {
       validKeyChar: "abcde",
@@ -175,9 +174,8 @@ const testInputs: {
   },
   {
     description: "object with invalid utf8 in nested key object",
-    buffer: Buffer.from(
+    buffer: decodeHexString(
       "460000000276616c69644b657943686172000600000061626364650003746f704c766c4b6579001e00000002696e76616c69644b657900090000006869f09f90627965000000",
-      "hex",
     ),
     expectedObjectWithReplacementChars: {
       validKeyChar: "abcde",
@@ -230,9 +228,8 @@ const testInputs: {
   },
   {
     description: "object with invalid utf8 in two top level keys",
-    buffer: Buffer.from(
+    buffer: decodeHexString(
       "5e0000000276616c69644b65794368617200040000006162630002696e76616c696455746638546f704c766c3100090000006869f09f906279650002696e76616c696455746638546f704c766c32000a000000f09f90f09f906279650000",
-      "hex",
     ),
     expectedObjectWithReplacementChars: {
       validKeyChar: "abc",
@@ -273,9 +270,8 @@ const testInputs: {
   },
   {
     description: "object with valid utf8 in top level key array",
-    buffer: Buffer.from(
+    buffer: decodeHexString(
       "4a0000000276616c69644b657943686172000600000061626364650004746f704c766c41727200220000000230000300000068690002310005000000f09f988e00103200393000000000",
-      "hex",
     ),
     expectedObjectWithReplacementChars: {
       validKeyChar: "abcde",
@@ -301,9 +297,8 @@ const testInputs: {
   },
   {
     description: "object with invalid utf8 in top level key array",
-    buffer: Buffer.from(
+    buffer: decodeHexString(
       "4e0000000276616c69644b657943686172000600000061626364650004746f704c766c417272002600000002300003000000686900023100090000006869f09f9062796500103200393000000000",
-      "hex",
     ),
     expectedObjectWithReplacementChars: {
       validKeyChar: "abcde",
@@ -332,9 +327,8 @@ const testInputs: {
   },
   {
     description: "object with invalid utf8 in nested key array",
-    buffer: Buffer.from(
+    buffer: decodeHexString(
       "5a0000000276616c69644b657943686172000600000061626364650003746f704c766c4b65790032000000046e65737465644b6579417272001f00000002300003000000686900023100090000006869f09f9062796500000000",
-      "hex",
     ),
     expectedObjectWithReplacementChars: {
       validKeyChar: "abcde",

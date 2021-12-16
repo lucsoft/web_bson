@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { assertEquals, assertThrows, Buffer } from "../deps.ts";
+import { assertEquals, assertThrows } from "../deps.ts";
 import {
   Binary,
   Code,
@@ -26,7 +26,7 @@ for (let i = 0; i < corruptScenarios.documents.length; i++) {
   Deno.test(`[BSON Compliance] Pass all corrupt BSON scenarios ./compliance/corrupt.json, case: ${i} ${doc.error}`, () => {
     assertThrows(() => {
       // Create a buffer containing the payload
-      const buffer = Buffer.from(doc.encoded, "hex");
+      const buffer = decodeHexString(doc.encoded);
       // Attempt to deserialize
       deserialize(buffer);
     });
