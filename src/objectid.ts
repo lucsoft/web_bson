@@ -1,7 +1,7 @@
 import { decodeHexString, encodeHexString } from "../utils.ts";
 import { BSONTypeError } from "./error.ts";
 import { randomBytes } from "./parser/utils.ts";
-
+import { equals } from "../deps.ts";
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
@@ -172,7 +172,7 @@ export class ObjectId {
     }
 
     if (otherId instanceof ObjectId) {
-      return this.toString() === otherId.toString();
+      return equals(this.#bytesBuffer, otherId.#bytesBuffer);
     }
 
     if (
