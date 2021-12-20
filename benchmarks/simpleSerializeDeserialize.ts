@@ -1,14 +1,13 @@
 import {
-    bench,
-    BenchmarkTimer,
-    BsonModule,
-    local,
-    prettyBenchmarkProgress,
-    runBenchmarks,
-    stable,
-    upstream,
-  } from "./common.ts";
-
+  bench,
+  BenchmarkTimer,
+  BsonModule,
+  local,
+  prettyBenchmarkProgress,
+  runBenchmarks,
+  stable,
+  upstream,
+} from "./common.ts";
 
 const runs = 2000;
 
