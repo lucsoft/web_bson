@@ -1148,6 +1148,11 @@ export function serializeInto(
   // Remove the path
   path.pop();
 
+  // throw if index is out of bounds
+  if (buffer.length < index) {
+    throw new Error("Document exceeds max BSON size");
+  }
+
   // Final padding byte for object
   buffer[index++] = 0x00;
 
