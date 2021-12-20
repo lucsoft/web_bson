@@ -1568,6 +1568,13 @@ Deno.test("[BSON] Should return boolean for ObjectId equality check", () => {
   assertEquals(false, id.equals("foo"));
 });
 
+Deno.test("[BSON] serializer should throw Error when document is bigger than MAX_SIZE", () => {
+  const doc = {
+    a: "a".repeat(1024 * 1024 * 18),
+  };
+  assertThrows(() => serialize(doc), Error, "Document exceeds max BSON size");
+});
+
 Deno.test("[BSON-Inspect] Binary", () => {
   const binary = new Binary(
     new Uint8Array([1, 2, 3, 4]),
