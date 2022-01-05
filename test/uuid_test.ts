@@ -1,7 +1,9 @@
 import {
-  validate as uuidStringValidate,
-} from "https://deno.land/std@0.117.0/uuid/v4.ts";
-import { assert, assertEquals, assertThrows } from "../test_deps.ts";
+  assert,
+  assertEquals,
+  assertThrows,
+  UUID as STD_UUID,
+} from "../test_deps.ts";
 import { Binary, BinarySizes, BSONTypeError, UUID } from "../src/bson.ts";
 import { decodeHexString } from "../utils.ts";
 
@@ -16,19 +18,11 @@ const LOWERCASE_DASH_SEPARATED_UUID_STRING =
   "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa";
 const LOWERCASE_VALUES_ONLY_UUID_STRING = "aaaaaaaaaaaa4aaaaaaaaaaaaaaaaaaa";
 
-function uuidStringVersion(uuid: string) {
-  if (!uuidStringValidate(uuid)) {
-    throw TypeError("Invalid UUID");
-  }
-
-  return parseInt(uuid.substr(14, 1), 16);
-}
-
 Deno.test("[UUID] should correctly generate a valid UUID v4 from empty constructor", () => {
   const uuid = new UUID();
   const uuidHexStr = uuid.toHexString();
-  assert(uuidStringValidate(uuidHexStr));
-  assertEquals(uuidStringVersion(uuidHexStr), BinarySizes.SUBTYPE_UUID);
+  assert(STD_UUID.v4.validate(uuidHexStr));
+  assertEquals(STD_UUID.version(uuidHexStr), BinarySizes.SUBTYPE_UUID);
 });
 
 Deno.test("[UUID] should correctly create UUIDs from UPPERCASE & lowercase 36 char dash-separated hex string", () => {
