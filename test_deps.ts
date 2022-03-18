@@ -13,3 +13,4 @@ export {
   prettyBenchmarkProgress,
 } from "https://deno.land/x/pretty_benching@v0.3.3/mod.ts";
 export * as UUID from "https://deno.land/std@0.130.0/uuid/mod.ts";
+export * as jsBson from "https://cdn.skypack.dev/bson";

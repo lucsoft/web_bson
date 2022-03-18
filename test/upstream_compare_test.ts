@@ -1,12 +1,12 @@
 import * as current from "../mod.ts";
-import * as _upstream from "https://cdn.skypack.dev/bson";
+import { jsBson } from "../test_deps.ts";
 import { assertEquals } from "../test_deps.ts";
 
 const upstream = {
-  ..._upstream,
+  ...jsBson,
   // deno-lint-ignore no-explicit-any
   serialize(doc: any) {
-    return new Uint8Array(_upstream.serialize(doc));
+    return new Uint8Array(jsBson.serialize(doc));
   },
 };
 
@@ -38,6 +38,7 @@ Deno.test("[Upstream-Compare] serialize & deserialize basic types", () => {
     binary,
     array,
     object,
+    undefined: undefined,
   });
 
   const bufferB = current.serialize({
@@ -52,6 +53,7 @@ Deno.test("[Upstream-Compare] serialize & deserialize basic types", () => {
     binary,
     array,
     object,
+    undefined: undefined,
   });
 
   assertEquals(bufferA.length, bufferB.length);
