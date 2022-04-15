@@ -1,5 +1,9 @@
 // deno-lint-ignore-file ban-types
 import type { Document } from "./bson.ts";
+export interface CodeExtended {
+  $code: string | Function;
+  $scope?: Document;
+}
 
 /**
  * A class representation of the BSON Code type.
@@ -19,6 +23,20 @@ export class Code {
 
   toJSON(): { code: string | Function; scope?: Document } {
     return { code: this.code, scope: this.scope };
+  }
+
+  /** @deprecated */
+  toExtendedJSON(): CodeExtended {
+    if (this.scope) {
+      return { $code: this.code, $scope: this.scope };
+    }
+
+    return { $code: this.code };
+  }
+
+  /** @deprecated */
+  static fromExtendedJSON(doc: CodeExtended): Code {
+    return new Code(doc.$code, doc.$scope);
   }
 
   [Symbol.for("Deno.customInspect")](): string {

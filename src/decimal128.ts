@@ -832,11 +832,21 @@ export class Decimal128 {
     return string.join("");
   }
 
-  [Symbol.for("Deno.customInspect")](): string {
-    return `new Decimal128("${this.toString()}")`;
+  /** @internal */
+  toExtendedJSON(): Decimal128Extended {
+    return { $numberDecimal: this.toString() };
+  }
+
+  /** @internal */
+  static fromExtendedJSON(doc: Decimal128Extended): Decimal128 {
+    return Decimal128.fromString(doc.$numberDecimal);
   }
 
   toJSON(): Decimal128Extended {
     return { $numberDecimal: this.toString() };
+  }
+
+  [Symbol.for("Deno.customInspect")](): string {
+    return `new Decimal128("${this.toString()}")`;
   }
 }

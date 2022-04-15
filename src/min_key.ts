@@ -8,8 +8,6 @@ export interface MinKeyExtended {
  * @public
  */
 export class MinKey {
-  _bsontype!: "MinKey";
-
   constructor() {
     if (!(this instanceof MinKey)) return new MinKey();
   }
@@ -33,5 +31,3 @@ export class MinKey {
     return "new MinKey()";
   }
 }
-
-Object.defineProperty(MinKey.prototype, "_bsontype", { value: "MinKey" });

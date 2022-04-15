@@ -9,6 +9,10 @@ import { BSONTypeError } from "./error.ts";
 import { equals } from "../deps.ts";
 const BYTE_LENGTH = 16;
 
+export type UUIDExtended = {
+  $uuid: string;
+};
+
 /**
  * A class representation of the BSON UUID type.
  * @public

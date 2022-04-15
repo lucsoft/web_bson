@@ -1,3 +1,10 @@
+import { EJSONOptions } from "./extended_json.ts";
+
+/** @public */
+export interface Int32Extended {
+  $numberInt: string;
+}
+
 /**
  * A class representation of a BSON Int32 type.
  * @public
@@ -32,6 +39,22 @@ export class Int32 {
 
   toJSON(): number {
     return this.value;
+  }
+
+  /** @internal */
+  toExtendedJSON(options?: EJSONOptions): number | Int32Extended {
+    if (options?.relaxed) return this.value;
+    return { $numberInt: this.value.toString() };
+  }
+
+  /** @internal */
+  static fromExtendedJSON(
+    doc: Int32Extended,
+    options?: EJSONOptions,
+  ): number | Int32 {
+    return options && options.relaxed
+      ? parseInt(doc.$numberInt, 10)
+      : new Int32(doc.$numberInt);
   }
 
   [Symbol.for("Deno.customInspect")](): string {

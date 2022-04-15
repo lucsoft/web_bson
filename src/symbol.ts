@@ -1,3 +1,7 @@
+export interface BSONSymbolExtended {
+  $symbol: string;
+}
+
 /**
  * A class representation of the BSON Symbol type.
  * @public
@@ -22,6 +26,16 @@ export class BSONSymbol {
 
   toJSON(): string {
     return this.value;
+  }
+
+  /** @internal */
+  toExtendedJSON(): BSONSymbolExtended {
+    return { $symbol: this.value };
+  }
+
+  /** @internal */
+  static fromExtendedJSON(doc: BSONSymbolExtended): BSONSymbol {
+    return new BSONSymbol(doc.$symbol);
   }
 
   [Symbol.for("Deno.customInspect")](): string {

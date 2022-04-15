@@ -1,16 +1,26 @@
 import { Long } from "./long.ts";
 
-/** @public */
+export type TimestampOverrides =
+  | "toExtendedJSON"
+  | "fromExtendedJSON"
+  | "inspect";
 export type LongWithoutOverrides = new (
   low: unknown,
   high?: number,
   unsigned?: boolean,
 ) => {
-  [P in keyof Long]: Long[P];
+  [P in Exclude<keyof Long, TimestampOverrides>]: Long[P];
 };
 /** @public */
-export const LongWithoutOverridesClass =
+export const LongWithoutOverridesClass: LongWithoutOverrides =
   Long as unknown as LongWithoutOverrides;
+
+export interface TimestampExtended {
+  $timestamp: {
+    t: number;
+    i: number;
+  };
+}
 
 /** @public */
 export class Timestamp extends LongWithoutOverridesClass {
@@ -20,17 +30,18 @@ export class Timestamp extends LongWithoutOverridesClass {
   /**
    * @param value - A 64-bit Long representing the Timestamp.
    */
-  constructor(value: Long);
+  constructor(value: Long | Timestamp);
   /**
    * @param value - A pair of two values indicating timestamp and increment.
    */
   constructor(value: { t: number; i: number });
   constructor(
-    value: Long | { t: number; i: number } = new Long(),
+    value: Timestamp | Long | { t: number; i: number } = new Long(),
   ) {
     const isLong = Long.isLong(value);
-    const low = isLong ? value.low : value.i;
-    const high = isLong ? value.high : value.t;
+    const isTimestamp = value instanceof Timestamp;
+    const low = isLong ? value.low : isTimestamp ? value.low : value.i;
+    const high = isLong ? value.high : isTimestamp ? value.high : value.t;
     super(low, high, true);
   }
 
@@ -68,6 +79,16 @@ export class Timestamp extends LongWithoutOverridesClass {
    */
   static fromString(str: string, optRadix: number): Timestamp {
     return new Timestamp(Long.fromString(str, true, optRadix));
+  }
+
+  /** @internal */
+  toExtendedJSON(): TimestampExtended {
+    return { $timestamp: { t: this.high >>> 0, i: this.low >>> 0 } };
+  }
+
+  /** @internal */
+  static fromExtendedJSON(doc: TimestampExtended): Timestamp {
+    return new Timestamp(doc.$timestamp);
   }
 
   [Symbol.for("Deno.customInspect")](): string {

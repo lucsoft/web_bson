@@ -24,6 +24,7 @@ import { Timestamp } from "./timestamp.ts";
 import { UUID } from "./uuid.ts";
 import { bytesCopy } from "./parser/utils.ts";
 export * from "./constants.ts";
+export * as EJSON from "./extended_json.ts";
 export type { DBRefLike } from "./db_ref.ts";
 export { LongWithoutOverridesClass } from "./timestamp.ts";
 export type { LongWithoutOverrides } from "./timestamp.ts";

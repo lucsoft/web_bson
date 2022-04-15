@@ -1,5 +1,10 @@
 // deno-lint-ignore-file no-explicit-any camelcase
+import { EJSONOptions } from "./extended_json.ts";
 import type { Timestamp } from "./timestamp.ts";
+
+export interface LongExtended {
+  $numberLong: string;
+}
 
 interface LongWASMHelpers {
   /** Gets the high bits of the last operation performed */
@@ -886,5 +891,18 @@ export class Long {
 
   [Symbol.for("Deno.customInspect")](): string {
     return `new Long("${this.toString()}"${this.unsigned ? ", true" : ""})`;
+  }
+
+  toExtendedJSON(options?: EJSONOptions): number | LongExtended {
+    if (options && options.relaxed) return this.toNumber();
+    return { $numberLong: this.toString() };
+  }
+
+  static fromExtendedJSON(
+    doc: { $numberLong: string },
+    options?: EJSONOptions,
+  ): number | Long {
+    const result = Long.fromString(doc.$numberLong);
+    return options && options.relaxed ? result.toNumber() : result;
   }
 }

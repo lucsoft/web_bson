@@ -8,8 +8,6 @@ export interface MaxKeyExtended {
  * @public
  */
 export class MaxKey {
-  _bsontype!: "MaxKey";
-
   constructor() {
     if (!(this instanceof MaxKey)) return new MaxKey();
   }
@@ -33,5 +31,3 @@ export class MaxKey {
     return "new MaxKey()";
   }
 }
-
-Object.defineProperty(MaxKey.prototype, "_bsontype", { value: "MaxKey" });

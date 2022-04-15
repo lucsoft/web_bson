@@ -428,7 +428,7 @@ function serializeDecimal128(
 function serializeLong(
   buffer: Uint8Array,
   key: string,
-  value: Long,
+  value: Long | Timestamp,
   index: number,
   isArray?: boolean,
 ) {

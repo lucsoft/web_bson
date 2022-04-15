@@ -10,6 +10,11 @@ const checkForHexRegExp = new RegExp("^[0-9a-fA-F]{24}$");
 
 // Unique sequence for the current process (initialized on first use)
 let PROCESS_UNIQUE: Uint8Array | null = null;
+
+export interface ObjectIdExtended {
+  $oid: string;
+}
+
 /**
  * A class representation of the BSON ObjectId type.
  * @public
@@ -266,6 +271,16 @@ export class ObjectId {
     } catch {
       return false;
     }
+  }
+
+  /** @internal */
+  toExtendedJSON(): ObjectIdExtended {
+    return { $oid: this.toHexString() };
+  }
+
+  /** @internal */
+  static fromExtendedJSON(doc: ObjectIdExtended): ObjectId {
+    return new ObjectId(doc.$oid);
   }
 
   [Symbol.for("Deno.customInspect")](): string {

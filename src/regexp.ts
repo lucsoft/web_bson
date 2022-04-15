@@ -1,7 +1,15 @@
-import { BSONError } from "./error.ts";
+import { BSONError, BSONTypeError } from "./error.ts";
+import { EJSONOptions } from "./extended_json.ts";
 
 function alphabetize(str: string): string {
   return str.split("").sort().join("");
+}
+
+export interface BSONRegExpExtended {
+  $regularExpression: {
+    pattern: string;
+    options: string;
+  };
 }
 
 /**
@@ -59,5 +67,25 @@ export class BSONRegExp {
 
   [Symbol.for("Deno.customInspect")](): string {
     return `new BSONRegExp("${this.pattern}")`;
+  }
+
+  /** @internal */
+  toExtendedJSON(
+    options?: EJSONOptions,
+  ): BSONRegExpExtended {
+    options = options || {};
+    return {
+      $regularExpression: { pattern: this.pattern, options: this.options },
+    };
+  }
+
+  /** @internal */
+  static fromExtendedJSON(
+    doc: BSONRegExpExtended,
+  ): BSONRegExp {
+    return new BSONRegExp(
+      doc.$regularExpression.pattern,
+      BSONRegExp.parseOptions(doc.$regularExpression.options),
+    );
   }
 }
