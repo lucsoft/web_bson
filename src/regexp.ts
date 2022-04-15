@@ -1,4 +1,4 @@
-import { BSONError, BSONTypeError } from "./error.ts";
+import { BSONError } from "./error.ts";
 import { EJSONOptions } from "./extended_json.ts";
 
 function alphabetize(str: string): string {

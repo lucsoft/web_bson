@@ -66,7 +66,7 @@ const keysToCodecs = {
   $timestamp: Timestamp,
 } as const;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// deno-lint-ignore no-explicit-any
 function deserializeValue(value: any, options: Options = {}) {
   if (typeof value === "number") {
     if (options.relaxed) {
@@ -145,7 +145,7 @@ type EJSONSerializeOptions = Options & {
   seenObjects: { obj: unknown; propertyName: string }[];
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// deno-lint-ignore no-explicit-any
 function serializeArray(array: any[], options: EJSONSerializeOptions): any[] {
   return array.map((v: unknown, index: number) => {
     options.seenObjects.push({ propertyName: `index ${index}`, obj: null });
@@ -163,7 +163,7 @@ function getISOString(date: Date) {
   return date.getUTCMilliseconds() !== 0 ? isoStr : isoStr.slice(0, -5) + "Z";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// deno-lint-ignore no-explicit-any
 function serializeValue(value: any, options: EJSONSerializeOptions): any {
   if (
     (typeof value === "object" || typeof value === "function") && value !== null
@@ -293,7 +293,7 @@ const BSON_TO_BSON_TYPE_MAPPING = (
   throw new BSONError("Could not parse");
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// deno-lint-ignore no-explicit-any
 function serializeDocument(doc: any, options: EJSONSerializeOptions) {
   if (doc == null || typeof doc !== "object") {
     throw new BSONError("not an object instance");
@@ -314,7 +314,7 @@ function serializeDocument(doc: any, options: EJSONSerializeOptions) {
     return _doc;
   } else if (isBSONType(doc)) {
     // the "document" is really just a BSON type object
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // deno-lint-ignore no-explicit-any
     let outDoc: any = doc;
     if (typeof outDoc.toExtendedJSON !== "function") {
       // There's no EJSON serialization function on the object. It's probably an
