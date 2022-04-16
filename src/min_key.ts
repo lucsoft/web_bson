@@ -8,6 +8,7 @@ export interface MinKeyExtended {
  * @public
  */
 export class MinKey {
+  _bsontype = "MinKey";
   constructor() {
     if (!(this instanceof MinKey)) return new MinKey();
   }
@@ -23,7 +24,7 @@ export class MinKey {
   }
 
   /** @internal */
-  [Symbol.for("nodejs.util.inspect.custom")](): string {
+  [Symbol.for("Deno.customInspect")](): string {
     return this.inspect();
   }
 

@@ -25,17 +25,21 @@ Deno.test("[BSON BigInt Support] Should serialize an int that fits in int64", ()
   // assert(BigInt(resultDoc.b)).to.equal(testDoc.b);
 });
 
-Deno.test("[BSON BigInt Support] Should serialize an int that fits in decimal128", () => {
-  const testDoc = { b: BigInt("9223372036854776001") }; // int64 max + 1
-  assertThrows(() => serialize(testDoc), BSONTypeError);
+Deno.test({
+  name: "[BSON BigInt Support] Should serialize an int that fits in decimal128",
+  ignore: true, // BigInt is not supported
+  fn: () => {
+    const testDoc = { b: BigInt("9223372036854776001") }; // int64 max + 1
+    assertThrows(() => serialize(testDoc), BSONTypeError);
 
-  // const serializedDoc = serialize(testDoc);
-  // // prettier-ignore
-  // const resultBuffer = Buffer.from([0x18, 0x00, 0x00, 0x00, 0x13, 0x62, 0x00, 0xC1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x30, 0x00]);
-  // const resultDoc = deserialize(serializedDoc);
-  // assert(Array.from(serializedDoc)).to.have.members(Array.from(resultBuffer));
-  // assert(resultDoc.b._bsontype).to.equal('Decimal128');
-  // assert(BigInt(resultDoc.b.toString())).to.equal(testDoc.b);
+    // const serializedDoc = serialize(testDoc);
+    // // prettier-ignore
+    // const resultBuffer = Buffer.from([0x18, 0x00, 0x00, 0x00, 0x13, 0x62, 0x00, 0xC1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x30, 0x00]);
+    // const resultDoc = deserialize(serializedDoc);
+    // assert(Array.from(serializedDoc)).to.have.members(Array.from(resultBuffer));
+    // assert(resultDoc.b._bsontype).to.equal('Decimal128');
+    // assert(BigInt(resultDoc.b.toString())).to.equal(testDoc.b);
+  },
 });
 
 Deno.test("[BSON BigInt Support] Should throw if BigInt is too large to serialize", () => {

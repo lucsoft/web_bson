@@ -20,6 +20,7 @@ export interface ObjectIdExtended {
  * @public
  */
 export class ObjectId {
+  _bsontype = "ObjectID";
   static #index = Math.floor(Math.random() * 0xff_ff_ff);
   static cacheHexString: boolean;
 

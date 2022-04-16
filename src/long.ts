@@ -83,6 +83,7 @@ const UINT_CACHE: { [key in number]?: Long } = {};
  * Common constant values ZERO, ONE, NEG_ONE, etc. are found as static properties on this class.
  */
 export class Long {
+  _bsontype = "Long";
   /**
    * The high 32 bits as a signed value.
    */

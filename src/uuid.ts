@@ -18,6 +18,7 @@ export type UUIDExtended = {
  * @public
  */
 export class UUID {
+  _bsontype = "UUID";
   static cacheHexString: boolean;
 
   #bytesBuffer: Uint8Array;

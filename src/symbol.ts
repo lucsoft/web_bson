@@ -7,6 +7,7 @@ export interface BSONSymbolExtended {
  * @public
  */
 export class BSONSymbol {
+  _bsontype = "Symbol";
   value!: string;
   /**
    * @param value - the string representing the symbol.

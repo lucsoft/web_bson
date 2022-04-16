@@ -10,6 +10,7 @@ export interface CodeExtended {
  * @public
  */
 export class Code {
+  _bsontype = "Code";
   code!: string | Function;
   scope?: Document;
   /**

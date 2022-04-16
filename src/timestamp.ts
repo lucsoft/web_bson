@@ -3,7 +3,8 @@ import { Long } from "./long.ts";
 export type TimestampOverrides =
   | "toExtendedJSON"
   | "fromExtendedJSON"
-  | "inspect";
+  | "inspect"
+  | "_bsontype";
 export type LongWithoutOverrides = new (
   low: unknown,
   high?: number,
@@ -24,6 +25,7 @@ export interface TimestampExtended {
 
 /** @public */
 export class Timestamp extends LongWithoutOverridesClass {
+  _bsontype = "Timestamp";
   static readonly MAX_VALUE = Long.MAX_UNSIGNED_VALUE;
 
   constructor();

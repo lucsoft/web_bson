@@ -19,6 +19,7 @@ export interface BSONRegExpExtended {
 export class BSONRegExp {
   pattern!: string;
   options!: string;
+  _bsontype = "BSONRegExp";
   /**
    * @param pattern - The regular expression pattern to match
    * @param options - The regular expression options

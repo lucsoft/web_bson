@@ -66,10 +66,10 @@ const keysToCodecs = {
   $timestamp: Timestamp,
 } as const;
 
-// deno-lint-ignore no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function deserializeValue(value: any, options: Options = {}) {
   if (typeof value === "number") {
-    if (options.relaxed) {
+    if (options.relaxed || options.legacy) {
       return value;
     }
 
@@ -106,9 +106,14 @@ function deserializeValue(value: any, options: Options = {}) {
     const d = value.$date;
     const date = new Date();
 
-    if (typeof d === "string") date.setTime(Date.parse(d));
-    else if (Long.isLong(d)) date.setTime(d.toNumber());
-    else if (typeof d === "number" && options.relaxed) date.setTime(d);
+    if (options.legacy) {
+      if (typeof d === "number") date.setTime(d);
+      else if (typeof d === "string") date.setTime(Date.parse(d));
+    } else {
+      if (typeof d === "string") date.setTime(Date.parse(d));
+      else if (Long.isLong(d)) date.setTime(d.toNumber());
+      else if (typeof d === "number" && options.relaxed) date.setTime(d);
+    }
     return date;
   }
 
@@ -145,7 +150,7 @@ type EJSONSerializeOptions = Options & {
   seenObjects: { obj: unknown; propertyName: string }[];
 };
 
-// deno-lint-ignore no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function serializeArray(array: any[], options: EJSONSerializeOptions): any[] {
   return array.map((v: unknown, index: number) => {
     options.seenObjects.push({ propertyName: `index ${index}`, obj: null });
@@ -163,7 +168,7 @@ function getISOString(date: Date) {
   return date.getUTCMilliseconds() !== 0 ? isoStr : isoStr.slice(0, -5) + "Z";
 }
 
-// deno-lint-ignore no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function serializeValue(value: any, options: EJSONSerializeOptions): any {
   if (
     (typeof value === "object" || typeof value === "function") && value !== null
@@ -207,6 +212,11 @@ function serializeValue(value: any, options: EJSONSerializeOptions): any {
       // is it in year range 1970-9999?
       inRange = dateNum > -1 && dateNum < 253402318800000;
 
+    if (options.legacy) {
+      return options.relaxed && inRange
+        ? { $date: value.getTime() }
+        : { $date: getISOString(value) };
+    }
     return options.relaxed && inRange
       ? { $date: getISOString(value) }
       : { $date: { $numberLong: value.getTime().toString() } };
@@ -247,8 +257,7 @@ function serializeValue(value: any, options: EJSONSerializeOptions): any {
 const BSON_TYPE_MAPPINGS = {
   Binary: (o: Binary) => new Binary(o.buffer, o.subType),
   Code: (o: Code) => new Code(o.code, o.scope),
-  DBRef: (o: DBRef) =>
-    new DBRef(o.collection || o.collection, o.oid, o.db, o.fields), // "namespace" for 1.x library backwards compat
+  DBRef: (o: DBRef) => new DBRef(o.collection, o.oid, o.db, o.fields), // "namespace" for 1.x library backwards compat
   Decimal128: (o: Decimal128) => new Decimal128(o.bytes),
   Double: (o: Double) => new Double(o.value),
   Int32: (o: Int32) => new Int32(o.value),
@@ -267,39 +276,20 @@ const BSON_TYPE_MAPPINGS = {
     ),
   MaxKey: () => new MaxKey(),
   MinKey: () => new MinKey(),
+  ObjectId: (o: ObjectId) => new ObjectId(o), // support 4.0.0/4.0.1 before _bsontype was reverted back to ObjectID
   ObjectID: (o: ObjectId) => new ObjectId(o),
   BSONRegExp: (o: BSONRegExp) => new BSONRegExp(o.pattern, o.options),
   Symbol: (o: BSONSymbol) => new BSONSymbol(o.value),
   Timestamp: (o: Timestamp) => Timestamp.fromBits(o.low, o.high),
 } as const;
 
-const BSON_TO_BSON_TYPE_MAPPING = (
-  type: BSONType,
-): keyof typeof BSON_TYPE_MAPPINGS => {
-  if (type instanceof Binary) return "Binary";
-  if (type instanceof Code) return "Code";
-  if (type instanceof ObjectId) return "ObjectID";
-  if (type instanceof DBRef) return "DBRef";
-  if (type instanceof Decimal128) return "Decimal128";
-  if (type instanceof Double) return "Double";
-  if (type instanceof Int32) return "Int32";
-  if (type instanceof Long) return "Long";
-  if (type instanceof MaxKey) return "MaxKey";
-  if (type instanceof MinKey) return "MinKey";
-  if (type instanceof BSONRegExp) return "BSONRegExp";
-  if (type instanceof BSONSymbol) return "Symbol";
-  if (type instanceof Timestamp) return "Timestamp";
-  console.log(type);
-  throw new BSONError("Could not parse");
-};
-
-// deno-lint-ignore no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function serializeDocument(doc: any, options: EJSONSerializeOptions) {
   if (doc == null || typeof doc !== "object") {
     throw new BSONError("not an object instance");
   }
 
-  const bsontype = BSON_TO_BSON_TYPE_MAPPING(doc);
+  const bsontype: BSONType["_bsontype"] = doc._bsontype;
   if (typeof bsontype === "undefined") {
     // It's a regular object. Recursively serialize its property values.
     const _doc: Document = {};
@@ -314,17 +304,18 @@ function serializeDocument(doc: any, options: EJSONSerializeOptions) {
     return _doc;
   } else if (isBSONType(doc)) {
     // the "document" is really just a BSON type object
-    // deno-lint-ignore no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let outDoc: any = doc;
     if (typeof outDoc.toExtendedJSON !== "function") {
       // There's no EJSON serialization function on the object. It's probably an
       // object created by a previous version of this library (or another library)
       // that's duck-typing objects to look like they were generated by this library).
       // Copy the object into this library's version of that type.
-      const mapper = BSON_TYPE_MAPPINGS[bsontype];
+      // @ts-expect-error skip that
+      const mapper = BSON_TYPE_MAPPINGS[doc._bsontype];
       if (!mapper) {
         throw new BSONTypeError(
-          "Unrecognized or invalid _bsontype: " + bsontype,
+          "Unrecognized or invalid _bsontype: " + doc._bsontype,
         );
       }
       outDoc = mapper(outDoc);
@@ -354,10 +345,19 @@ function serializeDocument(doc: any, options: EJSONSerializeOptions) {
  * EJSON parse / stringify API
  * @public
  */
-
+// the namespace here is used to emulate `export * as EJSON from '...'`
+// which as of now (sept 2020) api-extractor does not support
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export interface Options {
+  /** Output using the Extended JSON v1 spec */
+  legacy?: boolean;
   /** Enable Extended JSON's `relaxed` mode, which attempts to return native JS types where possible, rather than BSON types */
   relaxed?: boolean;
+  /**
+   * Disable Extended JSON's `relaxed` mode, which attempts to return BSON types where possible, rather than native JS types
+   * @deprecated Please use the relaxed property instead
+   */
+  strict?: boolean;
 }
 
 /**
@@ -370,18 +370,29 @@ export interface Options {
  * const text = '{ "int32": { "$numberInt": "10" } }';
  *
  * // prints { int32: { [String: '10'] _bsontype: 'Int32', value: '10' } }
- * console.log(EJSON.parse(text, { relaxed: false }));
+ * console.log(parse(text, { relaxed: false }));
  *
  * // prints { int32: 10 }
- * console.log(EJSON.parse(text));
+ * console.log(parse(text));
  * ```
  */
-export function parse(text: string, options?: Options): SerializableTypes {
+export function parse(
+  text: string,
+  options?: Options,
+): SerializableTypes {
   const finalOptions = Object.assign(
     {},
-    { relaxed: true },
+    { relaxed: true, legacy: false },
     options,
   );
+
+  // relaxed implies not strict
+  if (typeof finalOptions.relaxed === "boolean") {
+    finalOptions.strict = !finalOptions.relaxed;
+  }
+  if (typeof finalOptions.strict === "boolean") {
+    finalOptions.relaxed = !finalOptions.strict;
+  }
 
   return JSON.parse(text, (key, value) => {
     if (key.indexOf("\x00") !== -1) {
@@ -418,20 +429,19 @@ export type SerializableTypes =
  * const doc = { int32: new Int32(10) };
  *
  * // prints '{"int32":{"$numberInt":"10"}}'
- * console.log(EJSON.stringify(doc, { relaxed: false }));
+ * console.log(stringify(doc, { relaxed: false }));
  *
  * // prints '{"int32":10}'
- * console.log(EJSON.stringify(doc));
+ * console.log(stringify(doc));
  * ```
  */
 export function stringify(
   value: SerializableTypes,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   replacer?:
     | (number | string)[]
-    // deno-lint-ignore no-explicit-any
     | ((this: any, key: string, value: any) => any)
-    | Options
-    | null,
+    | Options,
   space?: string | number,
   options?: Options,
 ): string {
@@ -440,7 +450,8 @@ export function stringify(
     space = 0;
   }
   if (
-    replacer != null && typeof replacer === "object" && !Array.isArray(replacer)
+    replacer != null && typeof replacer === "object" &&
+    !Array.isArray(replacer)
   ) {
     options = replacer;
     replacer = undefined;

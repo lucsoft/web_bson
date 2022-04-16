@@ -27,6 +27,7 @@ export interface BinaryExtended {
 const textDecoder = new TextDecoder();
 
 export class Binary {
+  _bsontype = "Binary";
   buffer!: Uint8Array;
   subType!: number;
 

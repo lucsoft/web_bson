@@ -10,6 +10,7 @@ export interface Int32Extended {
  * @public
  */
 export class Int32 {
+  _bsontype = "Int32";
   value!: number;
   /**
    * Create an Int32 type

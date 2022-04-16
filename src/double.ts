@@ -10,6 +10,7 @@ export interface DoubleExtended {
  * @public
  */
 export class Double {
+  _bsontype = "Double";
   value!: number;
 
   /**

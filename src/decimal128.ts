@@ -170,6 +170,7 @@ export interface Decimal128Extended {
  * @public
  */
 export class Decimal128 {
+  _bsontype = "Decimal128";
   readonly bytes!: Uint8Array;
 
   /**

@@ -6,7 +6,8 @@ import { Decimal128 } from "./decimal128.ts";
 import { Double } from "./double.ts";
 import { Int32 } from "./int_32.ts";
 import { Long } from "./long.ts";
-import { MaxKey, MinKey } from "./key.ts";
+import { MinKey } from "./min_key.ts";
+import { MaxKey } from "./max_key.ts";
 import { ObjectId } from "./objectid.ts";
 import { calculateObjectSize as internalCalculateObjectSize } from "./parser/calculate_size.ts";
 // Parts of the parser

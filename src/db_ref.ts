@@ -1,4 +1,5 @@
 import type { Document } from "./bson.ts";
+import { EJSONOptions } from "./extended_json.ts";
 import type { ObjectId } from "./objectid.ts";
 import { isObjectLike } from "./parser/utils.ts";
 
@@ -24,6 +25,7 @@ export function isDBRefLike(value: unknown): value is DBRefLike {
  * @public
  */
 export class DBRef {
+  _bsontype = "DBRef";
   collection!: string;
   oid!: ObjectId;
   db?: string;
@@ -64,6 +66,23 @@ export class DBRef {
     );
 
     if (this.db != null) o.$db = this.db;
+    return o;
+  }
+
+  /** @internal */
+  toExtendedJSON(options?: EJSONOptions): DBRefLike {
+    options = options || {};
+    let o: DBRefLike = {
+      $ref: this.collection,
+      $id: this.oid,
+    };
+
+    if (options.legacy) {
+      return o;
+    }
+
+    if (this.db) o.$db = this.db;
+    o = Object.assign(o, this.fields);
     return o;
   }
 

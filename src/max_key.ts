@@ -8,6 +8,7 @@ export interface MaxKeyExtended {
  * @public
  */
 export class MaxKey {
+  _bsontype = "MaxKey";
   constructor() {
     if (!(this instanceof MaxKey)) return new MaxKey();
   }
@@ -23,7 +24,7 @@ export class MaxKey {
   }
 
   /** @internal */
-  [Symbol.for("nodejs.util.inspect.custom")](): string {
+  [Symbol.for("Deno.customInspect")](): string {
     return this.inspect();
   }
 
