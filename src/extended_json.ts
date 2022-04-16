@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Binary } from "./binary.ts";
 import type { Document } from "./bson.ts";
 import { Code } from "./code.ts";
