@@ -1,3 +1,3 @@
-export * as hex from "https://deno.land/std@0.145.0/encoding/hex.ts";
-export * as b64 from "https://deno.land/std@0.145.0/encoding/base64.ts";
-export * from "https://deno.land/std@0.145.0/bytes/mod.ts";
+export * as hex from "https://deno.land/std@0.146.0/encoding/hex.ts";
+export * as b64 from "https://deno.land/std@0.146.0/encoding/base64.ts";
+export * from "https://deno.land/std@0.146.0/bytes/mod.ts";
