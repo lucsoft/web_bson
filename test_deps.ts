@@ -3,6 +3,6 @@ export {
   assertEquals,
   assertThrows,
   equal,
-} from "https://deno.land/std@0.164.0/testing/asserts.ts";
-export * as UUID from "https://deno.land/std@0.164.0/uuid/mod.ts";
+} from "https://deno.land/std@0.165.0/testing/asserts.ts";
+export * as UUID from "https://deno.land/std@0.165.0/uuid/mod.ts";
 export * as jsBson from "https://cdn.skypack.dev/bson";
