@@ -10,9 +10,9 @@ let text = await req.text();
 text = `/// <reference types="./mod.d.ts" />\n` + text;
 
 // Currently we just use fallback js impl but we could also replace it with WebCrypto API
-text = text.replace("import('node:crypto')", "null");
+text = text.replaceAll("import('node:crypto')", "null");
 
-text = text.replace(
+text = text.replaceAll(
   "Symbol.for('nodejs.util.inspect.custom')",
   "Symbol.for('Deno.customInspect')",
 );

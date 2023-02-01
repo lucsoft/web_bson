@@ -589,7 +589,7 @@ class UUID extends Binary {
         const buffer = uuidHexStringToBuffer(hexString);
         return new UUID(buffer);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -621,7 +621,7 @@ class Code extends BSONValue {
     static fromExtendedJSON(doc) {
         return new Code(doc.$code, doc.$scope);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -691,7 +691,7 @@ class DBRef extends BSONValue {
         delete copy.$db;
         return new DBRef(doc.$ref, doc.$id, doc.$db, copy);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -1323,7 +1323,7 @@ class Long extends BSONValue {
         }
         return longResult;
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -1834,7 +1834,7 @@ class Decimal128 extends BSONValue {
     static fromExtendedJSON(doc) {
         return Decimal128.fromString(doc.$numberDecimal);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -1877,7 +1877,7 @@ class Double extends BSONValue {
         const doubleValue = parseFloat(doc.$numberDouble);
         return options && options.relaxed ? doubleValue : new Double(doubleValue);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -1914,7 +1914,7 @@ class Int32 extends BSONValue {
     static fromExtendedJSON(doc, options) {
         return options && options.relaxed ? parseInt(doc.$numberInt, 10) : new Int32(doc.$numberInt);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -1932,7 +1932,7 @@ class MaxKey extends BSONValue {
     static fromExtendedJSON() {
         return new MaxKey();
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -1950,7 +1950,7 @@ class MinKey extends BSONValue {
     static fromExtendedJSON() {
         return new MinKey();
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -2131,7 +2131,7 @@ class ObjectId extends BSONValue {
     static fromExtendedJSON(doc) {
         return new ObjectId(doc.$oid);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -2348,7 +2348,7 @@ class BSONRegExp extends BSONValue {
         }
         throw new BSONError(`Unexpected BSONRegExp EJSON object form: ${JSON.stringify(doc)}`);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
@@ -2382,7 +2382,7 @@ class BSONSymbol extends BSONValue {
     static fromExtendedJSON(doc) {
         return new BSONSymbol(doc.$symbol);
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
 }
@@ -2456,7 +2456,7 @@ class Timestamp extends LongWithoutOverridesClass {
             : doc.$timestamp.t;
         return new Timestamp({ t, i });
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    [Symbol.for('Deno.customInspect')]() {
         return this.inspect();
     }
     inspect() {
