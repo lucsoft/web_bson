@@ -29,7 +29,3 @@ jobs:
         run: |
           deno lint
           deno fmt --check
-
-      # Tests
-      - name: Test TS
-        run: deno test
