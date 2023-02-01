@@ -17,10 +17,9 @@ text = text.replaceAll(
   "Symbol.for('Deno.customInspect')",
 );
 
-await Deno.writeTextFile("mod.js", text);
-
 const reqTypes = await fetch(types);
 assert(reqTypes.ok);
 const textTypes = await reqTypes.text();
 
+await Deno.writeTextFile("mod.js", text);
 await Deno.writeTextFile("mod.d.ts", textTypes);
