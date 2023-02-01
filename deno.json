@@ -1,0 +1,21 @@
+{
+    "lint": {
+        "files": {
+            "exclude": [
+                "mod.js",
+                "mod.d.ts"
+            ]
+        }
+    },
+    "fmt": {
+        "files": {
+            "exclude": [
+                "mod.js",
+                "mod.d.ts"
+            ]
+        }
+    },
+    "imports": {
+        "bson-cdn/": "https://unpkg.com/bson@5.0.0/"
+    }
+}
