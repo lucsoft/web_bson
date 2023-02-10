@@ -9,8 +9,14 @@ let text = await req.text();
 
 text = `/// <reference types="./mod.d.ts" />\n` + text;
 
-// Currently we just use fallback js impl but we could also replace it with WebCrypto API
+// Just to remove this import. its already dead code.
 text = text.replaceAll("import('node:crypto')", "null");
+
+// Never use nodeJsByteUtils
+text = text.replace(
+  "const ByteUtils = hasGlobalBuffer ? nodeJsByteUtils : webByteUtils;",
+  "const ByteUtils = webByteUtils;",
+);
 
 text = text.replaceAll(
   "Symbol.for('nodejs.util.inspect.custom')",
