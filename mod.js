@@ -81,13 +81,21 @@ class BSONVersionError extends BSONError {
         super(`Unsupported BSON version, bson types must be from bson ${BSON_MAJOR_VERSION}.0 or later`);
     }
 }
+class BSONRuntimeError extends BSONError {
+    get name() {
+        return 'BSONRuntimeError';
+    }
+    constructor(message) {
+        super(message);
+    }
+}
 
 function nodejsMathRandomBytes(byteLength) {
     return nodeJsByteUtils.fromNumberArray(Array.from({ length: byteLength }, () => Math.floor(Math.random() * 256)));
 }
 const nodejsRandomBytes = await (async () => {
     try {
-        return (await null).randomBytes;
+        return (await import('crypto')).randomBytes;
     }
     catch {
         return nodejsMathRandomBytes;
@@ -266,7 +274,7 @@ const webByteUtils = {
 };
 
 const hasGlobalBuffer = typeof Buffer === 'function' && Buffer.prototype?._isBuffer !== true;
-const ByteUtils = hasGlobalBuffer ? nodeJsByteUtils : webByteUtils;
+const ByteUtils = webByteUtils;
 class BSONDataView extends DataView {
     static fromUint8Array(input) {
         return new DataView(input.buffer, input.byteOffset, input.byteLength);
@@ -3721,6 +3729,10 @@ function deserializeValue(value, options = {}) {
                 date.setTime(d);
             else if (typeof d === 'string')
                 date.setTime(Date.parse(d));
+            else if (typeof d === 'bigint')
+                date.setTime(Number(d));
+            else
+                throw new BSONRuntimeError(`Unrecognized type for EJSON date: ${typeof d}`);
         }
         else {
             if (typeof d === 'string')
@@ -3729,6 +3741,10 @@ function deserializeValue(value, options = {}) {
                 date.setTime(d.toNumber());
             else if (typeof d === 'number' && options.relaxed)
                 date.setTime(d);
+            else if (typeof d === 'bigint')
+                date.setTime(Number(d));
+            else
+                throw new BSONRuntimeError(`Unrecognized type for EJSON date: ${typeof d}`);
         }
         return date;
     }
@@ -4033,9 +4049,10 @@ var bson = /*#__PURE__*/Object.freeze({
     BSONValue: BSONValue,
     BSONError: BSONError,
     BSONVersionError: BSONVersionError,
+    BSONRuntimeError: BSONRuntimeError,
     BSONType: BSONType,
     EJSON: EJSON
 });
 
-export { bson as BSON, BSONError, BSONRegExp, BSONSymbol, BSONType, BSONValue, BSONVersionError, Binary, Code, DBRef, Decimal128, Double, EJSON, Int32, Long, MaxKey, MinKey, ObjectId, Timestamp, UUID, calculateObjectSize, deserialize, deserializeStream, serialize, serializeWithBufferAndIndex, setInternalBufferSize };
+export { bson as BSON, BSONError, BSONRegExp, BSONRuntimeError, BSONSymbol, BSONType, BSONValue, BSONVersionError, Binary, Code, DBRef, Decimal128, Double, EJSON, Int32, Long, MaxKey, MinKey, ObjectId, Timestamp, UUID, calculateObjectSize, deserialize, deserializeStream, serialize, serializeWithBufferAndIndex, setInternalBufferSize };
 //# sourceMappingURL=bson.mjs.map

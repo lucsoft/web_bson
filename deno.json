@@ -16,7 +16,7 @@
     }
   },
   "imports": {
-    "bson-cdn/": "https://unpkg.com/bson@5.0.0/"
+    "bson-cdn/": "https://unpkg.com/bson@5.0.1/"
   },
   "tasks": {
     "upgrade": "deno run -A scripts/upgrade.ts"

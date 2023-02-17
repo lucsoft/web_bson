@@ -144,6 +144,7 @@ declare namespace BSON {
         BSONValue,
         BSONError,
         BSONVersionError,
+        BSONRuntimeError,
         BSONType,
         EJSON,
         Document,
@@ -154,7 +155,11 @@ export { BSON }
 
 /**
  * @public
- * `BSONError` objects are thrown when runtime errors occur.
+ * @category Error
+ *
+ * `BSONError` objects are thrown when BSON ecounters an error.
+ *
+ * This is the parent class for all the other errors thrown by this library.
  */
 export declare class BSONError extends Error {
     /* Excluded from this release type: bsonError */
@@ -204,6 +209,19 @@ export declare interface BSONRegExpExtended {
 export declare interface BSONRegExpExtendedLegacy {
     $regex: string | BSONRegExp;
     $options: string;
+}
+
+/**
+ * @public
+ * @category Error
+ *
+ * An error generated when BSON functions encounter an unexpected input
+ * or reaches an unexpected/invalid internal state
+ *
+ */
+export declare class BSONRuntimeError extends BSONError {
+    get name(): 'BSONRuntimeError';
+    constructor(message: string);
 }
 
 /**
@@ -269,7 +287,10 @@ export declare abstract class BSONValue {
     /* Excluded from this release type: toExtendedJSON */
 }
 
-/** @public */
+/**
+ * @public
+ * @category Error
+ */
 export declare class BSONVersionError extends BSONError {
     get name(): 'BSONVersionError';
     constructor();
