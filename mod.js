@@ -3786,6 +3786,16 @@ function getISOString(date) {
     return date.getUTCMilliseconds() !== 0 ? isoStr : isoStr.slice(0, -5) + 'Z';
 }
 function serializeValue(value, options) {
+    if (value instanceof Map || isMap(value)) {
+        const obj = Object.create(null);
+        for (const [k, v] of value) {
+            if (typeof k !== 'string') {
+                throw new BSONError('Can only serialize maps with string keys');
+            }
+            obj[k] = v;
+        }
+        return serializeValue(obj, options);
+    }
     if ((typeof value === 'object' || typeof value === 'function') && value !== null) {
         const index = options.seenObjects.findIndex(entry => entry.obj === value);
         if (index !== -1) {
