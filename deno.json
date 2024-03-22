@@ -1,4 +1,21 @@
 {
+  "name": "@lucsoft/web-bson",
+  "version": "0.3.1",
+  "imports": {
+    "bson-cdn/": "https://unpkg.com/bson@5.1.0/"
+  },
+  "exports": {
+    ".": "./mod.js"
+  },
+  "publish": {
+    "exclude": [
+      "scripts",
+      "deno-tests",
+      ".vscode",
+      ".github",
+      ".gitignore"
+    ]
+  },
   "lint": {
     "files": {
       "exclude": [
@@ -14,9 +31,6 @@
         "mod.d.ts"
       ]
     }
-  },
-  "imports": {
-    "bson-cdn/": "https://unpkg.com/bson@5.1.0/"
   },
   "tasks": {
     "upgrade": "deno run -A scripts/upgrade.ts"
