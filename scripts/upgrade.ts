@@ -1,4 +1,4 @@
-import { assert } from "https://deno.land/std@0.220.1/testing/asserts.ts";
+import { assert } from "https://deno.land/std@0.224.0/testing/asserts.ts";
 
 const target = import.meta.resolve("bson-cdn/lib/bson.mjs");
 const types = import.meta.resolve("bson-cdn/bson.d.ts");
