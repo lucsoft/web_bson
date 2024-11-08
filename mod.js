@@ -1,5 +1,68 @@
 /// <reference types="./mod.d.ts" />
-const BSON_MAJOR_VERSION = 5;
+const map = new WeakMap();
+const TYPES = {
+    ArrayBuffer: '[object ArrayBuffer]',
+    SharedArrayBuffer: '[object SharedArrayBuffer]',
+    Uint8Array: '[object Uint8Array]',
+    BigInt64Array: '[object BigInt64Array]',
+    BigUint64Array: '[object BigUint64Array]',
+    RegExp: '[object RegExp]',
+    Map: '[object Map]',
+    Date: '[object Date]'
+};
+function getPrototypeString(value) {
+    let str = map.get(value);
+    if (!str) {
+        str = Object.prototype.toString.call(value);
+        if (value !== null && typeof value === 'object') {
+            map.set(value, str);
+        }
+    }
+    return str;
+}
+function isAnyArrayBuffer(value) {
+    const type = getPrototypeString(value);
+    return type === TYPES.ArrayBuffer || type === TYPES.SharedArrayBuffer;
+}
+function isUint8Array(value) {
+    const type = getPrototypeString(value);
+    return type === TYPES.Uint8Array;
+}
+function isRegExp(d) {
+    const type = getPrototypeString(d);
+    return type === TYPES.RegExp;
+}
+function isMap(d) {
+    const type = getPrototypeString(d);
+    return type === TYPES.Map;
+}
+function isDate(d) {
+    const type = getPrototypeString(d);
+    return type === TYPES.Date;
+}
+function defaultInspect(x, _options) {
+    return JSON.stringify(x, (k, v) => {
+        if (typeof v === 'bigint') {
+            return { $numberLong: `${v}` };
+        }
+        else if (isMap(v)) {
+            return Object.fromEntries(v);
+        }
+        return v;
+    });
+}
+function getStylizeFunction(options) {
+    const stylizeExists = options != null &&
+        typeof options === 'object' &&
+        'stylize' in options &&
+        typeof options.stylize === 'function';
+    if (stylizeExists) {
+        return options.stylize;
+    }
+}
+
+const BSON_MAJOR_VERSION = 6;
+const BSON_VERSION_SYMBOL = Symbol.for('@@mdb.bson.version');
 const BSON_INT32_MAX = 0x7fffffff;
 const BSON_INT32_MIN = -0x80000000;
 const BSON_INT64_MAX = Math.pow(2, 63) - 1;
@@ -60,8 +123,8 @@ class BSONError extends Error {
     get name() {
         return 'BSONError';
     }
-    constructor(message) {
-        super(message);
+    constructor(message, options) {
+        super(message, options);
     }
     static isBSONError(value) {
         return (value != null &&
@@ -78,7 +141,7 @@ class BSONVersionError extends BSONError {
         return 'BSONVersionError';
     }
     constructor() {
-        super(`Unsupported BSON version, bson types must be from bson ${BSON_MAJOR_VERSION}.0 or later`);
+        super(`Unsupported BSON version, bson types must be from bson ${BSON_MAJOR_VERSION}.x.x`);
     }
 }
 class BSONRuntimeError extends BSONError {
@@ -88,6 +151,82 @@ class BSONRuntimeError extends BSONError {
     constructor(message) {
         super(message);
     }
+}
+class BSONOffsetError extends BSONError {
+    get name() {
+        return 'BSONOffsetError';
+    }
+    constructor(message, offset, options) {
+        super(`${message}. offset: ${offset}`, options);
+        this.offset = offset;
+    }
+}
+
+let TextDecoderFatal;
+let TextDecoderNonFatal;
+function parseUtf8(buffer, start, end, fatal) {
+    if (fatal) {
+        TextDecoderFatal ??= new TextDecoder('utf8', { fatal: true });
+        try {
+            return TextDecoderFatal.decode(buffer.subarray(start, end));
+        }
+        catch (cause) {
+            throw new BSONError('Invalid UTF-8 string in BSON document', { cause });
+        }
+    }
+    TextDecoderNonFatal ??= new TextDecoder('utf8', { fatal: false });
+    return TextDecoderNonFatal.decode(buffer.subarray(start, end));
+}
+
+function tryReadBasicLatin(uint8array, start, end) {
+    if (uint8array.length === 0) {
+        return '';
+    }
+    const stringByteLength = end - start;
+    if (stringByteLength === 0) {
+        return '';
+    }
+    if (stringByteLength > 20) {
+        return null;
+    }
+    if (stringByteLength === 1 && uint8array[start] < 128) {
+        return String.fromCharCode(uint8array[start]);
+    }
+    if (stringByteLength === 2 && uint8array[start] < 128 && uint8array[start + 1] < 128) {
+        return String.fromCharCode(uint8array[start]) + String.fromCharCode(uint8array[start + 1]);
+    }
+    if (stringByteLength === 3 &&
+        uint8array[start] < 128 &&
+        uint8array[start + 1] < 128 &&
+        uint8array[start + 2] < 128) {
+        return (String.fromCharCode(uint8array[start]) +
+            String.fromCharCode(uint8array[start + 1]) +
+            String.fromCharCode(uint8array[start + 2]));
+    }
+    const latinBytes = [];
+    for (let i = start; i < end; i++) {
+        const byte = uint8array[i];
+        if (byte > 127) {
+            return null;
+        }
+        latinBytes.push(byte);
+    }
+    return String.fromCharCode(...latinBytes);
+}
+function tryWriteBasicLatin(destination, source, offset) {
+    if (source.length === 0)
+        return 0;
+    if (source.length > 25)
+        return null;
+    if (destination.length - offset < source.length)
+        return null;
+    for (let charOffset = 0, destinationOffset = offset; charOffset < source.length; charOffset++, destinationOffset++) {
+        const char = source.charCodeAt(charOffset);
+        if (char > 127)
+            return null;
+        destination[destinationOffset] = char;
+    }
+    return source.length;
 }
 
 function nodejsMathRandomBytes(byteLength) {
@@ -121,6 +260,9 @@ const nodeJsByteUtils = {
     allocate(size) {
         return Buffer.alloc(size);
     },
+    allocateUnsafe(size) {
+        return Buffer.allocUnsafe(size);
+    },
     equals(a, b) {
         return nodeJsByteUtils.toLocalBufferType(a).equals(b);
     },
@@ -145,16 +287,30 @@ const nodeJsByteUtils = {
     toHex(buffer) {
         return nodeJsByteUtils.toLocalBufferType(buffer).toString('hex');
     },
-    fromUTF8(text) {
-        return Buffer.from(text, 'utf8');
-    },
-    toUTF8(buffer) {
-        return nodeJsByteUtils.toLocalBufferType(buffer).toString('utf8');
+    toUTF8(buffer, start, end, fatal) {
+        const basicLatin = end - start <= 20 ? tryReadBasicLatin(buffer, start, end) : null;
+        if (basicLatin != null) {
+            return basicLatin;
+        }
+        const string = nodeJsByteUtils.toLocalBufferType(buffer).toString('utf8', start, end);
+        if (fatal) {
+            for (let i = 0; i < string.length; i++) {
+                if (string.charCodeAt(i) === 0xfffd) {
+                    parseUtf8(buffer, start, end, true);
+                    break;
+                }
+            }
+        }
+        return string;
     },
     utf8ByteLength(input) {
         return Buffer.byteLength(input, 'utf8');
     },
     encodeUTF8Into(buffer, source, byteOffset) {
+        const latinBytesWritten = tryWriteBasicLatin(buffer, source, byteOffset);
+        if (latinBytesWritten != null) {
+            return latinBytesWritten;
+        }
         return nodeJsByteUtils.toLocalBufferType(buffer).write(source, byteOffset, undefined, 'utf8');
     },
     randomBytes: nodejsRandomBytes
@@ -210,6 +366,9 @@ const webByteUtils = {
         }
         return new Uint8Array(size);
     },
+    allocateUnsafe(size) {
+        return webByteUtils.allocate(size);
+    },
     equals(a, b) {
         if (a.byteLength !== b.byteLength) {
             return false;
@@ -256,18 +415,19 @@ const webByteUtils = {
     toHex(uint8array) {
         return Array.from(uint8array, byte => byte.toString(16).padStart(2, '0')).join('');
     },
-    fromUTF8(text) {
-        return new TextEncoder().encode(text);
-    },
-    toUTF8(uint8array) {
-        return new TextDecoder('utf8', { fatal: false }).decode(uint8array);
+    toUTF8(uint8array, start, end, fatal) {
+        const basicLatin = end - start <= 20 ? tryReadBasicLatin(uint8array, start, end) : null;
+        if (basicLatin != null) {
+            return basicLatin;
+        }
+        return parseUtf8(uint8array, start, end, fatal);
     },
     utf8ByteLength(input) {
-        return webByteUtils.fromUTF8(input).byteLength;
+        return new TextEncoder().encode(input).byteLength;
     },
-    encodeUTF8Into(buffer, source, byteOffset) {
-        const bytes = webByteUtils.fromUTF8(source);
-        buffer.set(bytes, byteOffset);
+    encodeUTF8Into(uint8array, source, byteOffset) {
+        const bytes = new TextEncoder().encode(source);
+        uint8array.set(bytes, byteOffset);
         return bytes.byteLength;
     },
     randomBytes: webRandomBytes
@@ -275,53 +435,13 @@ const webByteUtils = {
 
 const hasGlobalBuffer = typeof Buffer === 'function' && Buffer.prototype?._isBuffer !== true;
 const ByteUtils = webByteUtils;
-class BSONDataView extends DataView {
-    static fromUint8Array(input) {
-        return new DataView(input.buffer, input.byteOffset, input.byteLength);
-    }
-}
-
-const VALIDATION_REGEX = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15})$/i;
-const uuidValidateString = (str) => typeof str === 'string' && VALIDATION_REGEX.test(str);
-const uuidHexStringToBuffer = (hexString) => {
-    if (!uuidValidateString(hexString)) {
-        throw new BSONError('UUID string representations must be a 32 or 36 character hex string (dashes excluded/included). Format: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" or "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".');
-    }
-    const sanitizedHexString = hexString.replace(/-/g, '');
-    return ByteUtils.fromHex(sanitizedHexString);
-};
-function bufferToUuidHexString(buffer, includeDashes = true) {
-    if (includeDashes) {
-        return [
-            ByteUtils.toHex(buffer.subarray(0, 4)),
-            ByteUtils.toHex(buffer.subarray(4, 6)),
-            ByteUtils.toHex(buffer.subarray(6, 8)),
-            ByteUtils.toHex(buffer.subarray(8, 10)),
-            ByteUtils.toHex(buffer.subarray(10, 16))
-        ].join('-');
-    }
-    return ByteUtils.toHex(buffer);
-}
-
-function isAnyArrayBuffer(value) {
-    return ['[object ArrayBuffer]', '[object SharedArrayBuffer]'].includes(Object.prototype.toString.call(value));
-}
-function isUint8Array(value) {
-    return Object.prototype.toString.call(value) === '[object Uint8Array]';
-}
-function isRegExp(d) {
-    return Object.prototype.toString.call(d) === '[object RegExp]';
-}
-function isMap(d) {
-    return Object.prototype.toString.call(d) === '[object Map]';
-}
-function isDate(d) {
-    return Object.prototype.toString.call(d) === '[object Date]';
-}
 
 class BSONValue {
-    get [Symbol.for('@@mdb.bson.version')]() {
+    get [BSON_VERSION_SYMBOL]() {
         return BSON_MAJOR_VERSION;
+    }
+    [Symbol.for('Deno.customInspect')](depth, options, inspect) {
+        return this.inspect(depth, options, inspect);
     }
 }
 
@@ -332,11 +452,11 @@ class Binary extends BSONValue {
     constructor(buffer, subType) {
         super();
         if (!(buffer == null) &&
-            !(typeof buffer === 'string') &&
+            typeof buffer === 'string' &&
             !ArrayBuffer.isView(buffer) &&
-            !(buffer instanceof ArrayBuffer) &&
+            !isAnyArrayBuffer(buffer) &&
             !Array.isArray(buffer)) {
-            throw new BSONError('Binary can only be constructed from string, Buffer, TypedArray, or Array<number>');
+            throw new BSONError('Binary can only be constructed from Uint8Array or number[]');
         }
         this.sub_type = subType ?? Binary.BSON_BINARY_SUBTYPE_DEFAULT;
         if (buffer == null) {
@@ -344,15 +464,9 @@ class Binary extends BSONValue {
             this.position = 0;
         }
         else {
-            if (typeof buffer === 'string') {
-                this.buffer = ByteUtils.fromISO88591(buffer);
-            }
-            else if (Array.isArray(buffer)) {
-                this.buffer = ByteUtils.fromNumberArray(buffer);
-            }
-            else {
-                this.buffer = ByteUtils.toLocalBufferType(buffer);
-            }
+            this.buffer = Array.isArray(buffer)
+                ? ByteUtils.fromNumberArray(buffer)
+                : ByteUtils.toLocalBufferType(buffer);
             this.position = this.buffer.byteLength;
         }
     }
@@ -398,40 +512,32 @@ class Binary extends BSONValue {
                 offset + sequence.byteLength > this.position ? offset + sequence.length : this.position;
         }
         else if (typeof sequence === 'string') {
-            const bytes = ByteUtils.fromISO88591(sequence);
-            this.buffer.set(bytes, offset);
-            this.position =
-                offset + sequence.length > this.position ? offset + sequence.length : this.position;
+            throw new BSONError('input cannot be string');
         }
     }
     read(position, length) {
         length = length && length > 0 ? length : this.position;
         return this.buffer.slice(position, position + length);
     }
-    value(asRaw) {
-        asRaw = !!asRaw;
-        if (asRaw && this.buffer.length === this.position) {
-            return this.buffer;
-        }
-        if (asRaw) {
-            return this.buffer.slice(0, this.position);
-        }
-        return ByteUtils.toISO88591(this.buffer.subarray(0, this.position));
+    value() {
+        return this.buffer.length === this.position
+            ? this.buffer
+            : this.buffer.subarray(0, this.position);
     }
     length() {
         return this.position;
     }
     toJSON() {
-        return ByteUtils.toBase64(this.buffer);
+        return ByteUtils.toBase64(this.buffer.subarray(0, this.position));
     }
     toString(encoding) {
         if (encoding === 'hex')
-            return ByteUtils.toHex(this.buffer);
+            return ByteUtils.toHex(this.buffer.subarray(0, this.position));
         if (encoding === 'base64')
-            return ByteUtils.toBase64(this.buffer);
+            return ByteUtils.toBase64(this.buffer.subarray(0, this.position));
         if (encoding === 'utf8' || encoding === 'utf-8')
-            return ByteUtils.toUTF8(this.buffer);
-        return ByteUtils.toUTF8(this.buffer);
+            return ByteUtils.toUTF8(this.buffer, 0, this.position, false);
+        return ByteUtils.toUTF8(this.buffer, 0, this.position, false);
     }
     toExtendedJSON(options) {
         options = options || {};
@@ -456,6 +562,12 @@ class Binary extends BSONValue {
         }
         throw new BSONError(`Binary sub_type "${this.sub_type}" is not supported for converting to UUID. Only "${Binary.SUBTYPE_UUID}" is currently supported.`);
     }
+    static createFromHexString(hex, subType) {
+        return new Binary(ByteUtils.fromHex(hex), subType);
+    }
+    static createFromBase64(base64, subType) {
+        return new Binary(ByteUtils.fromBase64(base64), subType);
+    }
     static fromExtendedJSON(doc, options) {
         options = options || {};
         let data;
@@ -474,18 +586,19 @@ class Binary extends BSONValue {
         }
         else if ('$uuid' in doc) {
             type = 4;
-            data = uuidHexStringToBuffer(doc.$uuid);
+            data = UUID.bytesFromString(doc.$uuid);
         }
         if (!data) {
             throw new BSONError(`Unexpected Binary Extended JSON format ${JSON.stringify(doc)}`);
         }
         return type === BSON_BINARY_SUBTYPE_UUID_NEW ? new UUID(data) : new Binary(data, type);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        return `new Binary(Buffer.from("${ByteUtils.toHex(this.buffer)}", "hex"), ${this.sub_type})`;
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        const base64 = ByteUtils.toBase64(this.buffer.subarray(0, this.position));
+        const base64Arg = inspect(base64, options);
+        const subTypeArg = inspect(this.sub_type, options);
+        return `Binary.createFromBase64(${base64Arg}, ${subTypeArg})`;
     }
 }
 Binary.BSON_BINARY_SUBTYPE_DEFAULT = 0;
@@ -498,49 +611,48 @@ Binary.SUBTYPE_UUID = 4;
 Binary.SUBTYPE_MD5 = 5;
 Binary.SUBTYPE_ENCRYPTED = 6;
 Binary.SUBTYPE_COLUMN = 7;
+Binary.SUBTYPE_SENSITIVE = 8;
 Binary.SUBTYPE_USER_DEFINED = 128;
 const UUID_BYTE_LENGTH = 16;
+const UUID_WITHOUT_DASHES = /^[0-9A-F]{32}$/i;
+const UUID_WITH_DASHES = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i;
 class UUID extends Binary {
     constructor(input) {
         let bytes;
-        let hexStr;
         if (input == null) {
             bytes = UUID.generate();
         }
         else if (input instanceof UUID) {
             bytes = ByteUtils.toLocalBufferType(new Uint8Array(input.buffer));
-            hexStr = input.__id;
         }
         else if (ArrayBuffer.isView(input) && input.byteLength === UUID_BYTE_LENGTH) {
             bytes = ByteUtils.toLocalBufferType(input);
         }
         else if (typeof input === 'string') {
-            bytes = uuidHexStringToBuffer(input);
+            bytes = UUID.bytesFromString(input);
         }
         else {
             throw new BSONError('Argument passed in UUID constructor must be a UUID, a 16 byte Buffer or a 32/36 character hex string (dashes excluded/included, format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx).');
         }
         super(bytes, BSON_BINARY_SUBTYPE_UUID_NEW);
-        this.__id = hexStr;
     }
     get id() {
         return this.buffer;
     }
     set id(value) {
         this.buffer = value;
-        if (UUID.cacheHexString) {
-            this.__id = bufferToUuidHexString(value);
-        }
     }
     toHexString(includeDashes = true) {
-        if (UUID.cacheHexString && this.__id) {
-            return this.__id;
+        if (includeDashes) {
+            return [
+                ByteUtils.toHex(this.buffer.subarray(0, 4)),
+                ByteUtils.toHex(this.buffer.subarray(4, 6)),
+                ByteUtils.toHex(this.buffer.subarray(6, 8)),
+                ByteUtils.toHex(this.buffer.subarray(8, 10)),
+                ByteUtils.toHex(this.buffer.subarray(10, 16))
+            ].join('-');
         }
-        const uuidHexString = bufferToUuidHexString(this.id, includeDashes);
-        if (UUID.cacheHexString) {
-            this.__id = uuidHexString;
-        }
-        return uuidHexString;
+        return ByteUtils.toHex(this.buffer);
     }
     toString(encoding) {
         if (encoding === 'hex')
@@ -579,29 +691,35 @@ class UUID extends Binary {
         if (!input) {
             return false;
         }
-        if (input instanceof UUID) {
-            return true;
-        }
         if (typeof input === 'string') {
-            return uuidValidateString(input);
+            return UUID.isValidUUIDString(input);
         }
         if (isUint8Array(input)) {
-            if (input.byteLength !== UUID_BYTE_LENGTH) {
-                return false;
-            }
-            return (input[6] & 0xf0) === 0x40 && (input[8] & 0x80) === 0x80;
+            return input.byteLength === UUID_BYTE_LENGTH;
         }
-        return false;
+        return (input._bsontype === 'Binary' &&
+            input.sub_type === this.SUBTYPE_UUID &&
+            input.buffer.byteLength === 16);
     }
     static createFromHexString(hexString) {
-        const buffer = uuidHexStringToBuffer(hexString);
+        const buffer = UUID.bytesFromString(hexString);
         return new UUID(buffer);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
+    static createFromBase64(base64) {
+        return new UUID(ByteUtils.fromBase64(base64));
     }
-    inspect() {
-        return `new UUID("${this.toHexString()}")`;
+    static bytesFromString(representation) {
+        if (!UUID.isValidUUIDString(representation)) {
+            throw new BSONError('UUID string representation must be 32 hex digits or canonical hyphenated representation');
+        }
+        return ByteUtils.fromHex(representation.replace(/-/g, ''));
+    }
+    static isValidUUIDString(representation) {
+        return UUID_WITHOUT_DASHES.test(representation) || UUID_WITH_DASHES.test(representation);
+    }
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        return `new UUID(${inspect(this.toHexString(), options)})`;
     }
 }
 
@@ -629,12 +747,15 @@ class Code extends BSONValue {
     static fromExtendedJSON(doc) {
         return new Code(doc.$code, doc.$scope);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        const codeJson = this.toJSON();
-        return `new Code("${String(codeJson.code)}"${codeJson.scope != null ? `, ${JSON.stringify(codeJson.scope)}` : ''})`;
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        let parametersString = inspect(this.code, options);
+        const multiLineFn = parametersString.includes('\n');
+        if (this.scope != null) {
+            parametersString += `,${multiLineFn ? '\n' : ' '}${inspect(this.scope, options)}`;
+        }
+        const endingNewline = multiLineFn && this.scope === null;
+        return `new Code(${multiLineFn ? '\n' : ''}${parametersString}${endingNewline ? '\n' : ''})`;
     }
 }
 
@@ -699,13 +820,43 @@ class DBRef extends BSONValue {
         delete copy.$db;
         return new DBRef(doc.$ref, doc.$id, doc.$db, copy);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        const args = [
+            inspect(this.namespace, options),
+            inspect(this.oid, options),
+            ...(this.db ? [inspect(this.db, options)] : []),
+            ...(Object.keys(this.fields).length > 0 ? [inspect(this.fields, options)] : [])
+        ];
+        args[1] = inspect === defaultInspect ? `new ObjectId(${args[1]})` : args[1];
+        return `new DBRef(${args.join(', ')})`;
     }
-    inspect() {
-        const oid = this.oid === undefined || this.oid.toString === undefined ? this.oid : this.oid.toString();
-        return `new DBRef("${this.namespace}", new ObjectId("${String(oid)}")${this.db ? `, "${this.db}"` : ''})`;
+}
+
+function removeLeadingZerosAndExplicitPlus(str) {
+    if (str === '') {
+        return str;
     }
+    let startIndex = 0;
+    const isNegative = str[startIndex] === '-';
+    const isExplicitlyPositive = str[startIndex] === '+';
+    if (isExplicitlyPositive || isNegative) {
+        startIndex += 1;
+    }
+    let foundInsignificantZero = false;
+    for (; startIndex < str.length && str[startIndex] === '0'; ++startIndex) {
+        foundInsignificantZero = true;
+    }
+    if (!foundInsignificantZero) {
+        return isExplicitlyPositive ? str.slice(1) : str;
+    }
+    return `${isNegative ? '-' : ''}${str.length === startIndex ? '0' : str.slice(startIndex)}`;
+}
+function validateStringCharacters(str, radix) {
+    radix = radix ?? 10;
+    const validCharacters = '0123456789abcdefghijklmnopqrstuvwxyz'.slice(0, radix);
+    const regex = new RegExp(`[^-+${validCharacters}]`, 'i');
+    return regex.test(str) ? false : str;
 }
 
 let wasm = undefined;
@@ -730,19 +881,18 @@ class Long extends BSONValue {
     get __isLong__() {
         return true;
     }
-    constructor(low = 0, high, unsigned) {
+    constructor(lowOrValue = 0, highOrUnsigned, unsigned) {
         super();
-        if (typeof low === 'bigint') {
-            Object.assign(this, Long.fromBigInt(low, !!high));
-        }
-        else if (typeof low === 'string') {
-            Object.assign(this, Long.fromString(low, !!high));
-        }
-        else {
-            this.low = low | 0;
-            this.high = high | 0;
-            this.unsigned = !!unsigned;
-        }
+        const unsignedBool = typeof highOrUnsigned === 'boolean' ? highOrUnsigned : Boolean(unsigned);
+        const high = typeof highOrUnsigned === 'number' ? highOrUnsigned : 0;
+        const res = typeof lowOrValue === 'string'
+            ? Long.fromString(lowOrValue, unsignedBool)
+            : typeof lowOrValue === 'bigint'
+                ? Long.fromBigInt(lowOrValue, unsignedBool)
+                : { low: lowOrValue | 0, high: high | 0, unsigned: unsignedBool };
+        this.low = res.low;
+        this.high = res.high;
+        this.unsigned = res.unsigned;
     }
     static fromBits(lowBits, highBits, unsigned) {
         return new Long(lowBits, highBits, unsigned);
@@ -794,27 +944,20 @@ class Long extends BSONValue {
         return Long.fromBits(value % TWO_PWR_32_DBL | 0, (value / TWO_PWR_32_DBL) | 0, unsigned);
     }
     static fromBigInt(value, unsigned) {
-        return Long.fromString(value.toString(), unsigned);
+        const FROM_BIGINT_BIT_MASK = BigInt(0xffffffff);
+        const FROM_BIGINT_BIT_SHIFT = BigInt(32);
+        return new Long(Number(value & FROM_BIGINT_BIT_MASK), Number((value >> FROM_BIGINT_BIT_SHIFT) & FROM_BIGINT_BIT_MASK), unsigned);
     }
-    static fromString(str, unsigned, radix) {
+    static _fromString(str, unsigned, radix) {
         if (str.length === 0)
             throw new BSONError('empty string');
-        if (str === 'NaN' || str === 'Infinity' || str === '+Infinity' || str === '-Infinity')
-            return Long.ZERO;
-        if (typeof unsigned === 'number') {
-            (radix = unsigned), (unsigned = false);
-        }
-        else {
-            unsigned = !!unsigned;
-        }
-        radix = radix || 10;
         if (radix < 2 || 36 < radix)
             throw new BSONError('radix');
         let p;
         if ((p = str.indexOf('-')) > 0)
             throw new BSONError('interior hyphen');
         else if (p === 0) {
-            return Long.fromString(str.substring(1), unsigned, radix).neg();
+            return Long._fromString(str.substring(1), unsigned, radix).neg();
         }
         const radixToPower = Long.fromNumber(Math.pow(radix, 8));
         let result = Long.ZERO;
@@ -831,6 +974,45 @@ class Long extends BSONValue {
         }
         result.unsigned = unsigned;
         return result;
+    }
+    static fromStringStrict(str, unsignedOrRadix, radix) {
+        let unsigned = false;
+        if (typeof unsignedOrRadix === 'number') {
+            (radix = unsignedOrRadix), (unsignedOrRadix = false);
+        }
+        else {
+            unsigned = !!unsignedOrRadix;
+        }
+        radix ??= 10;
+        if (str.trim() !== str) {
+            throw new BSONError(`Input: '${str}' contains leading and/or trailing whitespace`);
+        }
+        if (!validateStringCharacters(str, radix)) {
+            throw new BSONError(`Input: '${str}' contains invalid characters for radix: ${radix}`);
+        }
+        const cleanedStr = removeLeadingZerosAndExplicitPlus(str);
+        const result = Long._fromString(cleanedStr, unsigned, radix);
+        if (result.toString(radix).toLowerCase() !== cleanedStr.toLowerCase()) {
+            throw new BSONError(`Input: ${str} is not representable as ${result.unsigned ? 'an unsigned' : 'a signed'} 64-bit Long ${radix != null ? `with radix: ${radix}` : ''}`);
+        }
+        return result;
+    }
+    static fromString(str, unsignedOrRadix, radix) {
+        let unsigned = false;
+        if (typeof unsignedOrRadix === 'number') {
+            (radix = unsignedOrRadix), (unsignedOrRadix = false);
+        }
+        else {
+            unsigned = !!unsignedOrRadix;
+        }
+        radix ??= 10;
+        if (str === 'NaN' && radix < 24) {
+            return Long.ZERO;
+        }
+        else if ((str === 'Infinity' || str === '+Infinity' || str === '-Infinity') && radix < 35) {
+            return Long.ZERO;
+        }
+        return Long._fromString(str, unsigned, radix);
     }
     static fromBytes(bytes, unsigned, le) {
         return le ? Long.fromBytesLE(bytes, unsigned) : Long.fromBytesBE(bytes, unsigned);
@@ -1331,11 +1513,11 @@ class Long extends BSONValue {
         }
         return longResult;
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        return `new Long("${this.toString()}"${this.unsigned ? ', true' : ''})`;
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        const longVal = inspect(this.toString(), options);
+        const unsignedVal = this.unsigned ? `, ${inspect(this.unsigned, options)}` : '';
+        return `new Long(${longVal}${unsignedVal})`;
     }
 }
 Long.TWO_PWR_24 = Long.fromInt(TWO_PWR_24_DBL);
@@ -1432,7 +1614,7 @@ class Decimal128 extends BSONValue {
         if (typeof bytes === 'string') {
             this.bytes = Decimal128.fromString(bytes).bytes;
         }
-        else if (isUint8Array(bytes)) {
+        else if (bytes instanceof Uint8Array || isUint8Array(bytes)) {
             if (bytes.byteLength !== 16) {
                 throw new BSONError('Decimal128 must take a Buffer of 16 bytes');
             }
@@ -1443,7 +1625,14 @@ class Decimal128 extends BSONValue {
         }
     }
     static fromString(representation) {
+        return Decimal128._fromString(representation, { allowRounding: false });
+    }
+    static fromStringWithRounding(representation) {
+        return Decimal128._fromString(representation, { allowRounding: true });
+    }
+    static _fromString(representation, options) {
         let isNegative = false;
+        let sawSign = false;
         let sawRadix = false;
         let foundNonZero = false;
         let significantDigits = 0;
@@ -1454,10 +1643,8 @@ class Decimal128 extends BSONValue {
         const digits = [0];
         let nDigitsStored = 0;
         let digitsInsert = 0;
-        let firstDigit = 0;
         let lastDigit = 0;
         let exponent = 0;
-        let i = 0;
         let significandHigh = new Long(0, 0);
         let significandLow = new Long(0, 0);
         let biasedExponent = 0;
@@ -1485,6 +1672,7 @@ class Decimal128 extends BSONValue {
             }
         }
         if (representation[index] === '+' || representation[index] === '-') {
+            sawSign = true;
             isNegative = representation[index++] === '-';
         }
         if (!isDigit(representation[index]) && representation[index] !== '.') {
@@ -1503,7 +1691,7 @@ class Decimal128 extends BSONValue {
                 index = index + 1;
                 continue;
             }
-            if (nDigitsStored < 34) {
+            if (nDigitsStored < MAX_DIGITS) {
                 if (representation[index] !== '0' || foundNonZero) {
                     if (!foundNonZero) {
                         firstNonZero = nDigitsRead;
@@ -1531,10 +1719,7 @@ class Decimal128 extends BSONValue {
         }
         if (representation[index])
             return new Decimal128(NAN_BUFFER);
-        firstDigit = 0;
         if (!nDigitsStored) {
-            firstDigit = 0;
-            lastDigit = 0;
             digits[0] = 0;
             nDigits = 1;
             nDigitsStored = 1;
@@ -1544,12 +1729,12 @@ class Decimal128 extends BSONValue {
             lastDigit = nDigitsStored - 1;
             significantDigits = nDigits;
             if (significantDigits !== 1) {
-                while (digits[firstNonZero + significantDigits - 1] === 0) {
+                while (representation[firstNonZero + significantDigits - 1 + Number(sawSign) + Number(sawRadix)] === '0') {
                     significantDigits = significantDigits - 1;
                 }
             }
         }
-        if (exponent <= radixPosition && radixPosition - exponent > 1 << 14) {
+        if (exponent <= radixPosition && radixPosition > exponent + (1 << 14)) {
             exponent = EXPONENT_MIN;
         }
         else {
@@ -1557,9 +1742,8 @@ class Decimal128 extends BSONValue {
         }
         while (exponent > EXPONENT_MAX) {
             lastDigit = lastDigit + 1;
-            if (lastDigit - firstDigit > MAX_DIGITS) {
-                const digitsString = digits.join('');
-                if (digitsString.match(/^0+$/)) {
+            if (lastDigit >= MAX_DIGITS) {
+                if (significantDigits === 0) {
                     exponent = EXPONENT_MAX;
                     break;
                 }
@@ -1567,69 +1751,116 @@ class Decimal128 extends BSONValue {
             }
             exponent = exponent - 1;
         }
-        while (exponent < EXPONENT_MIN || nDigitsStored < nDigits) {
-            if (lastDigit === 0 && significantDigits < nDigitsStored) {
-                exponent = EXPONENT_MIN;
-                significantDigits = 0;
-                break;
-            }
-            if (nDigitsStored < nDigits) {
-                nDigits = nDigits - 1;
-            }
-            else {
-                lastDigit = lastDigit - 1;
-            }
-            if (exponent < EXPONENT_MAX) {
-                exponent = exponent + 1;
-            }
-            else {
-                const digitsString = digits.join('');
-                if (digitsString.match(/^0+$/)) {
-                    exponent = EXPONENT_MAX;
+        if (options.allowRounding) {
+            while (exponent < EXPONENT_MIN || nDigitsStored < nDigits) {
+                if (lastDigit === 0 && significantDigits < nDigitsStored) {
+                    exponent = EXPONENT_MIN;
+                    significantDigits = 0;
                     break;
                 }
-                invalidErr(representation, 'overflow');
+                if (nDigitsStored < nDigits) {
+                    nDigits = nDigits - 1;
+                }
+                else {
+                    lastDigit = lastDigit - 1;
+                }
+                if (exponent < EXPONENT_MAX) {
+                    exponent = exponent + 1;
+                }
+                else {
+                    const digitsString = digits.join('');
+                    if (digitsString.match(/^0+$/)) {
+                        exponent = EXPONENT_MAX;
+                        break;
+                    }
+                    invalidErr(representation, 'overflow');
+                }
             }
-        }
-        if (lastDigit - firstDigit + 1 < significantDigits) {
-            let endOfString = nDigitsRead;
-            if (sawRadix) {
-                firstNonZero = firstNonZero + 1;
-                endOfString = endOfString + 1;
-            }
-            if (isNegative) {
-                firstNonZero = firstNonZero + 1;
-                endOfString = endOfString + 1;
-            }
-            const roundDigit = parseInt(representation[firstNonZero + lastDigit + 1], 10);
-            let roundBit = 0;
-            if (roundDigit >= 5) {
-                roundBit = 1;
-                if (roundDigit === 5) {
-                    roundBit = digits[lastDigit] % 2 === 1 ? 1 : 0;
-                    for (i = firstNonZero + lastDigit + 2; i < endOfString; i++) {
-                        if (parseInt(representation[i], 10)) {
-                            roundBit = 1;
+            if (lastDigit + 1 < significantDigits) {
+                let endOfString = nDigitsRead;
+                if (sawRadix) {
+                    firstNonZero = firstNonZero + 1;
+                    endOfString = endOfString + 1;
+                }
+                if (sawSign) {
+                    firstNonZero = firstNonZero + 1;
+                    endOfString = endOfString + 1;
+                }
+                const roundDigit = parseInt(representation[firstNonZero + lastDigit + 1], 10);
+                let roundBit = 0;
+                if (roundDigit >= 5) {
+                    roundBit = 1;
+                    if (roundDigit === 5) {
+                        roundBit = digits[lastDigit] % 2 === 1 ? 1 : 0;
+                        for (let i = firstNonZero + lastDigit + 2; i < endOfString; i++) {
+                            if (parseInt(representation[i], 10)) {
+                                roundBit = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (roundBit) {
+                    let dIdx = lastDigit;
+                    for (; dIdx >= 0; dIdx--) {
+                        if (++digits[dIdx] > 9) {
+                            digits[dIdx] = 0;
+                            if (dIdx === 0) {
+                                if (exponent < EXPONENT_MAX) {
+                                    exponent = exponent + 1;
+                                    digits[dIdx] = 1;
+                                }
+                                else {
+                                    return new Decimal128(isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER);
+                                }
+                            }
+                        }
+                        else {
                             break;
                         }
                     }
                 }
             }
-            if (roundBit) {
-                let dIdx = lastDigit;
-                for (; dIdx >= 0; dIdx--) {
-                    if (++digits[dIdx] > 9) {
-                        digits[dIdx] = 0;
-                        if (dIdx === 0) {
-                            if (exponent < EXPONENT_MAX) {
-                                exponent = exponent + 1;
-                                digits[dIdx] = 1;
-                            }
-                            else {
-                                return new Decimal128(isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER);
-                            }
-                        }
+        }
+        else {
+            while (exponent < EXPONENT_MIN || nDigitsStored < nDigits) {
+                if (lastDigit === 0) {
+                    if (significantDigits === 0) {
+                        exponent = EXPONENT_MIN;
+                        break;
                     }
+                    invalidErr(representation, 'exponent underflow');
+                }
+                if (nDigitsStored < nDigits) {
+                    if (representation[nDigits - 1 + Number(sawSign) + Number(sawRadix)] !== '0' &&
+                        significantDigits !== 0) {
+                        invalidErr(representation, 'inexact rounding');
+                    }
+                    nDigits = nDigits - 1;
+                }
+                else {
+                    if (digits[lastDigit] !== 0) {
+                        invalidErr(representation, 'inexact rounding');
+                    }
+                    lastDigit = lastDigit - 1;
+                }
+                if (exponent < EXPONENT_MAX) {
+                    exponent = exponent + 1;
+                }
+                else {
+                    invalidErr(representation, 'overflow');
+                }
+            }
+            if (lastDigit + 1 < significantDigits) {
+                if (sawRadix) {
+                    firstNonZero = firstNonZero + 1;
+                }
+                if (sawSign) {
+                    firstNonZero = firstNonZero + 1;
+                }
+                const roundDigit = parseInt(representation[firstNonZero + lastDigit + 1], 10);
+                if (roundDigit !== 0) {
+                    invalidErr(representation, 'inexact rounding');
                 }
             }
         }
@@ -1639,8 +1870,8 @@ class Decimal128 extends BSONValue {
             significandHigh = Long.fromNumber(0);
             significandLow = Long.fromNumber(0);
         }
-        else if (lastDigit - firstDigit < 17) {
-            let dIdx = firstDigit;
+        else if (lastDigit < 17) {
+            let dIdx = 0;
             significandLow = Long.fromNumber(digits[dIdx++]);
             significandHigh = new Long(0, 0);
             for (; dIdx <= lastDigit; dIdx++) {
@@ -1649,7 +1880,7 @@ class Decimal128 extends BSONValue {
             }
         }
         else {
-            let dIdx = firstDigit;
+            let dIdx = 0;
             significandHigh = Long.fromNumber(digits[dIdx++]);
             for (; dIdx <= lastDigit - 17; dIdx++) {
                 significandHigh = significandHigh.multiply(Long.fromNumber(10));
@@ -1681,7 +1912,7 @@ class Decimal128 extends BSONValue {
         if (isNegative) {
             dec.high = dec.high.or(Long.fromString('9223372036854775808'));
         }
-        const buffer = ByteUtils.allocate(16);
+        const buffer = ByteUtils.allocateUnsafe(16);
         index = 0;
         buffer[index++] = dec.low.low & 0xff;
         buffer[index++] = (dec.low.low >> 8) & 0xff;
@@ -1842,11 +2073,10 @@ class Decimal128 extends BSONValue {
     static fromExtendedJSON(doc) {
         return Decimal128.fromString(doc.$numberDecimal);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        return `new Decimal128("${this.toString()}")`;
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        const d128string = inspect(this.toString(), options);
+        return `new Decimal128(${d128string})`;
     }
 }
 
@@ -1860,6 +2090,28 @@ class Double extends BSONValue {
             value = value.valueOf();
         }
         this.value = +value;
+    }
+    static fromString(value) {
+        const coercedValue = Number(value);
+        if (value === 'NaN')
+            return new Double(NaN);
+        if (value === 'Infinity')
+            return new Double(Infinity);
+        if (value === '-Infinity')
+            return new Double(-Infinity);
+        if (!Number.isFinite(coercedValue)) {
+            throw new BSONError(`Input: ${value} is not representable as a Double`);
+        }
+        if (value.trim() !== value) {
+            throw new BSONError(`Input: '${value}' contains whitespace`);
+        }
+        if (value === '') {
+            throw new BSONError(`Input is an empty string`);
+        }
+        if (/[^-0-9.+eE]/.test(value)) {
+            throw new BSONError(`Input: '${value}' is not in decimal or exponential notation`);
+        }
+        return new Double(coercedValue);
     }
     valueOf() {
         return this.value;
@@ -1885,12 +2137,9 @@ class Double extends BSONValue {
         const doubleValue = parseFloat(doc.$numberDouble);
         return options && options.relaxed ? doubleValue : new Double(doubleValue);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        const eJSON = this.toExtendedJSON();
-        return `new Double(${eJSON.$numberDouble})`;
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        return `new Double(${inspect(this.value, options)})`;
     }
 }
 
@@ -1904,6 +2153,23 @@ class Int32 extends BSONValue {
             value = value.valueOf();
         }
         this.value = +value | 0;
+    }
+    static fromString(value) {
+        const cleanedValue = removeLeadingZerosAndExplicitPlus(value);
+        const coercedValue = Number(value);
+        if (BSON_INT32_MAX < coercedValue) {
+            throw new BSONError(`Input: '${value}' is larger than the maximum value for Int32`);
+        }
+        else if (BSON_INT32_MIN > coercedValue) {
+            throw new BSONError(`Input: '${value}' is smaller than the minimum value for Int32`);
+        }
+        else if (!Number.isSafeInteger(coercedValue)) {
+            throw new BSONError(`Input: '${value}' is not a safe integer`);
+        }
+        else if (coercedValue.toString() !== cleanedValue) {
+            throw new BSONError(`Input: '${value}' is not a valid Int32 string`);
+        }
+        return new Int32(coercedValue);
     }
     valueOf() {
         return this.value;
@@ -1922,11 +2188,9 @@ class Int32 extends BSONValue {
     static fromExtendedJSON(doc, options) {
         return options && options.relaxed ? parseInt(doc.$numberInt, 10) : new Int32(doc.$numberInt);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        return `new Int32(${this.valueOf()})`;
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        return `new Int32(${inspect(this.value, options)})`;
     }
 }
 
@@ -1939,9 +2203,6 @@ class MaxKey extends BSONValue {
     }
     static fromExtendedJSON() {
         return new MaxKey();
-    }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
     }
     inspect() {
         return 'new MaxKey()';
@@ -1958,17 +2219,139 @@ class MinKey extends BSONValue {
     static fromExtendedJSON() {
         return new MinKey();
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
     inspect() {
         return 'new MinKey()';
     }
 }
 
-const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
+const FLOAT = new Float64Array(1);
+const FLOAT_BYTES = new Uint8Array(FLOAT.buffer, 0, 8);
+FLOAT[0] = -1;
+const isBigEndian = FLOAT_BYTES[7] === 0;
+const NumberUtils = {
+    getNonnegativeInt32LE(source, offset) {
+        if (source[offset + 3] > 127) {
+            throw new RangeError(`Size cannot be negative at offset: ${offset}`);
+        }
+        return (source[offset] |
+            (source[offset + 1] << 8) |
+            (source[offset + 2] << 16) |
+            (source[offset + 3] << 24));
+    },
+    getInt32LE(source, offset) {
+        return (source[offset] |
+            (source[offset + 1] << 8) |
+            (source[offset + 2] << 16) |
+            (source[offset + 3] << 24));
+    },
+    getUint32LE(source, offset) {
+        return (source[offset] +
+            source[offset + 1] * 256 +
+            source[offset + 2] * 65536 +
+            source[offset + 3] * 16777216);
+    },
+    getUint32BE(source, offset) {
+        return (source[offset + 3] +
+            source[offset + 2] * 256 +
+            source[offset + 1] * 65536 +
+            source[offset] * 16777216);
+    },
+    getBigInt64LE(source, offset) {
+        const lo = NumberUtils.getUint32LE(source, offset);
+        const hi = NumberUtils.getUint32LE(source, offset + 4);
+        return (BigInt(hi) << BigInt(32)) + BigInt(lo);
+    },
+    getFloat64LE: isBigEndian
+        ? (source, offset) => {
+            FLOAT_BYTES[7] = source[offset];
+            FLOAT_BYTES[6] = source[offset + 1];
+            FLOAT_BYTES[5] = source[offset + 2];
+            FLOAT_BYTES[4] = source[offset + 3];
+            FLOAT_BYTES[3] = source[offset + 4];
+            FLOAT_BYTES[2] = source[offset + 5];
+            FLOAT_BYTES[1] = source[offset + 6];
+            FLOAT_BYTES[0] = source[offset + 7];
+            return FLOAT[0];
+        }
+        : (source, offset) => {
+            FLOAT_BYTES[0] = source[offset];
+            FLOAT_BYTES[1] = source[offset + 1];
+            FLOAT_BYTES[2] = source[offset + 2];
+            FLOAT_BYTES[3] = source[offset + 3];
+            FLOAT_BYTES[4] = source[offset + 4];
+            FLOAT_BYTES[5] = source[offset + 5];
+            FLOAT_BYTES[6] = source[offset + 6];
+            FLOAT_BYTES[7] = source[offset + 7];
+            return FLOAT[0];
+        },
+    setInt32BE(destination, offset, value) {
+        destination[offset + 3] = value;
+        value >>>= 8;
+        destination[offset + 2] = value;
+        value >>>= 8;
+        destination[offset + 1] = value;
+        value >>>= 8;
+        destination[offset] = value;
+        return 4;
+    },
+    setInt32LE(destination, offset, value) {
+        destination[offset] = value;
+        value >>>= 8;
+        destination[offset + 1] = value;
+        value >>>= 8;
+        destination[offset + 2] = value;
+        value >>>= 8;
+        destination[offset + 3] = value;
+        return 4;
+    },
+    setBigInt64LE(destination, offset, value) {
+        const mask32bits = BigInt(0xffff_ffff);
+        let lo = Number(value & mask32bits);
+        destination[offset] = lo;
+        lo >>= 8;
+        destination[offset + 1] = lo;
+        lo >>= 8;
+        destination[offset + 2] = lo;
+        lo >>= 8;
+        destination[offset + 3] = lo;
+        let hi = Number((value >> BigInt(32)) & mask32bits);
+        destination[offset + 4] = hi;
+        hi >>= 8;
+        destination[offset + 5] = hi;
+        hi >>= 8;
+        destination[offset + 6] = hi;
+        hi >>= 8;
+        destination[offset + 7] = hi;
+        return 8;
+    },
+    setFloat64LE: isBigEndian
+        ? (destination, offset, value) => {
+            FLOAT[0] = value;
+            destination[offset] = FLOAT_BYTES[7];
+            destination[offset + 1] = FLOAT_BYTES[6];
+            destination[offset + 2] = FLOAT_BYTES[5];
+            destination[offset + 3] = FLOAT_BYTES[4];
+            destination[offset + 4] = FLOAT_BYTES[3];
+            destination[offset + 5] = FLOAT_BYTES[2];
+            destination[offset + 6] = FLOAT_BYTES[1];
+            destination[offset + 7] = FLOAT_BYTES[0];
+            return 8;
+        }
+        : (destination, offset, value) => {
+            FLOAT[0] = value;
+            destination[offset] = FLOAT_BYTES[0];
+            destination[offset + 1] = FLOAT_BYTES[1];
+            destination[offset + 2] = FLOAT_BYTES[2];
+            destination[offset + 3] = FLOAT_BYTES[3];
+            destination[offset + 4] = FLOAT_BYTES[4];
+            destination[offset + 5] = FLOAT_BYTES[5];
+            destination[offset + 6] = FLOAT_BYTES[6];
+            destination[offset + 7] = FLOAT_BYTES[7];
+            return 8;
+        }
+};
+
 let PROCESS_UNIQUE = null;
-const kId = Symbol('id');
 class ObjectId extends BSONValue {
     get _bsontype() {
         return 'ObjectId';
@@ -1991,26 +2374,17 @@ class ObjectId extends BSONValue {
             workingId = inputId;
         }
         if (workingId == null || typeof workingId === 'number') {
-            this[kId] = ObjectId.generate(typeof workingId === 'number' ? workingId : undefined);
+            this.buffer = ObjectId.generate(typeof workingId === 'number' ? workingId : undefined);
         }
         else if (ArrayBuffer.isView(workingId) && workingId.byteLength === 12) {
-            this[kId] = ByteUtils.toLocalBufferType(workingId);
+            this.buffer = ByteUtils.toLocalBufferType(workingId);
         }
         else if (typeof workingId === 'string') {
-            if (workingId.length === 12) {
-                const bytes = ByteUtils.fromUTF8(workingId);
-                if (bytes.byteLength === 12) {
-                    this[kId] = bytes;
-                }
-                else {
-                    throw new BSONError('Argument passed in must be a string of 12 bytes');
-                }
-            }
-            else if (workingId.length === 24 && checkForHexRegExp.test(workingId)) {
-                this[kId] = ByteUtils.fromHex(workingId);
+            if (ObjectId.validateHexString(workingId)) {
+                this.buffer = ByteUtils.fromHex(workingId);
             }
             else {
-                throw new BSONError('Argument passed in must be a string of 12 bytes or a string of 24 hex characters or an integer');
+                throw new BSONError('input must be a 24 character hex string, 12 byte Uint8Array, or an integer');
             }
         }
         else {
@@ -2021,13 +2395,27 @@ class ObjectId extends BSONValue {
         }
     }
     get id() {
-        return this[kId];
+        return this.buffer;
     }
     set id(value) {
-        this[kId] = value;
+        this.buffer = value;
         if (ObjectId.cacheHexString) {
             this.__id = ByteUtils.toHex(value);
         }
+    }
+    static validateHexString(string) {
+        if (string?.length !== 24)
+            return false;
+        for (let i = 0; i < 24; i++) {
+            const char = string.charCodeAt(i);
+            if ((char >= 48 && char <= 57) ||
+                (char >= 97 && char <= 102) ||
+                (char >= 65 && char <= 70)) {
+                continue;
+            }
+            return false;
+        }
+        return true;
     }
     toHexString() {
         if (ObjectId.cacheHexString && this.__id) {
@@ -2047,8 +2435,8 @@ class ObjectId extends BSONValue {
             time = Math.floor(Date.now() / 1000);
         }
         const inc = ObjectId.getInc();
-        const buffer = ByteUtils.allocate(12);
-        BSONDataView.fromUint8Array(buffer).setUint32(0, time, false);
+        const buffer = ByteUtils.allocateUnsafe(12);
+        NumberUtils.setInt32BE(buffer, 0, time);
         if (PROCESS_UNIQUE === null) {
             PROCESS_UNIQUE = ByteUtils.randomBytes(5);
         }
@@ -2072,57 +2460,77 @@ class ObjectId extends BSONValue {
     toJSON() {
         return this.toHexString();
     }
+    static is(variable) {
+        return (variable != null &&
+            typeof variable === 'object' &&
+            '_bsontype' in variable &&
+            variable._bsontype === 'ObjectId');
+    }
     equals(otherId) {
         if (otherId === undefined || otherId === null) {
             return false;
         }
-        if (otherId instanceof ObjectId) {
-            return this[kId][11] === otherId[kId][11] && ByteUtils.equals(this[kId], otherId[kId]);
+        if (ObjectId.is(otherId)) {
+            return (this.buffer[11] === otherId.buffer[11] && ByteUtils.equals(this.buffer, otherId.buffer));
         }
-        if (typeof otherId === 'string' &&
-            ObjectId.isValid(otherId) &&
-            otherId.length === 12 &&
-            isUint8Array(this.id)) {
-            return ByteUtils.equals(this.id, ByteUtils.fromISO88591(otherId));
-        }
-        if (typeof otherId === 'string' && ObjectId.isValid(otherId) && otherId.length === 24) {
+        if (typeof otherId === 'string') {
             return otherId.toLowerCase() === this.toHexString();
         }
-        if (typeof otherId === 'string' && ObjectId.isValid(otherId) && otherId.length === 12) {
-            return ByteUtils.equals(ByteUtils.fromUTF8(otherId), this.id);
-        }
-        if (typeof otherId === 'object' &&
-            'toHexString' in otherId &&
-            typeof otherId.toHexString === 'function') {
+        if (typeof otherId === 'object' && typeof otherId.toHexString === 'function') {
             const otherIdString = otherId.toHexString();
-            const thisIdString = this.toHexString().toLowerCase();
+            const thisIdString = this.toHexString();
             return typeof otherIdString === 'string' && otherIdString.toLowerCase() === thisIdString;
         }
         return false;
     }
     getTimestamp() {
         const timestamp = new Date();
-        const time = BSONDataView.fromUint8Array(this.id).getUint32(0, false);
+        const time = NumberUtils.getUint32BE(this.buffer, 0);
         timestamp.setTime(Math.floor(time) * 1000);
         return timestamp;
     }
     static createPk() {
         return new ObjectId();
     }
+    serializeInto(uint8array, index) {
+        uint8array[index] = this.buffer[0];
+        uint8array[index + 1] = this.buffer[1];
+        uint8array[index + 2] = this.buffer[2];
+        uint8array[index + 3] = this.buffer[3];
+        uint8array[index + 4] = this.buffer[4];
+        uint8array[index + 5] = this.buffer[5];
+        uint8array[index + 6] = this.buffer[6];
+        uint8array[index + 7] = this.buffer[7];
+        uint8array[index + 8] = this.buffer[8];
+        uint8array[index + 9] = this.buffer[9];
+        uint8array[index + 10] = this.buffer[10];
+        uint8array[index + 11] = this.buffer[11];
+        return 12;
+    }
     static createFromTime(time) {
-        const buffer = ByteUtils.fromNumberArray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-        BSONDataView.fromUint8Array(buffer).setUint32(0, time, false);
+        const buffer = ByteUtils.allocate(12);
+        for (let i = 11; i >= 4; i--)
+            buffer[i] = 0;
+        NumberUtils.setInt32BE(buffer, 0, time);
         return new ObjectId(buffer);
     }
     static createFromHexString(hexString) {
-        if (typeof hexString === 'undefined' || (hexString != null && hexString.length !== 24)) {
-            throw new BSONError('Argument passed in must be a single String of 12 bytes or a string of 24 hex characters');
+        if (hexString?.length !== 24) {
+            throw new BSONError('hex string must be 24 characters');
         }
         return new ObjectId(ByteUtils.fromHex(hexString));
+    }
+    static createFromBase64(base64) {
+        if (base64?.length !== 16) {
+            throw new BSONError('base64 string must be 16 characters');
+        }
+        return new ObjectId(ByteUtils.fromBase64(base64));
     }
     static isValid(id) {
         if (id == null)
             return false;
+        if (typeof id === 'string')
+            return ObjectId.validateHexString(id);
         try {
             new ObjectId(id);
             return true;
@@ -2139,11 +2547,9 @@ class ObjectId extends BSONValue {
     static fromExtendedJSON(doc) {
         return new ObjectId(doc.$oid);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        return `new ObjectId("${this.toHexString()}")`;
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        return `new ObjectId(${inspect(this.toHexString(), options)})`;
     }
 }
 ObjectId.index = Math.floor(Math.random() * 0xffffff);
@@ -2195,7 +2601,7 @@ function calculateElement(name, value, serializeFunctions = false, isArray = fal
         case 'object':
             if (value != null &&
                 typeof value._bsontype === 'string' &&
-                value[Symbol.for('@@mdb.bson.version')] !== BSON_MAJOR_VERSION) {
+                value[BSON_VERSION_SYMBOL] !== BSON_MAJOR_VERSION) {
                 throw new BSONVersionError();
             }
             else if (value == null || value._bsontype === 'MinKey' || value._bsontype === 'MaxKey') {
@@ -2356,11 +2762,12 @@ class BSONRegExp extends BSONValue {
         }
         throw new BSONError(`Unexpected BSONRegExp EJSON object form: ${JSON.stringify(doc)}`);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        return `new BSONRegExp(${JSON.stringify(this.pattern)}, ${JSON.stringify(this.options)})`;
+    inspect(depth, options, inspect) {
+        const stylize = getStylizeFunction(options) ?? (v => v);
+        inspect ??= defaultInspect;
+        const pattern = stylize(inspect(this.pattern), 'regexp');
+        const flags = stylize(inspect(this.options), 'regexp');
+        return `new BSONRegExp(${pattern}, ${flags})`;
     }
 }
 
@@ -2378,9 +2785,6 @@ class BSONSymbol extends BSONValue {
     toString() {
         return this.value;
     }
-    inspect() {
-        return `new BSONSymbol("${this.value}")`;
-    }
     toJSON() {
         return this.value;
     }
@@ -2390,8 +2794,9 @@ class BSONSymbol extends BSONValue {
     static fromExtendedJSON(doc) {
         return new BSONSymbol(doc.$symbol);
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        return `new BSONSymbol(${inspect(this.value, options)})`;
     }
 }
 
@@ -2399,6 +2804,12 @@ const LongWithoutOverridesClass = Long;
 class Timestamp extends LongWithoutOverridesClass {
     get _bsontype() {
         return 'Timestamp';
+    }
+    get i() {
+        return this.low >>> 0;
+    }
+    get t() {
+        return this.high >>> 0;
     }
     constructor(low) {
         if (low == null) {
@@ -2417,19 +2828,21 @@ class Timestamp extends LongWithoutOverridesClass {
             if (typeof low.i !== 'number' && (typeof low.i !== 'object' || low.i._bsontype !== 'Int32')) {
                 throw new BSONError('Timestamp constructed from { t, i } must provide i as a number');
             }
-            if (low.t < 0) {
+            const t = Number(low.t);
+            const i = Number(low.i);
+            if (t < 0 || Number.isNaN(t)) {
                 throw new BSONError('Timestamp constructed from { t, i } must provide a positive t');
             }
-            if (low.i < 0) {
+            if (i < 0 || Number.isNaN(i)) {
                 throw new BSONError('Timestamp constructed from { t, i } must provide a positive i');
             }
-            if (low.t > 4294967295) {
+            if (t > 0xffff_ffff) {
                 throw new BSONError('Timestamp constructed from { t, i } must provide t equal or less than uint32 max');
             }
-            if (low.i > 4294967295) {
+            if (i > 0xffff_ffff) {
                 throw new BSONError('Timestamp constructed from { t, i } must provide i equal or less than uint32 max');
             }
-            super(low.i.valueOf(), low.t.valueOf(), true);
+            super(i, t, true);
         }
         else {
             throw new BSONError('A Timestamp can only be constructed with: bigint, Long, or { t: number; i: number }');
@@ -2453,7 +2866,7 @@ class Timestamp extends LongWithoutOverridesClass {
         return new Timestamp(Long.fromString(str, true, optRadix));
     }
     toExtendedJSON() {
-        return { $timestamp: { t: this.high >>> 0, i: this.low >>> 0 } };
+        return { $timestamp: { t: this.t, i: this.i } };
     }
     static fromExtendedJSON(doc) {
         const i = Long.isLong(doc.$timestamp.i)
@@ -2464,61 +2877,21 @@ class Timestamp extends LongWithoutOverridesClass {
             : doc.$timestamp.t;
         return new Timestamp({ t, i });
     }
-    [Symbol.for('Deno.customInspect')]() {
-        return this.inspect();
-    }
-    inspect() {
-        return `new Timestamp({ t: ${this.getHighBits()}, i: ${this.getLowBits()} })`;
+    inspect(depth, options, inspect) {
+        inspect ??= defaultInspect;
+        const t = inspect(this.t, options);
+        const i = inspect(this.i, options);
+        return `new Timestamp({ t: ${t}, i: ${i} })`;
     }
 }
 Timestamp.MAX_VALUE = Long.MAX_UNSIGNED_VALUE;
-
-const FIRST_BIT = 0x80;
-const FIRST_TWO_BITS = 0xc0;
-const FIRST_THREE_BITS = 0xe0;
-const FIRST_FOUR_BITS = 0xf0;
-const FIRST_FIVE_BITS = 0xf8;
-const TWO_BIT_CHAR = 0xc0;
-const THREE_BIT_CHAR = 0xe0;
-const FOUR_BIT_CHAR = 0xf0;
-const CONTINUING_CHAR = 0x80;
-function validateUtf8(bytes, start, end) {
-    let continuation = 0;
-    for (let i = start; i < end; i += 1) {
-        const byte = bytes[i];
-        if (continuation) {
-            if ((byte & FIRST_TWO_BITS) !== CONTINUING_CHAR) {
-                return false;
-            }
-            continuation -= 1;
-        }
-        else if (byte & FIRST_BIT) {
-            if ((byte & FIRST_THREE_BITS) === TWO_BIT_CHAR) {
-                continuation = 1;
-            }
-            else if ((byte & FIRST_FOUR_BITS) === THREE_BIT_CHAR) {
-                continuation = 2;
-            }
-            else if ((byte & FIRST_FIVE_BITS) === FOUR_BIT_CHAR) {
-                continuation = 3;
-            }
-            else {
-                return false;
-            }
-        }
-    }
-    return !continuation;
-}
 
 const JS_INT_MAX_LONG = Long.fromNumber(JS_INT_MAX);
 const JS_INT_MIN_LONG = Long.fromNumber(JS_INT_MIN);
 function internalDeserialize(buffer, options, isArray) {
     options = options == null ? {} : options;
     const index = options && options.index ? options.index : 0;
-    const size = buffer[index] |
-        (buffer[index + 1] << 8) |
-        (buffer[index + 2] << 16) |
-        (buffer[index + 3] << 24);
+    const size = NumberUtils.getInt32LE(buffer, index);
     if (size < 5) {
         throw new BSONError(`bson size must be >= 5, is ${size}`);
     }
@@ -2554,7 +2927,7 @@ function deserializeObject(buffer, index, options, isArray = false) {
     const validation = options.validation == null ? { utf8: true } : options.validation;
     let globalUTFValidation = true;
     let validationSetting;
-    const utf8KeysSet = new Set();
+    let utf8KeysSet;
     const utf8ValidatedKeys = validation.utf8;
     if (typeof utf8ValidatedKeys === 'boolean') {
         validationSetting = utf8ValidatedKeys;
@@ -2576,6 +2949,7 @@ function deserializeObject(buffer, index, options, isArray = false) {
         }
     }
     if (!globalUTFValidation) {
+        utf8KeysSet = new Set();
         for (const key of Object.keys(utf8ValidatedKeys)) {
             utf8KeysSet.add(key);
         }
@@ -2583,14 +2957,14 @@ function deserializeObject(buffer, index, options, isArray = false) {
     const startIndex = index;
     if (buffer.length < 5)
         throw new BSONError('corrupt bson message < 5 bytes long');
-    const size = buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
+    const size = NumberUtils.getInt32LE(buffer, index);
+    index += 4;
     if (size < 5 || size > buffer.length)
         throw new BSONError('corrupt bson message');
     const object = isArray ? [] : {};
     let arrayIndex = 0;
     const done = false;
     let isPossibleDBRef = isArray ? false : null;
-    const dataview = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
     while (!done) {
         const elementType = buffer[index++];
         if (elementType === 0)
@@ -2601,9 +2975,9 @@ function deserializeObject(buffer, index, options, isArray = false) {
         }
         if (i >= buffer.byteLength)
             throw new BSONError('Bad BSON Document: illegal CString');
-        const name = isArray ? arrayIndex++ : ByteUtils.toUTF8(buffer.subarray(index, i));
+        const name = isArray ? arrayIndex++ : ByteUtils.toUTF8(buffer, index, i, false);
         let shouldValidateKey = true;
-        if (globalUTFValidation || utf8KeysSet.has(name)) {
+        if (globalUTFValidation || utf8KeysSet?.has(name)) {
             shouldValidateKey = validationSetting;
         }
         else {
@@ -2615,51 +2989,41 @@ function deserializeObject(buffer, index, options, isArray = false) {
         let value;
         index = i + 1;
         if (elementType === BSON_DATA_STRING) {
-            const stringSize = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
+            const stringSize = NumberUtils.getInt32LE(buffer, index);
+            index += 4;
             if (stringSize <= 0 ||
                 stringSize > buffer.length - index ||
                 buffer[index + stringSize - 1] !== 0) {
                 throw new BSONError('bad string length in bson');
             }
-            value = getValidatedString(buffer, index, index + stringSize - 1, shouldValidateKey);
+            value = ByteUtils.toUTF8(buffer, index, index + stringSize - 1, shouldValidateKey);
             index = index + stringSize;
         }
         else if (elementType === BSON_DATA_OID) {
-            const oid = ByteUtils.allocate(12);
-            oid.set(buffer.subarray(index, index + 12));
+            const oid = ByteUtils.allocateUnsafe(12);
+            for (let i = 0; i < 12; i++)
+                oid[i] = buffer[index + i];
             value = new ObjectId(oid);
             index = index + 12;
         }
         else if (elementType === BSON_DATA_INT && promoteValues === false) {
-            value = new Int32(buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24));
+            value = new Int32(NumberUtils.getInt32LE(buffer, index));
+            index += 4;
         }
         else if (elementType === BSON_DATA_INT) {
-            value =
-                buffer[index++] |
-                    (buffer[index++] << 8) |
-                    (buffer[index++] << 16) |
-                    (buffer[index++] << 24);
-        }
-        else if (elementType === BSON_DATA_NUMBER && promoteValues === false) {
-            value = new Double(dataview.getFloat64(index, true));
-            index = index + 8;
+            value = NumberUtils.getInt32LE(buffer, index);
+            index += 4;
         }
         else if (elementType === BSON_DATA_NUMBER) {
-            value = dataview.getFloat64(index, true);
-            index = index + 8;
+            value = NumberUtils.getFloat64LE(buffer, index);
+            index += 8;
+            if (promoteValues === false)
+                value = new Double(value);
         }
         else if (elementType === BSON_DATA_DATE) {
-            const lowBits = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
-            const highBits = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
+            const lowBits = NumberUtils.getInt32LE(buffer, index);
+            const highBits = NumberUtils.getInt32LE(buffer, index + 4);
+            index += 8;
             value = new Date(new Long(lowBits, highBits).toNumber());
         }
         else if (elementType === BSON_DATA_BOOLEAN) {
@@ -2669,10 +3033,7 @@ function deserializeObject(buffer, index, options, isArray = false) {
         }
         else if (elementType === BSON_DATA_OBJECT) {
             const _index = index;
-            const objectSize = buffer[index] |
-                (buffer[index + 1] << 8) |
-                (buffer[index + 2] << 16) |
-                (buffer[index + 3] << 24);
+            const objectSize = NumberUtils.getInt32LE(buffer, index);
             if (objectSize <= 0 || objectSize > buffer.length - index)
                 throw new BSONError('bad embedded document length in bson');
             if (raw) {
@@ -2689,10 +3050,7 @@ function deserializeObject(buffer, index, options, isArray = false) {
         }
         else if (elementType === BSON_DATA_ARRAY) {
             const _index = index;
-            const objectSize = buffer[index] |
-                (buffer[index + 1] << 8) |
-                (buffer[index + 2] << 16) |
-                (buffer[index + 3] << 24);
+            const objectSize = NumberUtils.getInt32LE(buffer, index);
             let arrayOptions = options;
             const stopIndex = index + objectSize;
             if (fieldsAsRaw && fieldsAsRaw[name]) {
@@ -2715,40 +3073,36 @@ function deserializeObject(buffer, index, options, isArray = false) {
             value = null;
         }
         else if (elementType === BSON_DATA_LONG) {
-            const dataview = BSONDataView.fromUint8Array(buffer.subarray(index, index + 8));
-            const lowBits = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
-            const highBits = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
-            const long = new Long(lowBits, highBits);
             if (useBigInt64) {
-                value = dataview.getBigInt64(0, true);
-            }
-            else if (promoteLongs && promoteValues === true) {
-                value =
-                    long.lessThanOrEqual(JS_INT_MAX_LONG) && long.greaterThanOrEqual(JS_INT_MIN_LONG)
-                        ? long.toNumber()
-                        : long;
+                value = NumberUtils.getBigInt64LE(buffer, index);
+                index += 8;
             }
             else {
-                value = long;
+                const lowBits = NumberUtils.getInt32LE(buffer, index);
+                const highBits = NumberUtils.getInt32LE(buffer, index + 4);
+                index += 8;
+                const long = new Long(lowBits, highBits);
+                if (promoteLongs && promoteValues === true) {
+                    value =
+                        long.lessThanOrEqual(JS_INT_MAX_LONG) && long.greaterThanOrEqual(JS_INT_MIN_LONG)
+                            ? long.toNumber()
+                            : long;
+                }
+                else {
+                    value = long;
+                }
             }
         }
         else if (elementType === BSON_DATA_DECIMAL128) {
-            const bytes = ByteUtils.allocate(16);
-            bytes.set(buffer.subarray(index, index + 16), 0);
+            const bytes = ByteUtils.allocateUnsafe(16);
+            for (let i = 0; i < 16; i++)
+                bytes[i] = buffer[index + i];
             index = index + 16;
             value = new Decimal128(bytes);
         }
         else if (elementType === BSON_DATA_BINARY) {
-            let binarySize = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
+            let binarySize = NumberUtils.getInt32LE(buffer, index);
+            index += 4;
             const totalBinarySize = binarySize;
             const subType = buffer[index++];
             if (binarySize < 0)
@@ -2757,11 +3111,8 @@ function deserializeObject(buffer, index, options, isArray = false) {
                 throw new BSONError('Binary type size larger than document size');
             if (buffer['slice'] != null) {
                 if (subType === Binary.SUBTYPE_BYTE_ARRAY) {
-                    binarySize =
-                        buffer[index++] |
-                            (buffer[index++] << 8) |
-                            (buffer[index++] << 16) |
-                            (buffer[index++] << 24);
+                    binarySize = NumberUtils.getInt32LE(buffer, index);
+                    index += 4;
                     if (binarySize < 0)
                         throw new BSONError('Negative binary type element size found for subtype 0x02');
                     if (binarySize > totalBinarySize - 4)
@@ -2774,19 +3125,15 @@ function deserializeObject(buffer, index, options, isArray = false) {
                 }
                 else {
                     value = new Binary(buffer.slice(index, index + binarySize), subType);
-                    if (subType === BSON_BINARY_SUBTYPE_UUID_NEW) {
+                    if (subType === BSON_BINARY_SUBTYPE_UUID_NEW && UUID.isValid(value)) {
                         value = value.toUUID();
                     }
                 }
             }
             else {
-                const _buffer = ByteUtils.allocate(binarySize);
                 if (subType === Binary.SUBTYPE_BYTE_ARRAY) {
-                    binarySize =
-                        buffer[index++] |
-                            (buffer[index++] << 8) |
-                            (buffer[index++] << 16) |
-                            (buffer[index++] << 24);
+                    binarySize = NumberUtils.getInt32LE(buffer, index);
+                    index += 4;
                     if (binarySize < 0)
                         throw new BSONError('Negative binary type element size found for subtype 0x02');
                     if (binarySize > totalBinarySize - 4)
@@ -2794,17 +3141,17 @@ function deserializeObject(buffer, index, options, isArray = false) {
                     if (binarySize < totalBinarySize - 4)
                         throw new BSONError('Binary type with subtype 0x02 contains too short binary size');
                 }
-                for (i = 0; i < binarySize; i++) {
-                    _buffer[i] = buffer[index + i];
-                }
                 if (promoteBuffers && promoteValues) {
-                    value = _buffer;
-                }
-                else if (subType === BSON_BINARY_SUBTYPE_UUID_NEW) {
-                    value = new Binary(buffer.slice(index, index + binarySize), subType).toUUID();
+                    value = ByteUtils.allocateUnsafe(binarySize);
+                    for (i = 0; i < binarySize; i++) {
+                        value[i] = buffer[index + i];
+                    }
                 }
                 else {
                     value = new Binary(buffer.slice(index, index + binarySize), subType);
+                    if (subType === BSON_BINARY_SUBTYPE_UUID_NEW && UUID.isValid(value)) {
+                        value = value.toUUID();
+                    }
                 }
             }
             index = index + binarySize;
@@ -2816,7 +3163,7 @@ function deserializeObject(buffer, index, options, isArray = false) {
             }
             if (i >= buffer.length)
                 throw new BSONError('Bad BSON Document: illegal CString');
-            const source = ByteUtils.toUTF8(buffer.subarray(index, i));
+            const source = ByteUtils.toUTF8(buffer, index, i, false);
             index = i + 1;
             i = index;
             while (buffer[i] !== 0x00 && i < buffer.length) {
@@ -2824,7 +3171,7 @@ function deserializeObject(buffer, index, options, isArray = false) {
             }
             if (i >= buffer.length)
                 throw new BSONError('Bad BSON Document: illegal CString');
-            const regExpOptions = ByteUtils.toUTF8(buffer.subarray(index, i));
+            const regExpOptions = ByteUtils.toUTF8(buffer, index, i, false);
             index = i + 1;
             const optionsArray = new Array(regExpOptions.length);
             for (i = 0; i < regExpOptions.length; i++) {
@@ -2849,7 +3196,7 @@ function deserializeObject(buffer, index, options, isArray = false) {
             }
             if (i >= buffer.length)
                 throw new BSONError('Bad BSON Document: illegal CString');
-            const source = ByteUtils.toUTF8(buffer.subarray(index, i));
+            const source = ByteUtils.toUTF8(buffer, index, i, false);
             index = i + 1;
             i = index;
             while (buffer[i] !== 0x00 && i < buffer.length) {
@@ -2857,34 +3204,28 @@ function deserializeObject(buffer, index, options, isArray = false) {
             }
             if (i >= buffer.length)
                 throw new BSONError('Bad BSON Document: illegal CString');
-            const regExpOptions = ByteUtils.toUTF8(buffer.subarray(index, i));
+            const regExpOptions = ByteUtils.toUTF8(buffer, index, i, false);
             index = i + 1;
             value = new BSONRegExp(source, regExpOptions);
         }
         else if (elementType === BSON_DATA_SYMBOL) {
-            const stringSize = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
+            const stringSize = NumberUtils.getInt32LE(buffer, index);
+            index += 4;
             if (stringSize <= 0 ||
                 stringSize > buffer.length - index ||
                 buffer[index + stringSize - 1] !== 0) {
                 throw new BSONError('bad string length in bson');
             }
-            const symbol = getValidatedString(buffer, index, index + stringSize - 1, shouldValidateKey);
+            const symbol = ByteUtils.toUTF8(buffer, index, index + stringSize - 1, shouldValidateKey);
             value = promoteValues ? symbol : new BSONSymbol(symbol);
             index = index + stringSize;
         }
         else if (elementType === BSON_DATA_TIMESTAMP) {
-            const i = buffer[index++] +
-                buffer[index++] * (1 << 8) +
-                buffer[index++] * (1 << 16) +
-                buffer[index++] * (1 << 24);
-            const t = buffer[index++] +
-                buffer[index++] * (1 << 8) +
-                buffer[index++] * (1 << 16) +
-                buffer[index++] * (1 << 24);
-            value = new Timestamp({ i, t });
+            value = new Timestamp({
+                i: NumberUtils.getUint32LE(buffer, index),
+                t: NumberUtils.getUint32LE(buffer, index + 4)
+            });
+            index += 8;
         }
         else if (elementType === BSON_DATA_MIN_KEY) {
             value = new MinKey();
@@ -2893,43 +3234,34 @@ function deserializeObject(buffer, index, options, isArray = false) {
             value = new MaxKey();
         }
         else if (elementType === BSON_DATA_CODE) {
-            const stringSize = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
+            const stringSize = NumberUtils.getInt32LE(buffer, index);
+            index += 4;
             if (stringSize <= 0 ||
                 stringSize > buffer.length - index ||
                 buffer[index + stringSize - 1] !== 0) {
                 throw new BSONError('bad string length in bson');
             }
-            const functionString = getValidatedString(buffer, index, index + stringSize - 1, shouldValidateKey);
+            const functionString = ByteUtils.toUTF8(buffer, index, index + stringSize - 1, shouldValidateKey);
             value = new Code(functionString);
             index = index + stringSize;
         }
         else if (elementType === BSON_DATA_CODE_W_SCOPE) {
-            const totalSize = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
+            const totalSize = NumberUtils.getInt32LE(buffer, index);
+            index += 4;
             if (totalSize < 4 + 4 + 4 + 1) {
                 throw new BSONError('code_w_scope total size shorter minimum expected length');
             }
-            const stringSize = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
+            const stringSize = NumberUtils.getInt32LE(buffer, index);
+            index += 4;
             if (stringSize <= 0 ||
                 stringSize > buffer.length - index ||
                 buffer[index + stringSize - 1] !== 0) {
                 throw new BSONError('bad string length in bson');
             }
-            const functionString = getValidatedString(buffer, index, index + stringSize - 1, shouldValidateKey);
+            const functionString = ByteUtils.toUTF8(buffer, index, index + stringSize - 1, shouldValidateKey);
             index = index + stringSize;
             const _index = index;
-            const objectSize = buffer[index] |
-                (buffer[index + 1] << 8) |
-                (buffer[index + 2] << 16) |
-                (buffer[index + 3] << 24);
+            const objectSize = NumberUtils.getInt32LE(buffer, index);
             const scopeObject = deserializeObject(buffer, _index, options, false);
             index = index + objectSize;
             if (totalSize < 4 + 4 + objectSize + stringSize) {
@@ -2941,23 +3273,17 @@ function deserializeObject(buffer, index, options, isArray = false) {
             value = new Code(functionString, scopeObject);
         }
         else if (elementType === BSON_DATA_DBPOINTER) {
-            const stringSize = buffer[index++] |
-                (buffer[index++] << 8) |
-                (buffer[index++] << 16) |
-                (buffer[index++] << 24);
+            const stringSize = NumberUtils.getInt32LE(buffer, index);
+            index += 4;
             if (stringSize <= 0 ||
                 stringSize > buffer.length - index ||
                 buffer[index + stringSize - 1] !== 0)
                 throw new BSONError('bad string length in bson');
-            if (validation != null && validation.utf8) {
-                if (!validateUtf8(buffer, index, index + stringSize - 1)) {
-                    throw new BSONError('Invalid UTF-8 string in BSON document');
-                }
-            }
-            const namespace = ByteUtils.toUTF8(buffer.subarray(index, index + stringSize - 1));
+            const namespace = ByteUtils.toUTF8(buffer, index, index + stringSize - 1, shouldValidateKey);
             index = index + stringSize;
-            const oidBuffer = ByteUtils.allocate(12);
-            oidBuffer.set(buffer.subarray(index, index + 12), 0);
+            const oidBuffer = ByteUtils.allocateUnsafe(12);
+            for (let i = 0; i < 12; i++)
+                oidBuffer[i] = buffer[index + i];
             const oid = new ObjectId(oidBuffer);
             index = index + 12;
             value = new DBRef(namespace, oid);
@@ -2993,20 +3319,6 @@ function deserializeObject(buffer, index, options, isArray = false) {
     }
     return object;
 }
-function getValidatedString(buffer, start, end, shouldValidateUtf8) {
-    const value = ByteUtils.toUTF8(buffer.subarray(start, end));
-    if (shouldValidateUtf8) {
-        for (let i = 0; i < value.length; i++) {
-            if (value.charCodeAt(i) === 0xfffd) {
-                if (!validateUtf8(buffer, start, end)) {
-                    throw new BSONError('Invalid UTF-8 string in BSON document');
-                }
-                break;
-            }
-        }
-    }
-    return value;
-}
 
 const regexp = /\x00/;
 const ignoreKeys = new Set(['$db', '$ref', '$id', '$clusterTime']);
@@ -3016,17 +3328,11 @@ function serializeString(buffer, key, value, index) {
     index = index + numberOfWrittenBytes + 1;
     buffer[index - 1] = 0;
     const size = ByteUtils.encodeUTF8Into(buffer, value, index + 4);
-    buffer[index + 3] = ((size + 1) >> 24) & 0xff;
-    buffer[index + 2] = ((size + 1) >> 16) & 0xff;
-    buffer[index + 1] = ((size + 1) >> 8) & 0xff;
-    buffer[index] = (size + 1) & 0xff;
+    NumberUtils.setInt32LE(buffer, index, size + 1);
     index = index + 4 + size;
     buffer[index++] = 0;
     return index;
 }
-const NUMBER_SPACE = new DataView(new ArrayBuffer(8), 0, 8);
-const FOUR_BYTE_VIEW_ON_NUMBER = new Uint8Array(NUMBER_SPACE.buffer, 0, 4);
-const EIGHT_BYTE_VIEW_ON_NUMBER = new Uint8Array(NUMBER_SPACE.buffer, 0, 8);
 function serializeNumber(buffer, key, value, index) {
     const isNegativeZero = Object.is(value, -0);
     const type = !isNegativeZero &&
@@ -3035,19 +3341,16 @@ function serializeNumber(buffer, key, value, index) {
         value >= BSON_INT32_MIN
         ? BSON_DATA_INT
         : BSON_DATA_NUMBER;
-    if (type === BSON_DATA_INT) {
-        NUMBER_SPACE.setInt32(0, value, true);
-    }
-    else {
-        NUMBER_SPACE.setFloat64(0, value, true);
-    }
-    const bytes = type === BSON_DATA_INT ? FOUR_BYTE_VIEW_ON_NUMBER : EIGHT_BYTE_VIEW_ON_NUMBER;
     buffer[index++] = type;
     const numberOfWrittenBytes = ByteUtils.encodeUTF8Into(buffer, key, index);
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0x00;
-    buffer.set(bytes, index);
-    index += bytes.byteLength;
+    if (type === BSON_DATA_INT) {
+        index += NumberUtils.setInt32LE(buffer, index, value);
+    }
+    else {
+        index += NumberUtils.setFloat64LE(buffer, index, value);
+    }
     return index;
 }
 function serializeBigInt(buffer, key, value, index) {
@@ -3055,9 +3358,7 @@ function serializeBigInt(buffer, key, value, index) {
     const numberOfWrittenBytes = ByteUtils.encodeUTF8Into(buffer, key, index);
     index += numberOfWrittenBytes;
     buffer[index++] = 0;
-    NUMBER_SPACE.setBigInt64(0, value, true);
-    buffer.set(EIGHT_BYTE_VIEW_ON_NUMBER, index);
-    index += EIGHT_BYTE_VIEW_ON_NUMBER.byteLength;
+    index += NumberUtils.setBigInt64LE(buffer, index, value);
     return index;
 }
 function serializeNull(buffer, key, _, index) {
@@ -3083,14 +3384,8 @@ function serializeDate(buffer, key, value, index) {
     const dateInMilis = Long.fromNumber(value.getTime());
     const lowBits = dateInMilis.getLowBits();
     const highBits = dateInMilis.getHighBits();
-    buffer[index++] = lowBits & 0xff;
-    buffer[index++] = (lowBits >> 8) & 0xff;
-    buffer[index++] = (lowBits >> 16) & 0xff;
-    buffer[index++] = (lowBits >> 24) & 0xff;
-    buffer[index++] = highBits & 0xff;
-    buffer[index++] = (highBits >> 8) & 0xff;
-    buffer[index++] = (highBits >> 16) & 0xff;
-    buffer[index++] = (highBits >> 24) & 0xff;
+    index += NumberUtils.setInt32LE(buffer, index, lowBits);
+    index += NumberUtils.setInt32LE(buffer, index, highBits);
     return index;
 }
 function serializeRegExp(buffer, key, value, index) {
@@ -3147,13 +3442,8 @@ function serializeObjectId(buffer, key, value, index) {
     const numberOfWrittenBytes = ByteUtils.encodeUTF8Into(buffer, key, index);
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0;
-    if (isUint8Array(value.id)) {
-        buffer.set(value.id.subarray(0, 12), index);
-    }
-    else {
-        throw new BSONError('object [' + JSON.stringify(value) + '] is not a valid ObjectId');
-    }
-    return index + 12;
+    index += value.serializeInto(buffer, index);
+    return index;
 }
 function serializeBuffer(buffer, key, value, index) {
     buffer[index++] = BSON_DATA_BINARY;
@@ -3161,12 +3451,15 @@ function serializeBuffer(buffer, key, value, index) {
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0;
     const size = value.length;
-    buffer[index++] = size & 0xff;
-    buffer[index++] = (size >> 8) & 0xff;
-    buffer[index++] = (size >> 16) & 0xff;
-    buffer[index++] = (size >> 24) & 0xff;
+    index += NumberUtils.setInt32LE(buffer, index, size);
     buffer[index++] = BSON_BINARY_SUBTYPE_DEFAULT;
-    buffer.set(value, index);
+    if (size <= 16) {
+        for (let i = 0; i < size; i++)
+            buffer[index + i] = value[i];
+    }
+    else {
+        buffer.set(value, index);
+    }
     index = index + size;
     return index;
 }
@@ -3188,7 +3481,8 @@ function serializeDecimal128(buffer, key, value, index) {
     const numberOfWrittenBytes = ByteUtils.encodeUTF8Into(buffer, key, index);
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0;
-    buffer.set(value.bytes.subarray(0, 16), index);
+    for (let i = 0; i < 16; i++)
+        buffer[index + i] = value.bytes[i];
     return index + 16;
 }
 function serializeLong(buffer, key, value, index) {
@@ -3199,14 +3493,8 @@ function serializeLong(buffer, key, value, index) {
     buffer[index++] = 0;
     const lowBits = value.getLowBits();
     const highBits = value.getHighBits();
-    buffer[index++] = lowBits & 0xff;
-    buffer[index++] = (lowBits >> 8) & 0xff;
-    buffer[index++] = (lowBits >> 16) & 0xff;
-    buffer[index++] = (lowBits >> 24) & 0xff;
-    buffer[index++] = highBits & 0xff;
-    buffer[index++] = (highBits >> 8) & 0xff;
-    buffer[index++] = (highBits >> 16) & 0xff;
-    buffer[index++] = (highBits >> 24) & 0xff;
+    index += NumberUtils.setInt32LE(buffer, index, lowBits);
+    index += NumberUtils.setInt32LE(buffer, index, highBits);
     return index;
 }
 function serializeInt32(buffer, key, value, index) {
@@ -3215,10 +3503,7 @@ function serializeInt32(buffer, key, value, index) {
     const numberOfWrittenBytes = ByteUtils.encodeUTF8Into(buffer, key, index);
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0;
-    buffer[index++] = value & 0xff;
-    buffer[index++] = (value >> 8) & 0xff;
-    buffer[index++] = (value >> 16) & 0xff;
-    buffer[index++] = (value >> 24) & 0xff;
+    index += NumberUtils.setInt32LE(buffer, index, value);
     return index;
 }
 function serializeDouble(buffer, key, value, index) {
@@ -3226,9 +3511,7 @@ function serializeDouble(buffer, key, value, index) {
     const numberOfWrittenBytes = ByteUtils.encodeUTF8Into(buffer, key, index);
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0;
-    NUMBER_SPACE.setFloat64(0, value.value, true);
-    buffer.set(EIGHT_BYTE_VIEW_ON_NUMBER, index);
-    index = index + 8;
+    index += NumberUtils.setFloat64LE(buffer, index, value.value);
     return index;
 }
 function serializeFunction(buffer, key, value, index) {
@@ -3238,10 +3521,7 @@ function serializeFunction(buffer, key, value, index) {
     buffer[index++] = 0;
     const functionString = value.toString();
     const size = ByteUtils.encodeUTF8Into(buffer, functionString, index + 4) + 1;
-    buffer[index] = size & 0xff;
-    buffer[index + 1] = (size >> 8) & 0xff;
-    buffer[index + 2] = (size >> 16) & 0xff;
-    buffer[index + 3] = (size >> 24) & 0xff;
+    NumberUtils.setInt32LE(buffer, index, size);
     index = index + 4 + size - 1;
     buffer[index++] = 0;
     return index;
@@ -3256,19 +3536,13 @@ function serializeCode(buffer, key, value, index, checkKeys = false, depth = 0, 
         const functionString = value.code;
         index = index + 4;
         const codeSize = ByteUtils.encodeUTF8Into(buffer, functionString, index + 4) + 1;
-        buffer[index] = codeSize & 0xff;
-        buffer[index + 1] = (codeSize >> 8) & 0xff;
-        buffer[index + 2] = (codeSize >> 16) & 0xff;
-        buffer[index + 3] = (codeSize >> 24) & 0xff;
+        NumberUtils.setInt32LE(buffer, index, codeSize);
         buffer[index + 4 + codeSize - 1] = 0;
         index = index + codeSize + 4;
         const endIndex = serializeInto(buffer, value.scope, checkKeys, index, depth + 1, serializeFunctions, ignoreUndefined, path);
         index = endIndex - 1;
         const totalSize = endIndex - startIndex;
-        buffer[startIndex++] = totalSize & 0xff;
-        buffer[startIndex++] = (totalSize >> 8) & 0xff;
-        buffer[startIndex++] = (totalSize >> 16) & 0xff;
-        buffer[startIndex++] = (totalSize >> 24) & 0xff;
+        startIndex += NumberUtils.setInt32LE(buffer, startIndex, totalSize);
         buffer[index++] = 0;
     }
     else {
@@ -3278,10 +3552,7 @@ function serializeCode(buffer, key, value, index, checkKeys = false, depth = 0, 
         buffer[index++] = 0;
         const functionString = value.code.toString();
         const size = ByteUtils.encodeUTF8Into(buffer, functionString, index + 4) + 1;
-        buffer[index] = size & 0xff;
-        buffer[index + 1] = (size >> 8) & 0xff;
-        buffer[index + 2] = (size >> 16) & 0xff;
-        buffer[index + 3] = (size >> 24) & 0xff;
+        NumberUtils.setInt32LE(buffer, index, size);
         index = index + 4 + size - 1;
         buffer[index++] = 0;
     }
@@ -3296,19 +3567,19 @@ function serializeBinary(buffer, key, value, index) {
     let size = value.position;
     if (value.sub_type === Binary.SUBTYPE_BYTE_ARRAY)
         size = size + 4;
-    buffer[index++] = size & 0xff;
-    buffer[index++] = (size >> 8) & 0xff;
-    buffer[index++] = (size >> 16) & 0xff;
-    buffer[index++] = (size >> 24) & 0xff;
+    index += NumberUtils.setInt32LE(buffer, index, size);
     buffer[index++] = value.sub_type;
     if (value.sub_type === Binary.SUBTYPE_BYTE_ARRAY) {
         size = size - 4;
-        buffer[index++] = size & 0xff;
-        buffer[index++] = (size >> 8) & 0xff;
-        buffer[index++] = (size >> 16) & 0xff;
-        buffer[index++] = (size >> 24) & 0xff;
+        index += NumberUtils.setInt32LE(buffer, index, size);
     }
-    buffer.set(data, index);
+    if (size <= 16) {
+        for (let i = 0; i < size; i++)
+            buffer[index + i] = data[i];
+    }
+    else {
+        buffer.set(data, index);
+    }
     index = index + value.position;
     return index;
 }
@@ -3318,12 +3589,9 @@ function serializeSymbol(buffer, key, value, index) {
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0;
     const size = ByteUtils.encodeUTF8Into(buffer, value.value, index + 4) + 1;
-    buffer[index] = size & 0xff;
-    buffer[index + 1] = (size >> 8) & 0xff;
-    buffer[index + 2] = (size >> 16) & 0xff;
-    buffer[index + 3] = (size >> 24) & 0xff;
+    NumberUtils.setInt32LE(buffer, index, size);
     index = index + 4 + size - 1;
-    buffer[index++] = 0x00;
+    buffer[index++] = 0;
     return index;
 }
 function serializeDBRef(buffer, key, value, index, depth, serializeFunctions, path) {
@@ -3342,10 +3610,7 @@ function serializeDBRef(buffer, key, value, index, depth, serializeFunctions, pa
     output = Object.assign(output, value.fields);
     const endIndex = serializeInto(buffer, output, false, index, depth + 1, serializeFunctions, true, path);
     const size = endIndex - startIndex;
-    buffer[startIndex++] = size & 0xff;
-    buffer[startIndex++] = (size >> 8) & 0xff;
-    buffer[startIndex++] = (size >> 16) & 0xff;
-    buffer[startIndex++] = (size >> 24) & 0xff;
+    startIndex += NumberUtils.setInt32LE(buffer, index, size);
     return endIndex;
 }
 function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializeFunctions, ignoreUndefined, path) {
@@ -3384,78 +3649,82 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
             if (typeof value?.toBSON === 'function') {
                 value = value.toBSON();
             }
-            if (typeof value === 'string') {
-                index = serializeString(buffer, key, value, index);
-            }
-            else if (typeof value === 'number') {
-                index = serializeNumber(buffer, key, value, index);
-            }
-            else if (typeof value === 'bigint') {
-                index = serializeBigInt(buffer, key, value, index);
-            }
-            else if (typeof value === 'boolean') {
-                index = serializeBoolean(buffer, key, value, index);
-            }
-            else if (value instanceof Date || isDate(value)) {
-                index = serializeDate(buffer, key, value, index);
-            }
-            else if (value === undefined) {
+            const type = typeof value;
+            if (value === undefined) {
                 index = serializeNull(buffer, key, value, index);
             }
             else if (value === null) {
                 index = serializeNull(buffer, key, value, index);
             }
-            else if (isUint8Array(value)) {
-                index = serializeBuffer(buffer, key, value, index);
+            else if (type === 'string') {
+                index = serializeString(buffer, key, value, index);
             }
-            else if (value instanceof RegExp || isRegExp(value)) {
-                index = serializeRegExp(buffer, key, value, index);
+            else if (type === 'number') {
+                index = serializeNumber(buffer, key, value, index);
             }
-            else if (typeof value === 'object' && value._bsontype == null) {
-                index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+            else if (type === 'bigint') {
+                index = serializeBigInt(buffer, key, value, index);
             }
-            else if (typeof value === 'object' &&
-                value[Symbol.for('@@mdb.bson.version')] !== BSON_MAJOR_VERSION) {
-                throw new BSONVersionError();
+            else if (type === 'boolean') {
+                index = serializeBoolean(buffer, key, value, index);
             }
-            else if (value._bsontype === 'ObjectId') {
-                index = serializeObjectId(buffer, key, value, index);
+            else if (type === 'object' && value._bsontype == null) {
+                if (value instanceof Date || isDate(value)) {
+                    index = serializeDate(buffer, key, value, index);
+                }
+                else if (value instanceof Uint8Array || isUint8Array(value)) {
+                    index = serializeBuffer(buffer, key, value, index);
+                }
+                else if (value instanceof RegExp || isRegExp(value)) {
+                    index = serializeRegExp(buffer, key, value, index);
+                }
+                else {
+                    index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+                }
             }
-            else if (value._bsontype === 'Decimal128') {
-                index = serializeDecimal128(buffer, key, value, index);
+            else if (type === 'object') {
+                if (value[BSON_VERSION_SYMBOL] !== BSON_MAJOR_VERSION) {
+                    throw new BSONVersionError();
+                }
+                else if (value._bsontype === 'ObjectId') {
+                    index = serializeObjectId(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Decimal128') {
+                    index = serializeDecimal128(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Long' || value._bsontype === 'Timestamp') {
+                    index = serializeLong(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Double') {
+                    index = serializeDouble(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Code') {
+                    index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+                }
+                else if (value._bsontype === 'Binary') {
+                    index = serializeBinary(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'BSONSymbol') {
+                    index = serializeSymbol(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'DBRef') {
+                    index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions, path);
+                }
+                else if (value._bsontype === 'BSONRegExp') {
+                    index = serializeBSONRegExp(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Int32') {
+                    index = serializeInt32(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'MinKey' || value._bsontype === 'MaxKey') {
+                    index = serializeMinMax(buffer, key, value, index);
+                }
+                else if (typeof value._bsontype !== 'undefined') {
+                    throw new BSONError(`Unrecognized or invalid _bsontype: ${String(value._bsontype)}`);
+                }
             }
-            else if (value._bsontype === 'Long' || value._bsontype === 'Timestamp') {
-                index = serializeLong(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Double') {
-                index = serializeDouble(buffer, key, value, index);
-            }
-            else if (typeof value === 'function' && serializeFunctions) {
+            else if (type === 'function' && serializeFunctions) {
                 index = serializeFunction(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Code') {
-                index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
-            }
-            else if (value._bsontype === 'Binary') {
-                index = serializeBinary(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'BSONSymbol') {
-                index = serializeSymbol(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'DBRef') {
-                index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions, path);
-            }
-            else if (value._bsontype === 'BSONRegExp') {
-                index = serializeBSONRegExp(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Int32') {
-                index = serializeInt32(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'MinKey' || value._bsontype === 'MaxKey') {
-                index = serializeMinMax(buffer, key, value, index);
-            }
-            else if (typeof value._bsontype !== 'undefined') {
-                throw new BSONError(`Unrecognized or invalid _bsontype: ${String(value._bsontype)}`);
             }
         }
     }
@@ -3481,12 +3750,19 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
                     if ('$' === key[0]) {
                         throw new BSONError('key ' + key + " must not start with '$'");
                     }
-                    else if (~key.indexOf('.')) {
+                    else if (key.includes('.')) {
                         throw new BSONError('key ' + key + " must not contain '.'");
                     }
                 }
             }
-            if (type === 'string') {
+            if (value === undefined) {
+                if (ignoreUndefined === false)
+                    index = serializeNull(buffer, key, value, index);
+            }
+            else if (value === null) {
+                index = serializeNull(buffer, key, value, index);
+            }
+            else if (type === 'string') {
                 index = serializeString(buffer, key, value, index);
             }
             else if (type === 'number') {
@@ -3498,63 +3774,63 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
             else if (type === 'boolean') {
                 index = serializeBoolean(buffer, key, value, index);
             }
-            else if (value instanceof Date || isDate(value)) {
-                index = serializeDate(buffer, key, value, index);
-            }
-            else if (value === null || (value === undefined && ignoreUndefined === false)) {
-                index = serializeNull(buffer, key, value, index);
-            }
-            else if (isUint8Array(value)) {
-                index = serializeBuffer(buffer, key, value, index);
-            }
-            else if (value instanceof RegExp || isRegExp(value)) {
-                index = serializeRegExp(buffer, key, value, index);
-            }
             else if (type === 'object' && value._bsontype == null) {
-                index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+                if (value instanceof Date || isDate(value)) {
+                    index = serializeDate(buffer, key, value, index);
+                }
+                else if (value instanceof Uint8Array || isUint8Array(value)) {
+                    index = serializeBuffer(buffer, key, value, index);
+                }
+                else if (value instanceof RegExp || isRegExp(value)) {
+                    index = serializeRegExp(buffer, key, value, index);
+                }
+                else {
+                    index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+                }
             }
-            else if (typeof value === 'object' &&
-                value[Symbol.for('@@mdb.bson.version')] !== BSON_MAJOR_VERSION) {
-                throw new BSONVersionError();
+            else if (type === 'object') {
+                if (value[BSON_VERSION_SYMBOL] !== BSON_MAJOR_VERSION) {
+                    throw new BSONVersionError();
+                }
+                else if (value._bsontype === 'ObjectId') {
+                    index = serializeObjectId(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Decimal128') {
+                    index = serializeDecimal128(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Long' || value._bsontype === 'Timestamp') {
+                    index = serializeLong(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Double') {
+                    index = serializeDouble(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Code') {
+                    index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+                }
+                else if (value._bsontype === 'Binary') {
+                    index = serializeBinary(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'BSONSymbol') {
+                    index = serializeSymbol(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'DBRef') {
+                    index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions, path);
+                }
+                else if (value._bsontype === 'BSONRegExp') {
+                    index = serializeBSONRegExp(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Int32') {
+                    index = serializeInt32(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'MinKey' || value._bsontype === 'MaxKey') {
+                    index = serializeMinMax(buffer, key, value, index);
+                }
+                else if (typeof value._bsontype !== 'undefined') {
+                    throw new BSONError(`Unrecognized or invalid _bsontype: ${String(value._bsontype)}`);
+                }
             }
-            else if (value._bsontype === 'ObjectId') {
-                index = serializeObjectId(buffer, key, value, index);
-            }
-            else if (type === 'object' && value._bsontype === 'Decimal128') {
-                index = serializeDecimal128(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Long' || value._bsontype === 'Timestamp') {
-                index = serializeLong(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Double') {
-                index = serializeDouble(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Code') {
-                index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
-            }
-            else if (typeof value === 'function' && serializeFunctions) {
+            else if (type === 'function' && serializeFunctions) {
                 index = serializeFunction(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Binary') {
-                index = serializeBinary(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'BSONSymbol') {
-                index = serializeSymbol(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'DBRef') {
-                index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions, path);
-            }
-            else if (value._bsontype === 'BSONRegExp') {
-                index = serializeBSONRegExp(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Int32') {
-                index = serializeInt32(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'MinKey' || value._bsontype === 'MaxKey') {
-                index = serializeMinMax(buffer, key, value, index);
-            }
-            else if (typeof value._bsontype !== 'undefined') {
-                throw new BSONError(`Unrecognized or invalid _bsontype: ${String(value._bsontype)}`);
             }
         }
     }
@@ -3579,12 +3855,19 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
                     if ('$' === key[0]) {
                         throw new BSONError('key ' + key + " must not start with '$'");
                     }
-                    else if (~key.indexOf('.')) {
+                    else if (key.includes('.')) {
                         throw new BSONError('key ' + key + " must not contain '.'");
                     }
                 }
             }
-            if (type === 'string') {
+            if (value === undefined) {
+                if (ignoreUndefined === false)
+                    index = serializeNull(buffer, key, value, index);
+            }
+            else if (value === null) {
+                index = serializeNull(buffer, key, value, index);
+            }
+            else if (type === 'string') {
                 index = serializeString(buffer, key, value, index);
             }
             else if (type === 'number') {
@@ -3596,77 +3879,70 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
             else if (type === 'boolean') {
                 index = serializeBoolean(buffer, key, value, index);
             }
-            else if (value instanceof Date || isDate(value)) {
-                index = serializeDate(buffer, key, value, index);
-            }
-            else if (value === undefined) {
-                if (ignoreUndefined === false)
-                    index = serializeNull(buffer, key, value, index);
-            }
-            else if (value === null) {
-                index = serializeNull(buffer, key, value, index);
-            }
-            else if (isUint8Array(value)) {
-                index = serializeBuffer(buffer, key, value, index);
-            }
-            else if (value instanceof RegExp || isRegExp(value)) {
-                index = serializeRegExp(buffer, key, value, index);
-            }
             else if (type === 'object' && value._bsontype == null) {
-                index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+                if (value instanceof Date || isDate(value)) {
+                    index = serializeDate(buffer, key, value, index);
+                }
+                else if (value instanceof Uint8Array || isUint8Array(value)) {
+                    index = serializeBuffer(buffer, key, value, index);
+                }
+                else if (value instanceof RegExp || isRegExp(value)) {
+                    index = serializeRegExp(buffer, key, value, index);
+                }
+                else {
+                    index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+                }
             }
-            else if (typeof value === 'object' &&
-                value[Symbol.for('@@mdb.bson.version')] !== BSON_MAJOR_VERSION) {
-                throw new BSONVersionError();
+            else if (type === 'object') {
+                if (value[BSON_VERSION_SYMBOL] !== BSON_MAJOR_VERSION) {
+                    throw new BSONVersionError();
+                }
+                else if (value._bsontype === 'ObjectId') {
+                    index = serializeObjectId(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Decimal128') {
+                    index = serializeDecimal128(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Long' || value._bsontype === 'Timestamp') {
+                    index = serializeLong(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Double') {
+                    index = serializeDouble(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Code') {
+                    index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
+                }
+                else if (value._bsontype === 'Binary') {
+                    index = serializeBinary(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'BSONSymbol') {
+                    index = serializeSymbol(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'DBRef') {
+                    index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions, path);
+                }
+                else if (value._bsontype === 'BSONRegExp') {
+                    index = serializeBSONRegExp(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'Int32') {
+                    index = serializeInt32(buffer, key, value, index);
+                }
+                else if (value._bsontype === 'MinKey' || value._bsontype === 'MaxKey') {
+                    index = serializeMinMax(buffer, key, value, index);
+                }
+                else if (typeof value._bsontype !== 'undefined') {
+                    throw new BSONError(`Unrecognized or invalid _bsontype: ${String(value._bsontype)}`);
+                }
             }
-            else if (value._bsontype === 'ObjectId') {
-                index = serializeObjectId(buffer, key, value, index);
-            }
-            else if (type === 'object' && value._bsontype === 'Decimal128') {
-                index = serializeDecimal128(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Long' || value._bsontype === 'Timestamp') {
-                index = serializeLong(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Double') {
-                index = serializeDouble(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Code') {
-                index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, path);
-            }
-            else if (typeof value === 'function' && serializeFunctions) {
+            else if (type === 'function' && serializeFunctions) {
                 index = serializeFunction(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Binary') {
-                index = serializeBinary(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'BSONSymbol') {
-                index = serializeSymbol(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'DBRef') {
-                index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions, path);
-            }
-            else if (value._bsontype === 'BSONRegExp') {
-                index = serializeBSONRegExp(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'Int32') {
-                index = serializeInt32(buffer, key, value, index);
-            }
-            else if (value._bsontype === 'MinKey' || value._bsontype === 'MaxKey') {
-                index = serializeMinMax(buffer, key, value, index);
-            }
-            else if (typeof value._bsontype !== 'undefined') {
-                throw new BSONError(`Unrecognized or invalid _bsontype: ${String(value._bsontype)}`);
             }
         }
     }
     path.delete(object);
     buffer[index++] = 0x00;
     const size = index - startingIndex;
-    buffer[startingIndex++] = size & 0xff;
-    buffer[startingIndex++] = (size >> 8) & 0xff;
-    buffer[startingIndex++] = (size >> 16) & 0xff;
-    buffer[startingIndex++] = (size >> 24) & 0xff;
+    startingIndex += NumberUtils.setInt32LE(buffer, startingIndex, size);
     return index;
 }
 
@@ -3912,7 +4188,7 @@ function serializeDocument(doc, options) {
     else if (doc != null &&
         typeof doc === 'object' &&
         typeof doc._bsontype === 'string' &&
-        doc[Symbol.for('@@mdb.bson.version')] !== BSON_MAJOR_VERSION) {
+        doc[BSON_VERSION_SYMBOL] !== BSON_MAJOR_VERSION) {
         throw new BSONVersionError();
     }
     else if (isBSONType(doc)) {
@@ -3980,6 +4256,113 @@ EJSON.serialize = EJSONserialize;
 EJSON.deserialize = EJSONdeserialize;
 Object.freeze(EJSON);
 
+function getSize(source, offset) {
+    try {
+        return NumberUtils.getNonnegativeInt32LE(source, offset);
+    }
+    catch (cause) {
+        throw new BSONOffsetError('BSON size cannot be negative', offset, { cause });
+    }
+}
+function findNull(bytes, offset) {
+    let nullTerminatorOffset = offset;
+    for (; bytes[nullTerminatorOffset] !== 0x00; nullTerminatorOffset++)
+        ;
+    if (nullTerminatorOffset === bytes.length - 1) {
+        throw new BSONOffsetError('Null terminator not found', offset);
+    }
+    return nullTerminatorOffset;
+}
+function parseToElements(bytes, startOffset = 0) {
+    startOffset ??= 0;
+    if (bytes.length < 5) {
+        throw new BSONOffsetError(`Input must be at least 5 bytes, got ${bytes.length} bytes`, startOffset);
+    }
+    const documentSize = getSize(bytes, startOffset);
+    if (documentSize > bytes.length - startOffset) {
+        throw new BSONOffsetError(`Parsed documentSize (${documentSize} bytes) does not match input length (${bytes.length} bytes)`, startOffset);
+    }
+    if (bytes[startOffset + documentSize - 1] !== 0x00) {
+        throw new BSONOffsetError('BSON documents must end in 0x00', startOffset + documentSize);
+    }
+    const elements = [];
+    let offset = startOffset + 4;
+    while (offset <= documentSize + startOffset) {
+        const type = bytes[offset];
+        offset += 1;
+        if (type === 0) {
+            if (offset - startOffset !== documentSize) {
+                throw new BSONOffsetError(`Invalid 0x00 type byte`, offset);
+            }
+            break;
+        }
+        const nameOffset = offset;
+        const nameLength = findNull(bytes, offset) - nameOffset;
+        offset += nameLength + 1;
+        let length;
+        if (type === 1 ||
+            type === 18 ||
+            type === 9 ||
+            type === 17) {
+            length = 8;
+        }
+        else if (type === 16) {
+            length = 4;
+        }
+        else if (type === 7) {
+            length = 12;
+        }
+        else if (type === 19) {
+            length = 16;
+        }
+        else if (type === 8) {
+            length = 1;
+        }
+        else if (type === 10 ||
+            type === 6 ||
+            type === 127 ||
+            type === 255) {
+            length = 0;
+        }
+        else if (type === 11) {
+            length = findNull(bytes, findNull(bytes, offset) + 1) + 1 - offset;
+        }
+        else if (type === 3 ||
+            type === 4 ||
+            type === 15) {
+            length = getSize(bytes, offset);
+        }
+        else if (type === 2 ||
+            type === 5 ||
+            type === 12 ||
+            type === 13 ||
+            type === 14) {
+            length = getSize(bytes, offset) + 4;
+            if (type === 5) {
+                length += 1;
+            }
+            if (type === 12) {
+                length += 12;
+            }
+        }
+        else {
+            throw new BSONOffsetError(`Invalid 0x${type.toString(16).padStart(2, '0')} type byte`, offset);
+        }
+        if (length > documentSize) {
+            throw new BSONOffsetError('value reports length larger than document', offset);
+        }
+        elements.push([type, nameOffset, nameLength, offset, length]);
+        offset += length;
+    }
+    return elements;
+}
+
+const onDemand = Object.create(null);
+onDemand.parseToElements = parseToElements;
+onDemand.ByteUtils = ByteUtils;
+onDemand.NumberUtils = NumberUtils;
+Object.freeze(onDemand);
+
 const MAXSIZE = 1024 * 1024 * 17;
 let buffer = ByteUtils.allocate(MAXSIZE);
 function setInternalBufferSize(size) {
@@ -3996,7 +4379,7 @@ function serialize(object, options = {}) {
         buffer = ByteUtils.allocate(minInternalBufferSize);
     }
     const serializationIndex = serializeInto(buffer, object, checkKeys, 0, 0, serializeFunctions, ignoreUndefined, null);
-    const finishedBuffer = ByteUtils.allocate(serializationIndex);
+    const finishedBuffer = ByteUtils.allocateUnsafe(serializationIndex);
     finishedBuffer.set(buffer.subarray(0, serializationIndex), 0);
     return finishedBuffer;
 }
@@ -4023,10 +4406,7 @@ function deserializeStream(data, startIndex, numberOfDocuments, documents, docSt
     const bufferData = ByteUtils.toLocalBufferType(data);
     let index = startIndex;
     for (let i = 0; i < numberOfDocuments; i++) {
-        const size = bufferData[index] |
-            (bufferData[index + 1] << 8) |
-            (bufferData[index + 2] << 16) |
-            (bufferData[index + 3] << 24);
+        const size = NumberUtils.getInt32LE(bufferData, index);
         internalOptions.index = index;
         documents[docStartIndex + i] = internalDeserialize(bufferData, internalOptions);
         index = index + size;
@@ -4036,33 +4416,35 @@ function deserializeStream(data, startIndex, numberOfDocuments, documents, docSt
 
 var bson = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    Code: Code,
-    BSONSymbol: BSONSymbol,
-    DBRef: DBRef,
-    Binary: Binary,
-    ObjectId: ObjectId,
-    UUID: UUID,
-    Long: Long,
-    Timestamp: Timestamp,
-    Double: Double,
-    Int32: Int32,
-    MinKey: MinKey,
-    MaxKey: MaxKey,
+    BSONError: BSONError,
+    BSONOffsetError: BSONOffsetError,
     BSONRegExp: BSONRegExp,
+    BSONRuntimeError: BSONRuntimeError,
+    BSONSymbol: BSONSymbol,
+    BSONType: BSONType,
+    BSONValue: BSONValue,
+    BSONVersionError: BSONVersionError,
+    Binary: Binary,
+    Code: Code,
+    DBRef: DBRef,
     Decimal128: Decimal128,
-    setInternalBufferSize: setInternalBufferSize,
+    Double: Double,
+    EJSON: EJSON,
+    Int32: Int32,
+    Long: Long,
+    MaxKey: MaxKey,
+    MinKey: MinKey,
+    ObjectId: ObjectId,
+    Timestamp: Timestamp,
+    UUID: UUID,
+    calculateObjectSize: calculateObjectSize,
+    deserialize: deserialize,
+    deserializeStream: deserializeStream,
+    onDemand: onDemand,
     serialize: serialize,
     serializeWithBufferAndIndex: serializeWithBufferAndIndex,
-    deserialize: deserialize,
-    calculateObjectSize: calculateObjectSize,
-    deserializeStream: deserializeStream,
-    BSONValue: BSONValue,
-    BSONError: BSONError,
-    BSONVersionError: BSONVersionError,
-    BSONRuntimeError: BSONRuntimeError,
-    BSONType: BSONType,
-    EJSON: EJSON
+    setInternalBufferSize: setInternalBufferSize
 });
 
-export { bson as BSON, BSONError, BSONRegExp, BSONRuntimeError, BSONSymbol, BSONType, BSONValue, BSONVersionError, Binary, Code, DBRef, Decimal128, Double, EJSON, Int32, Long, MaxKey, MinKey, ObjectId, Timestamp, UUID, calculateObjectSize, deserialize, deserializeStream, serialize, serializeWithBufferAndIndex, setInternalBufferSize };
+export { bson as BSON, BSONError, BSONOffsetError, BSONRegExp, BSONRuntimeError, BSONSymbol, BSONType, BSONValue, BSONVersionError, Binary, Code, DBRef, Decimal128, Double, EJSON, Int32, Long, MaxKey, MinKey, ObjectId, Timestamp, UUID, calculateObjectSize, deserialize, deserializeStream, onDemand, serialize, serializeWithBufferAndIndex, setInternalBufferSize };
 //# sourceMappingURL=bson.mjs.map

@@ -3,7 +3,7 @@
   "version": "0.3.1",
   "imports": {
     "@std/assert": "jsr:@std/assert@1.0.7",
-    "bson-cdn/": "https://unpkg.com/bson@5.1.0/"
+    "bson-cdn/": "https://unpkg.com/bson@6.9.0/"
   },
   "exports": {
     ".": "./mod.js"
