@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.177.0/testing/asserts.ts";
+import { assertEquals } from "@std/assert";
 import * as BSON from "../mod.js";
 
 Deno.test("input object shoult equal output object", () => {
