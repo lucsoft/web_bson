@@ -234,7 +234,7 @@ function nodejsMathRandomBytes(byteLength) {
 }
 const nodejsRandomBytes = await (async () => {
     try {
-        return (await import('crypto')).randomBytes;
+        return (await import('node:crypto')).randomBytes;
     }
     catch {
         return nodejsMathRandomBytes;
